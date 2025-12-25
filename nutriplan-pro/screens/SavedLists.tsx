@@ -1,9 +1,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
-import { useAuth } from '../contexts/AuthContext';
-import Navigation from '../components/Navigation';
+import { supabase } from '../../lib/supabaseClient';
+import { useAuth } from '../../contexts/AuthContext';
+import Navigation from '../../components/Navigation';
 
 const SavedLists: React.FC = () => {
     const navigate = useNavigate();

@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navigation from '../components/Navigation';
-import { MOCK_RECIPES } from '../constants';
+import Navigation from '../../components/Navigation';
+import { MOCK_RECIPES } from '../../constants';
 
 const Search: React.FC = () => {
   const navigate = useNavigate();
@@ -52,8 +52,8 @@ const Search: React.FC = () => {
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={`flex h-9 shrink-0 items-center justify-center rounded-full px-4 transition-all ${activeCategory === cat
-                  ? 'bg-primary text-black shadow-lg shadow-primary/20 ring-1 ring-primary font-semibold'
-                  : 'bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
+                ? 'bg-primary text-black shadow-lg shadow-primary/20 ring-1 ring-primary font-semibold'
+                : 'bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
             >
               <span className="text-sm">{cat}</span>

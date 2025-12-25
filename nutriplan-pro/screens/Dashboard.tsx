@@ -1,10 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navigation from '../components/Navigation';
-import { MOCK_RECIPES, MOCK_USER } from '../constants';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabaseClient';
+import Navigation from '../../components/Navigation';
+import { MOCK_RECIPES, MOCK_USER } from '../../constants';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();

@@ -1,21 +1,21 @@
 
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Dashboard from './screens/Dashboard';
-import Search from './screens/Search';
-import RecipeDetails from './screens/RecipeDetails';
-import MealPlanner from './screens/MealPlanner';
-import CreateRecipe from './screens/CreateRecipe';
-import ShoppingCart from './screens/ShoppingCart';
-import Profile from './screens/Profile';
-import Login from './screens/Login';
-import Register from './screens/Register';
-import Favorites from './screens/Favorites';
-import MealHistory from './screens/MealHistory';
-import SavedLists from './screens/SavedLists';
-import WaterLog from './screens/WaterLog';
-import Notifications from './screens/Notifications';
-import Scan from './screens/Scan';
+import Dashboard from './nutriplan-pro/screens/Dashboard';
+import Search from './nutriplan-pro/screens/Search';
+import RecipeDetails from './nutriplan-pro/screens/RecipeDetails';
+import MealPlanner from './nutriplan-pro/screens/MealPlanner';
+import CreateRecipe from './nutriplan-pro/screens/CreateRecipe';
+import ShoppingCart from './nutriplan-pro/screens/ShoppingCart';
+import Profile from './nutriplan-pro/screens/Profile';
+import Login from './nutriplan-pro/screens/Login';
+import Register from './nutriplan-pro/screens/Register';
+import Favorites from './nutriplan-pro/screens/Favorites';
+import MealHistory from './nutriplan-pro/screens/MealHistory';
+import SavedLists from './nutriplan-pro/screens/SavedLists';
+import WaterLog from './nutriplan-pro/screens/WaterLog';
+import Notifications from './nutriplan-pro/screens/Notifications';
+import Scan from './nutriplan-pro/screens/Scan';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const AppContent: React.FC = () => {

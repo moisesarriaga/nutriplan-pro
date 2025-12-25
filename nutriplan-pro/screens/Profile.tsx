@@ -1,10 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navigation from '../components/Navigation';
-import { MOCK_USER } from '../constants';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabaseClient';
+import Navigation from '../../components/Navigation';
+import { MOCK_USER } from '../../constants';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
 
 interface ProfileProps {
   onLogout: () => void;
@@ -384,8 +384,8 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                           setIsObjectiveOpen(false);
                         }}
                         className={`w-full p-4 text-left text-sm font-medium transition-colors ${editForm.objetivo === opt.value
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-slate-900 dark:text-white hover:bg-primary hover:text-black'
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-slate-900 dark:text-white hover:bg-primary hover:text-black'
                           }`}
                       >
                         {opt.label}
