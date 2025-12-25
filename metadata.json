@@ -1,0 +1,8 @@
+
+{
+  "name": "NutriPlan Pro",
+  "description": "A comprehensive nutrition and meal planning application with integrated shopping lists, recipe discovery, and dietary tracking.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
