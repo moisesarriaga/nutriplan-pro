@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, ChevronDown, ChevronUp, ShoppingBasket, Info, List, Smartphone } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, ChefHat, UtensilsCrossed, ShoppingCart, Sparkles } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
 const LandingPage: React.FC = () => {
@@ -37,11 +37,9 @@ const LandingPage: React.FC = () => {
             {/* Navbar */}
             <nav className="fixed top-0 w-full z-50 bg-dark-bg/80 backdrop-blur-md border-b border-white/5">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-white font-bold text-xl tracking-tighter">
-                        <div className="p-1 bg-neon-green rounded-lg">
-                            <ShoppingBasket className="w-5 h-5 text-black" />
-                        </div>
-                        <span>MENU LIST</span>
+                    <div className="flex items-center gap-2 text-white font-bold text-xl tracking-tight">
+                        <span>MENU</span>
+                        <span className="text-neon-green">LIST</span>
                     </div>
                     <button
                         onClick={() => navigate('/login')}
@@ -85,59 +83,95 @@ const LandingPage: React.FC = () => {
                 </div>
             </section>
 
-            {/* Reasons Section */}
+            {/* Features Section */}
             <section className="py-20 px-6">
                 <div className="max-w-7xl mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+                            Por que usar a <span className="text-neon-green">MENU LIST</span>?
+                        </h2>
+                        <p className="text-gray-400 text-lg">
+                            Ferramentas poderosas para transformar sua relação com o supermercado e a cozinha.
+                        </p>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <FeatureCard
-                            icon={<ShoppingBasket />}
-                            title="Várias Receitas"
-                            description="Tenha acesso a várias receitas deliciosas e práticas."
+                            icon={<ChefHat className="w-6 h-6" />}
+                            title="Acesso a várias receitas"
+                            description="Milhares de receitas deliciosas integradas diretamente à sua lista de compras."
                         />
                         <FeatureCard
-                            icon={<Smartphone />}
-                            title="Controle Total"
-                            description="Tenha controle do que você está comendo e gastando."
+                            icon={<UtensilsCrossed className="w-6 h-6" />}
+                            title="Controle do que você come"
+                            description="Monitore macros e nutrientes automaticamente com base nas suas compras."
                         />
                         <FeatureCard
-                            icon={<Info />}
-                            title="Consciência"
-                            description="Saiba o porquê você está comprando cada item."
+                            icon={<ShoppingCart className="w-6 h-6" />}
+                            title="Porquê você está comprando"
+                            description="Insights inteligentes sobre seus hábitos de consumo e onde economizar."
                         />
                         <FeatureCard
-                            icon={<List />}
-                            title="Lista Inteligente"
-                            description="Lista melhor que nem IA consegue montar para você."
+                            icon={<Sparkles className="w-6 h-6" />}
+                            title="Melhor que IA"
+                            description="Uma lista personalizada que entende seu gosto melhor que qualquer algoritmo genérico."
                         />
                     </div>
                 </div>
             </section>
 
             {/* Pricing Section */}
-            <section className="py-20 px-6 bg-white/5">
+            <section className="py-20 px-6">
                 <div className="max-w-7xl mx-auto">
-                    <h2 className="text-3xl font-bold text-center text-white mb-12">Escolha o plano ideal para você</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-center">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Escolha o plano ideal</h2>
+                        <p className="text-gray-400 text-lg">
+                            Comece grátis e evolua conforme suas necessidades.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
                         {/* Free */}
                         <PricingCard
                             title="Grátis"
                             price="R$ 0"
-                            features={["Acesso básico", "1 lista de compras"]}
+                            period="/mês"
+                            description="Para quem está começando a se organizar."
+                            features={[
+                                "Acesso básico ao app",
+                                "1 Lista de compras",
+                                "Sem anúncios intrusivos"
+                            ]}
+                            buttonText="Escolher Plano"
                         />
                         {/* Simple - Highlighted */}
                         <PricingCard
-                            title="Plano Simples"
+                            title="Simples"
                             price="R$ 39,90"
                             period="/mês"
+                            description="O essencial para ter controle total."
                             highlighted
-                            features={["2 aparelhos", "Contagem de calorias", "Soma de preços", "Receitas ilimitadas"]}
+                            features={[
+                                "Tudo do plano Grátis",
+                                "Até 2 aparelhos conectados",
+                                "Controle de Calorias",
+                                "Soma automática de preços",
+                                "Receitas exclusivas"
+                            ]}
+                            buttonText="Escolher Plano"
                         />
                         {/* Premium */}
                         <PricingCard
-                            title="Plano Premium"
+                            title="Premium"
                             price="R$ 59,90"
                             period="/mês"
-                            features={["6 aparelhos", "Plano Familiar", "Todas as funções do Simples", "Suporte prioritário"]}
+                            description="Para famílias que buscam praticidade máxima."
+                            features={[
+                                "Tudo do plano Simples",
+                                "Até 6 aparelhos (Plano Familiar)",
+                                "Prioridade no suporte",
+                                "Acesso antecipado a novas features",
+                                "Análise de consumo avançada"
+                            ]}
+                            buttonText="Escolher Plano"
                         />
                     </div>
                 </div>
@@ -166,39 +200,58 @@ const LandingPage: React.FC = () => {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
     return (
-        <div className="bg-card-bg p-6 rounded-2xl border border-white/5 hover:border-neon-green/50 transition-colors group">
-            <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-neon-green mb-4 group-hover:bg-neon-green group-hover:text-black transition-colors">
+        <div className="bg-card-bg p-6 rounded-2xl border border-white/5 hover:border-neon-green/50 transition-all duration-300 group">
+            <div className="w-12 h-12 bg-transparent border-2 border-neon-green rounded-lg flex items-center justify-center text-neon-green mb-4 group-hover:bg-neon-green group-hover:text-black transition-all duration-300">
                 {icon}
             </div>
             <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-            <p className="text-gray-400 text-sm">{description}</p>
+            <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
         </div>
     );
 }
 
-function PricingCard({ title, price, period = "", features, highlighted = false }: { title: string, price: string, period?: string, features: string[], highlighted?: boolean }) {
+function PricingCard({
+    title,
+    price,
+    period = "",
+    description,
+    features,
+    highlighted = false,
+    buttonText = "Escolher Plano"
+}: {
+    title: string,
+    price: string,
+    period?: string,
+    description: string,
+    features: string[],
+    highlighted?: boolean,
+    buttonText?: string
+}) {
     return (
-        <div className={`rounded-2xl p-8 relative ${highlighted ? 'bg-card-bg border-2 border-neon-green shadow-glow transform md:-translate-y-4' : 'bg-card-bg/50 border border-white/10'}`}>
+        <div className={`rounded-2xl p-8 relative flex flex-col ${highlighted ? 'bg-card-bg border-2 border-neon-green shadow-glow transform md:-translate-y-4' : 'bg-card-bg/50 border border-white/10'}`}>
             {highlighted && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-neon-green text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                    Mais Popular
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-neon-green text-black text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
+                    MAIS POPULAR
                 </div>
             )}
-            <h3 className="text-lg text-gray-400 mb-2">{title}</h3>
-            <div className="flex items-end gap-1 mb-6">
-                <span className="text-4xl font-bold text-white">{price}</span>
-                {period && <span className="text-gray-500 text-sm mb-1">{period}</span>}
+            <h3 className="text-2xl font-bold text-white mb-2">{title}</h3>
+            <div className="flex items-end gap-1 mb-3">
+                <span className="text-5xl font-bold text-white">{price}</span>
+                {period && <span className="text-gray-400 text-base mb-2">{period}</span>}
             </div>
-            <ul className="space-y-4 text-sm text-gray-300 mb-8">
+            <p className="text-gray-400 text-sm mb-6">{description}</p>
+
+            <ul className="space-y-3 text-sm text-gray-300 mb-8 flex-grow">
                 {features.map((feat, i) => (
-                    <li key={i} className="flex items-center gap-3">
-                        <Check className="w-4 h-4 text-neon-green" />
-                        {feat}
+                    <li key={i} className="flex items-start gap-3">
+                        <Check className="w-5 h-5 text-neon-green flex-shrink-0 mt-0.5" />
+                        <span>{feat}</span>
                     </li>
                 ))}
             </ul>
-            <button className={`w-full py-3 rounded-lg font-bold transition-all ${highlighted ? 'bg-neon-green text-black hover:shadow-glow-hover' : 'bg-white/10 text-white hover:bg-white/20'}`}>
-                Assinar Agora
+
+            <button className={`w-full py-3.5 rounded-xl font-bold transition-all ${highlighted ? 'bg-neon-green text-black hover:shadow-glow-hover hover:scale-105' : 'bg-white/10 text-white hover:bg-white/20'}`}>
+                {buttonText}
             </button>
         </div>
     );
