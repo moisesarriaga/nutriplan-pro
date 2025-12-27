@@ -13,6 +13,12 @@ export default function Home() {
     e.preventDefault();
     if (!email) return;
 
+    if (!supabase) {
+      alert("Configuração do Supabase pendente. Verifique o console ou contate o administrador.");
+      console.warn("Supabase client is not initialized. Check your .env.local file.");
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase
