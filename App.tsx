@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './nutriplan-pro/screens/Dashboard';
@@ -16,6 +15,7 @@ import SavedLists from './nutriplan-pro/screens/SavedLists';
 import WaterLog from './nutriplan-pro/screens/WaterLog';
 import Notifications from './nutriplan-pro/screens/Notifications';
 import Scan from './nutriplan-pro/screens/Scan';
+import LandingPage from './nutriplan-pro/screens/LandingPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const AppContent: React.FC = () => {
@@ -32,11 +32,12 @@ const AppContent: React.FC = () => {
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display">
       <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" /> : <Login onLogin={() => { }} />} />
-        <Route path="/register" element={user ? <Navigate to="/" /> : <Register onRegister={() => { }} />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login onLogin={() => { }} />} />
+        <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register onRegister={() => { }} />} />
 
         <Route
-          path="/"
+          path="/dashboard"
           element={user ? <Dashboard /> : <Navigate to="/login" />}
         />
         <Route
