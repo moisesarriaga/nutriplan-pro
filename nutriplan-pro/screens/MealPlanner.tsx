@@ -5,6 +5,7 @@ import Navigation from '../../components/Navigation';
 import { MOCK_RECIPES } from '../../constants';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { aggregateIngredients, AggregatedIngredient } from '../../utils/ingredientAggregator';
 
 interface MealPlanEntry {
   id: string;
@@ -21,16 +22,16 @@ const MealPlanner: React.FC = () => {
   const [mealPlan, setMealPlan] = useState<MealPlanEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGeneratingList, setIsGeneratingList] = useState(false);
-  const [aggregatedIngredients, setAggregatedIngredients] = useState<{ id: string; name: string; unit: string; quantity: number; checked: boolean }[]>([]);
+  const [aggregatedIngredients, setAggregatedIngredients] = useState<AggregatedIngredient[]>([]);
 
   const days = [
-    { label: 'Seg', name: 'Segunda', date: '12' },
-    { label: 'Ter', name: 'Terça', date: '13' },
-    { label: 'Qua', name: 'Quarta', date: '14' },
-    { label: 'Qui', name: 'Quinta', date: '15' },
-    { label: 'Sex', name: 'Sexta', date: '16' },
-    { label: 'Sáb', name: 'Sábado', date: '17' },
-    { label: 'Dom', name: 'Domingo', date: '18' },
+    { label: 'Seg', name: 'Segunda' },
+    { label: 'Ter', name: 'Terça' },
+    { label: 'Qua', name: 'Quarta' },
+    { label: 'Qui', name: 'Quinta' },
+    { label: 'Sex', name: 'Sexta' },
+    { label: 'Sáb', name: 'Sábado' },
+    { label: 'Dom', name: 'Domingo' },
   ];
 
   useEffect(() => {
@@ -70,23 +71,24 @@ const MealPlanner: React.FC = () => {
       return;
     }
 
-    const ingredientsMap = new Map<string, { id: string; name: string; unit: string; quantity: number }>();
+    // Collect ALL ingredients from ALL meals across ALL days
+    const allIngredients: Array<{ name: string; quantity: number; unit: string }> = [];
 
     mealPlan.forEach(entry => {
       if (entry.receita?.ingredients) {
         entry.receita.ingredients.forEach((ing: any) => {
-          if (ingredientsMap.has(ing.id)) {
-            const existing = ingredientsMap.get(ing.id)!;
-            ingredientsMap.set(ing.id, { ...existing, quantity: existing.quantity + ing.quantity });
-          } else {
-            ingredientsMap.set(ing.id, { id: ing.id, name: ing.name, unit: ing.unit, quantity: ing.quantity });
-          }
+          allIngredients.push({
+            name: ing.name,
+            quantity: ing.quantity,
+            unit: ing.unit
+          });
         });
       }
     });
 
-    const ingredientsList = Array.from(ingredientsMap.values()).map(ing => ({ ...ing, checked: true }));
-    setAggregatedIngredients(ingredientsList);
+    // Use smart aggregation with unit conversion
+    const aggregated = aggregateIngredients(allIngredients);
+    setAggregatedIngredients(aggregated);
     setIsGeneratingList(true);
   };
 
@@ -150,8 +152,7 @@ const MealPlanner: React.FC = () => {
                 : 'bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700'
                 }`}
             >
-              <span className={`text-[10px] font-semibold uppercase ${selectedDay === day.name ? '' : 'text-gray-500'}`}>{day.label}</span>
-              <span className="text-sm font-bold mt-0.5">{day.date}</span>
+              <span className={`text-sm font-bold ${selectedDay === day.name ? '' : 'text-gray-500'}`}>{day.label}</span>
             </button>
           ))}
         </div>

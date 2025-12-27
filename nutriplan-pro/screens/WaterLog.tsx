@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useWaterNotifications } from '../../hooks/useWaterNotifications';
 
 const WaterLog: React.FC = () => {
     const navigate = useNavigate();
@@ -9,10 +10,42 @@ const WaterLog: React.FC = () => {
     const [currentWater, setCurrentWater] = useState(0);
     const [goal, setGoal] = useState(2000);
     const [loading, setLoading] = useState(true);
+    const { permission, requestPermission, scheduleWaterReminders } = useWaterNotifications();
+    const [remindersActive, setRemindersActive] = useState(false);
 
     useEffect(() => {
-        if (user) fetchWaterData();
+        if (user) {
+            checkAndResetIfNewDay();
+            fetchWaterData();
+        }
     }, [user]);
+
+    // Check if it's a new day and auto-reset water consumption
+    useEffect(() => {
+        const checkMidnight = setInterval(() => {
+            checkAndResetIfNewDay();
+        }, 60000); // Check every minute
+
+        return () => clearInterval(checkMidnight);
+    }, [user]);
+
+    const checkAndResetIfNewDay = async () => {
+        if (!user) return;
+
+        const today = new Date().toDateString();
+        const lastResetDate = localStorage.getItem(`waterlog_last_reset_${user.id}`);
+
+        if (lastResetDate !== today) {
+            // It's a new day, reset water consumption
+            await supabase
+                .from('perfis_usuario')
+                .update({ consumo_agua_hoje: 0 })
+                .eq('id', user.id);
+
+            localStorage.setItem(`waterlog_last_reset_${user.id}`, today);
+            setCurrentWater(0);
+        }
+    };
 
     const fetchWaterData = async () => {
         try {
@@ -104,12 +137,45 @@ const WaterLog: React.FC = () => {
                     ))}
                 </div>
 
-                <button
-                    onClick={resetWater}
-                    className="mt-10 text-slate-500 text-sm font-medium hover:text-red-500"
-                >
-                    Zerar consumo de hoje
-                </button>
+                <div className="mt-10 flex flex-col items-center gap-4">
+                    <button
+                        onClick={resetWater}
+                        className="text-slate-500 text-sm font-medium hover:text-red-500"
+                    >
+                        Zerar consumo de hoje
+                    </button>
+
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700">
+                        <span className="material-symbols-outlined text-primary">notifications</span>
+                        <div className="flex-1">
+                            <p className="text-sm font-semibold">Lembretes de Água</p>
+                            <p className="text-xs text-slate-500">Receba notificações a cada 2 horas</p>
+                        </div>
+                        <button
+                            onClick={async () => {
+                                if (permission !== 'granted') {
+                                    const granted = await requestPermission();
+                                    if (granted) {
+                                        scheduleWaterReminders();
+                                        setRemindersActive(true);
+                                    }
+                                } else {
+                                    if (!remindersActive) {
+                                        scheduleWaterReminders();
+                                        setRemindersActive(true);
+                                    } else {
+                                        setRemindersActive(false);
+                                    }
+                                }
+                            }}
+                            className={`relative w-12 h-6 rounded-full transition-colors ${remindersActive ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'
+                                }`}
+                        >
+                            <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${remindersActive ? 'translate-x-6' : 'translate-x-0'
+                                }`} />
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );
