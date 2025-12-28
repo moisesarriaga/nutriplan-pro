@@ -105,6 +105,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               </>
             )}
           </button>
+
+          <button
+            onClick={() => navigate('/register')}
+            className="w-full bg-white dark:bg-surface-dark border-2 border-primary text-primary hover:bg-primary hover:text-black font-bold text-base py-3.5 rounded-xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-3"
+            type="button"
+          >
+            <span>Criar Conta</span>
+            <span className="material-symbols-outlined text-[20px]">person_add</span>
+          </button>
         </form>
 
         <div className="relative mt-8 mb-6">

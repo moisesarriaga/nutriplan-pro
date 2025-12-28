@@ -41,19 +41,26 @@ const LandingPage: React.FC = () => {
                         <span>MENU</span>
                         <span className="text-neon-green">LIST</span>
                     </div>
-                    <button
-                        onClick={() => navigate('/login')}
-                        className="text-sm font-medium hover:text-neon-green transition-colors"
-                    >
-                        Login
-                    </button>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate('/register')}
+                            className="text-sm font-medium hover:text-neon-green transition-colors"
+                        >
+                            Cadastrar
+                        </button>
+                        <button
+                            onClick={() => navigate('/login')}
+                            className="text-sm font-medium hover:text-neon-green transition-colors">
+                            Login
+                        </button>
+                    </div>
                 </div>
             </nav>
 
             {/* Hero Section */}
-            <section className="pt-32 pb-20 px-6 relative overflow-hidden">
+            <section className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
                 {/* Glow Effect */}
-                <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-neon-green/20 rounded-full blur-[100px] -z-10" />
+                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-neon-green/20 rounded-full blur-[100px] -z-10" />
 
                 <div className="max-w-4xl mx-auto text-center space-y-8">
                     <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-tight">
@@ -63,10 +70,10 @@ const LandingPage: React.FC = () => {
                         A maneira mais inteligente de organizar suas refeições. Planeje, economize e tenha controle total do seu carrinho.
                     </p>
 
-                    <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto mt-8">
+                    <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto mt-8">
                         <input
                             type="email"
-                            placeholder="Quer montar sua lista agora? Informe seu e-mail"
+                            placeholder="Quer montar sua lista agora? Informe o seu e-mail"
                             className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon-green focus:ring-1 focus:ring-neon-green transition-all"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -75,9 +82,9 @@ const LandingPage: React.FC = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="bg-neon-green text-black font-bold py-3 px-6 rounded-lg hover:shadow-glow-hover transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-neon-green text-black font-bold py-3 px-8 rounded-lg hover:shadow-glow-hover transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                         >
-                            {loading ? "Enviando..." : "Criar Assinatura"}
+                            {loading ? "Enviando..." : "Assinar"}
                         </button>
                     </form>
                 </div>
@@ -141,8 +148,8 @@ const LandingPage: React.FC = () => {
                                 "Sem anúncios intrusivos"
                             ]}
                             buttonText="Escolher Plano"
+                            plan="free"
                         />
-                        {/* Simple - Highlighted */}
                         <PricingCard
                             title="Simples"
                             price="R$ 39,90"
@@ -157,8 +164,8 @@ const LandingPage: React.FC = () => {
                                 "Receitas exclusivas"
                             ]}
                             buttonText="Escolher Plano"
+                            plan="simple"
                         />
-                        {/* Premium */}
                         <PricingCard
                             title="Premium"
                             price="R$ 59,90"
@@ -172,6 +179,7 @@ const LandingPage: React.FC = () => {
                                 "Análise de consumo avançada"
                             ]}
                             buttonText="Escolher Plano"
+                            plan="premium"
                         />
                     </div>
                 </div>
@@ -217,7 +225,8 @@ function PricingCard({
     description,
     features,
     highlighted = false,
-    buttonText = "Escolher Plano"
+    buttonText = "Escolher Plano",
+    plan
 }: {
     title: string,
     price: string,
@@ -225,8 +234,10 @@ function PricingCard({
     description: string,
     features: string[],
     highlighted?: boolean,
-    buttonText?: string
+    buttonText?: string,
+    plan: string
 }) {
+    const navigate = useNavigate();
     return (
         <div className={`rounded-2xl p-8 relative flex flex-col ${highlighted ? 'bg-card-bg border-2 border-neon-green shadow-glow transform md:-translate-y-4' : 'bg-card-bg/50 border border-white/10'}`}>
             {highlighted && (
@@ -250,7 +261,10 @@ function PricingCard({
                 ))}
             </ul>
 
-            <button className={`w-full py-3.5 rounded-xl font-bold transition-all ${highlighted ? 'bg-neon-green text-black hover:shadow-glow-hover hover:scale-105' : 'bg-white/10 text-white hover:bg-white/20'}`}>
+            <button
+                onClick={() => navigate(`/checkout/${plan}`)}
+                className={`w-full py-3.5 rounded-xl font-bold transition-all ${highlighted ? 'bg-neon-green text-black hover:shadow-glow-hover hover:scale-105' : 'bg-white/10 text-white hover:bg-white/20'}`}
+            >
                 {buttonText}
             </button>
         </div>

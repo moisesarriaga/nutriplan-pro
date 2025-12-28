@@ -16,6 +16,8 @@ import WaterLog from './nutriplan-pro/screens/WaterLog';
 import Notifications from './nutriplan-pro/screens/Notifications';
 import Scan from './nutriplan-pro/screens/Scan';
 import LandingPage from './nutriplan-pro/screens/LandingPage';
+import Checkout from './nutriplan-pro/screens/Checkout';
+import ThankYou from './nutriplan-pro/screens/ThankYou';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const AppContent: React.FC = () => {
@@ -88,6 +90,8 @@ const AppContent: React.FC = () => {
           path="/scan"
           element={user ? <Scan /> : <Navigate to="/login" />}
         />
+        <Route path="/checkout/:plan" element={<Checkout />} />
+        <Route path="/thank-you" element={<ThankYou />} />
       </Routes>
     </div>
   );

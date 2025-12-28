@@ -9,7 +9,7 @@ const Navigation: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const navItems = [
-    { label: 'Início', path: '/', icon: 'home' },
+    { label: 'Início', path: '/dashboard', icon: 'home' },
     { label: 'Buscar', path: '/search', icon: 'search' },
     { label: 'Cart', path: '/cart', icon: 'shopping_cart', isCenter: true },
     { label: 'Plano', path: '/planner', icon: 'calendar_month' },
@@ -33,9 +33,8 @@ const Navigation: React.FC = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center gap-1 w-12 transition-colors ${
-                isActive(item.path) ? 'text-primary' : 'text-slate-400 dark:text-slate-500'
-              }`}
+              className={`flex flex-col items-center gap-1 w-12 transition-colors ${isActive(item.path) ? 'text-primary' : 'text-slate-400 dark:text-slate-500'
+                }`}
             >
               <span className={`material-symbols-outlined ${isActive(item.path) ? 'filled' : ''}`}>
                 {item.icon}
