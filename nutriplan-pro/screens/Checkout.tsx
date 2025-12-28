@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CreditCard, QrCode, ArrowLeft, Check } from 'lucide-react';
+import { CreditCard, QrCode, ArrowLeft, Check, AlertCircle } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { createSubscription } from '../../utils/subscriptionHelpers';
 
 const Checkout: React.FC = () => {
     const navigate = useNavigate();
     const { plan } = useParams<{ plan: string }>();
-    const [paymentMethod, setPaymentMethod] = useState<'credit_card' | 'pix'>('credit_card');
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const planDetails = {
         free: { name: 'Grátis', price: 0, description: 'Para quem está começando a se organizar.' },
@@ -16,15 +19,47 @@ const Checkout: React.FC = () => {
 
     const selectedPlan = planDetails[plan as keyof typeof planDetails] || planDetails.simple;
 
+    useEffect(() => {
+        if (!user) {
+            navigate('/login');
+        }
+    }, [user, navigate]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
 
-        // Simulate payment processing
-        setTimeout(() => {
+        if (!user) {
+            setError('Você precisa estar logado para continuar');
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await createSubscription({
+                plan: plan as 'free' | 'simple' | 'premium',
+                userId: user.id,
+            });
+
+            if (!response.success) {
+                throw new Error(response.error || 'Erro ao criar assinatura');
+            }
+
+            // If free plan, redirect directly to thank you
+            if (plan === 'free' || response.redirect) {
+                navigate('/thank-you');
+            } else if (response.init_point) {
+                // Redirect to Mercado Pago checkout
+                window.location.href = response.init_point;
+            } else {
+                throw new Error('Erro ao processar pagamento');
+            }
+        } catch (err) {
+            console.error('Checkout error:', err);
+            setError(err instanceof Error ? err.message : 'Erro ao processar pagamento');
             setLoading(false);
-            navigate('/thank-you');
-        }, 2000);
+        }
     };
 
     return (
@@ -50,125 +85,92 @@ const Checkout: React.FC = () => {
                     {/* Payment Form */}
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-2xl font-bold text-white mb-2">Informações de Pagamento</h2>
-                            <p className="text-gray-400 text-sm">Escolha a forma de pagamento e complete os dados</p>
+                            <h2 className="text-2xl font-bold text-white mb-2">Confirmar Assinatura</h2>
+                            <p className="text-gray-400 text-sm">
+                                {selectedPlan.price === 0
+                                    ? 'Ative seu plano gratuito agora mesmo'
+                                    : 'Você será redirecionado para o Mercado Pago para completar o pagamento'
+                                }
+                            </p>
                         </div>
 
-                        {/* Payment Method Selection */}
-                        <div className="space-y-3">
-                            <label className="text-sm font-semibold text-gray-300">Método de Pagamento</label>
-                            <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    onClick={() => setPaymentMethod('credit_card')}
-                                    className={`p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${paymentMethod === 'credit_card'
-                                            ? 'border-neon-green bg-neon-green/10'
-                                            : 'border-white/10 bg-white/5 hover:border-white/20'
-                                        }`}
-                                >
-                                    <CreditCard className="w-5 h-5" />
-                                    <span className="font-medium">Cartão</span>
-                                </button>
-                                <button
-                                    onClick={() => setPaymentMethod('pix')}
-                                    className={`p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${paymentMethod === 'pix'
-                                            ? 'border-neon-green bg-neon-green/10'
-                                            : 'border-white/10 bg-white/5 hover:border-white/20'
-                                        }`}
-                                >
-                                    <QrCode className="w-5 h-5" />
-                                    <span className="font-medium">PIX</span>
-                                </button>
+                        {error && (
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
+                                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-red-500 font-semibold">Erro ao processar</p>
+                                    <p className="text-red-400 text-sm mt-1">{error}</p>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            {/* Personal Information */}
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-300 mb-2">Nome Completo</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon-green focus:ring-1 focus:ring-neon-green transition-all"
-                                        placeholder="João Silva"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-300 mb-2">E-mail</label>
-                                    <input
-                                        type="email"
-                                        required
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon-green focus:ring-1 focus:ring-neon-green transition-all"
-                                        placeholder="joao@exemplo.com"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-300 mb-2">CPF</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon-green focus:ring-1 focus:ring-neon-green transition-all"
-                                        placeholder="000.000.000-00"
-                                    />
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* Plan Summary */}
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                                <h3 className="font-semibold text-white mb-4">Detalhes da Assinatura</h3>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-400">Plano</span>
+                                        <span className="text-white font-semibold">{selectedPlan.name}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-400">Valor Mensal</span>
+                                        <span className="text-neon-green font-bold">
+                                            R$ {selectedPlan.price.toFixed(2)}
+                                        </span>
+                                    </div>
+                                    {selectedPlan.price > 0 && (
+                                        <>
+                                            <div className="border-t border-white/10 pt-3 mt-3">
+                                                <p className="text-sm text-gray-400">
+                                                    <Check className="w-4 h-4 inline text-neon-green mr-2" />
+                                                    Cobrança automática mensal
+                                                </p>
+                                                <p className="text-sm text-gray-400 mt-2">
+                                                    <Check className="w-4 h-4 inline text-neon-green mr-2" />
+                                                    Cancele quando quiser
+                                                </p>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Credit Card Fields */}
-                            {paymentMethod === 'credit_card' && (
-                                <div className="space-y-4 pt-4 border-t border-white/10">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-300 mb-2">Número do Cartão</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon-green focus:ring-1 focus:ring-neon-green transition-all"
-                                            placeholder="0000 0000 0000 0000"
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-300 mb-2">Validade</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon-green focus:ring-1 focus:ring-neon-green transition-all"
-                                                placeholder="MM/AA"
-                                            />
+                            {/* Payment Methods Info */}
+                            {selectedPlan.price > 0 && (
+                                <div className="bg-neon-green/10 border border-neon-green/30 rounded-xl p-6">
+                                    <h4 className="font-semibold text-white mb-3">Métodos de Pagamento Aceitos</h4>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="flex items-center gap-2 text-sm text-gray-300">
+                                            <CreditCard className="w-5 h-5 text-neon-green" />
+                                            <span>Cartão de Crédito</span>
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-300 mb-2">CVV</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon-green focus:ring-1 focus:ring-neon-green transition-all"
-                                                placeholder="123"
-                                            />
+                                        <div className="flex items-center gap-2 text-sm text-gray-300">
+                                            <QrCode className="w-5 h-5 text-neon-green" />
+                                            <span>PIX</span>
                                         </div>
                                     </div>
-                                </div>
-                            )}
-
-                            {/* PIX Instructions */}
-                            {paymentMethod === 'pix' && (
-                                <div className="pt-4 border-t border-white/10">
-                                    <div className="bg-neon-green/10 border border-neon-green/30 rounded-xl p-6 text-center space-y-4">
-                                        <QrCode className="w-32 h-32 mx-auto text-neon-green" />
-                                        <p className="text-sm text-gray-300">
-                                            Após confirmar, você receberá o QR Code PIX para pagamento
-                                        </p>
-                                    </div>
+                                    <p className="text-xs text-gray-400 mt-4">
+                                        Pagamento processado com segurança pelo Mercado Pago
+                                    </p>
                                 </div>
                             )}
 
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-neon-green text-black font-bold py-4 px-6 rounded-lg hover:shadow-glow-hover transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+                                className="w-full bg-neon-green text-black font-bold py-4 px-6 rounded-lg hover:shadow-glow-hover transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {loading ? 'Processando...' : `Confirmar Pagamento - R$ ${selectedPlan.price.toFixed(2)}/mês`}
+                                {loading ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                                        <span>Processando...</span>
+                                    </div>
+                                ) : (
+                                    selectedPlan.price === 0
+                                        ? 'Ativar Plano Gratuito'
+                                        : 'Ir para Pagamento'
+                                )}
                             </button>
                         </form>
                     </div>
