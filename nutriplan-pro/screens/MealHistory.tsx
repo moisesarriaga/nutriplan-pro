@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSubscription } from '../../contexts/SubscriptionContext';
+import UpgradePrompt from '../../components/UpgradePrompt';
 import Navigation from '../../components/Navigation';
 
 interface HistoryItem {
@@ -21,6 +23,10 @@ const MealHistory: React.FC = () => {
     const { user } = useAuth();
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const { hasFeature } = useSubscription();
+
+    const canTrackCalories = hasFeature('calorie_tracking');
 
     useEffect(() => {
         if (user) {
@@ -95,15 +101,29 @@ const MealHistory: React.FC = () => {
                                     </span>
                                 </div>
                                 <h3 className="font-bold text-lg">{item.receitas?.nome || item.nome_receita_manual || 'Refeição'}</h3>
-                                <div className="flex items-center gap-1 mt-1 text-sm text-slate-500">
+                                <div
+                                    className={`flex items-center gap-1 mt-1 text-sm text-slate-500 ${!canTrackCalories ? 'cursor-pointer' : ''}`}
+                                    onClick={!canTrackCalories ? () => setShowUpgradeModal(true) : undefined}
+                                >
                                     <span className="material-symbols-outlined text-[16px] text-orange-400">local_fire_department</span>
-                                    {item.calorias} kcal
+                                    <span className={!canTrackCalories ? 'blur-[3px] select-none' : ''}>
+                                        {item.calorias} kcal
+                                    </span>
+                                    {!canTrackCalories && <span className="material-symbols-outlined text-[12px] ml-1">lock</span>}
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
+
+            {showUpgradeModal && (
+                <UpgradePrompt
+                    feature="O histórico detalhado de calorias"
+                    requiredPlan="simple"
+                    onClose={() => setShowUpgradeModal(false)}
+                />
+            )}
             <Navigation />
         </div>
     );

@@ -5,6 +5,8 @@ import Navigation from '../../components/Navigation';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { MOCK_RECIPES } from '../../constants';
+import { useSubscription } from '../../contexts/SubscriptionContext';
+import UpgradePrompt from '../../components/UpgradePrompt';
 
 interface ShoppingItem {
   usuario_id: string;
@@ -21,6 +23,10 @@ const ShoppingCart: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [newItemName, setNewItemName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const { hasFeature } = useSubscription();
+
+  const canSumPrices = hasFeature('price_sum');
 
   useEffect(() => {
     if (user) {
@@ -130,7 +136,6 @@ const ShoppingCart: React.FC = () => {
     setItems(prev => prev.map(item =>
       item.nome_item === nomeItem ? { ...item, comprado: !item.comprado } : item
     ));
-    // Persistence for 'comprado' is deferred as column might not exist
   };
 
   const totalPrice = items.reduce((acc, curr) => acc + (curr.ultimo_preco_informado || 0), 0).toFixed(2);
@@ -172,8 +177,19 @@ const ShoppingCart: React.FC = () => {
         <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-surface-dark p-5 shadow-sm border border-slate-100 dark:border-white/5">
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Estimado</span>
-              <h2 className="text-3xl font-extrabold tracking-tight">R$ {totalPrice}</h2>
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                Total Estimado
+                {!canSumPrices && <span className="material-symbols-outlined text-[12px]">lock</span>}
+              </span>
+              <div
+                className={`flex items-baseline gap-1 ${!canSumPrices ? 'cursor-pointer' : ''}`}
+                onClick={!canSumPrices ? () => setShowUpgradeModal(true) : undefined}
+              >
+                <h2 className={`text-3xl font-extrabold tracking-tight transition-all ${!canSumPrices ? 'blur-md select-none' : ''}`}>
+                  R$ {totalPrice}
+                </h2>
+                {!canSumPrices && <span className="text-xs text-primary font-bold ml-2">Upgrade p/ ver</span>}
+              </div>
               <p className="text-sm font-medium text-primary-dark dark:text-primary flex items-center gap-1 mt-1">
                 <span className="material-symbols-outlined text-[16px] filled">shopping_basket</span>
                 {items.filter(i => !i.comprado).length} itens restantes
@@ -274,14 +290,27 @@ const ShoppingCart: React.FC = () => {
         <div className="mx-auto w-full max-w-md">
           <div className="mb-4 flex items-center justify-between px-1">
             <span className="text-sm text-slate-500">Total a Pagar</span>
-            <span className="text-xl font-bold">R$ {totalPrice}</span>
+            <span className={`text-xl font-bold transition-all ${!canSumPrices ? 'blur-sm select-none' : ''}`}>
+              R$ {totalPrice}
+            </span>
           </div>
-          <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 font-bold text-black shadow-lg shadow-primary/25 active:scale-[0.98]">
+          <button
+            onClick={!canSumPrices ? () => setShowUpgradeModal(true) : undefined}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 font-bold text-black shadow-lg shadow-primary/25 active:scale-[0.98]"
+          >
             <span>Confirmar Pedido</span>
             <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
           </button>
         </div>
       </div>
+
+      {showUpgradeModal && (
+        <UpgradePrompt
+          feature="A Soma Automática de Preços da sua lista"
+          requiredPlan="simple"
+          onClose={() => setShowUpgradeModal(false)}
+        />
+      )}
 
       <Navigation />
     </div>

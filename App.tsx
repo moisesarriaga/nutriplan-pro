@@ -19,6 +19,7 @@ import LandingPage from './nutriplan-pro/screens/LandingPage';
 import Checkout from './nutriplan-pro/screens/Checkout';
 import ThankYou from './nutriplan-pro/screens/ThankYou';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
@@ -101,7 +102,9 @@ const App: React.FC = () => {
   return (
     <HashRouter>
       <AuthProvider>
-        <AppContent />
+        <SubscriptionProvider>
+          <AppContent />
+        </SubscriptionProvider>
       </AuthProvider>
     </HashRouter>
   );

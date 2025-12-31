@@ -4,6 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { MOCK_RECIPES } from '../../constants';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSubscription } from '../../contexts/SubscriptionContext';
+import UpgradePrompt from '../../components/UpgradePrompt';
 
 const RecipeDetails: React.FC = () => {
   const { id } = useParams();
@@ -17,6 +19,10 @@ const RecipeDetails: React.FC = () => {
     mealType: 'Almoço'
   });
   const [isFavorited, setIsFavorited] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const { hasFeature } = useSubscription();
+
+  const canTrackCalories = hasFeature('calorie_tracking');
 
   const recipe = MOCK_RECIPES.find(r => r.id === id);
 
@@ -155,11 +161,15 @@ const RecipeDetails: React.FC = () => {
           <div className="flex flex-wrap gap-3">
             {[
               { icon: 'schedule', label: recipe.time },
-              { icon: 'local_fire_department', label: `${recipe.calories} kcal` },
+              { icon: 'local_fire_department', label: canTrackCalories ? `${recipe.calories} kcal` : 'Premium' },
               { icon: 'equalizer', label: recipe.difficulty },
               { icon: 'person', label: `${recipe.servings} porções` }
             ].map((stat, idx) => (
-              <div key={idx} className="flex items-center gap-1.5 bg-surface-dark/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
+              <div
+                key={idx}
+                className={`flex items-center gap-1.5 bg-surface-dark/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 ${stat.icon === 'local_fire_department' && !canTrackCalories ? 'cursor-pointer hover:bg-surface-dark transition-colors' : ''}`}
+                onClick={stat.icon === 'local_fire_department' && !canTrackCalories ? () => setShowUpgradeModal(true) : undefined}
+              >
                 <span className="material-symbols-outlined text-primary text-[18px]">{stat.icon}</span>
                 <span className="text-xs font-medium text-white">{stat.label}</span>
               </div>
@@ -174,11 +184,20 @@ const RecipeDetails: React.FC = () => {
             {(['ingredients', 'prep', 'nutrition'] as const).map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => {
+                  if (tab === 'nutrition' && !canTrackCalories) {
+                    setShowUpgradeModal(true);
+                  } else {
+                    setActiveTab(tab);
+                  }
+                }}
                 className={`flex-1 pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === tab ? 'text-primary border-primary' : 'text-gray-500 border-transparent'
                   }`}
               >
-                {tab === 'ingredients' ? 'Ingredientes' : tab === 'prep' ? 'Preparo' : 'Nutrição'}
+                <div className="flex items-center justify-center gap-1">
+                  {tab === 'nutrition' && !canTrackCalories && <span className="material-symbols-outlined text-[14px]">lock</span>}
+                  {tab === 'ingredients' ? 'Ingredientes' : tab === 'prep' ? 'Preparo' : 'Nutrição'}
+                </div>
               </button>
             ))}
           </div>
@@ -332,6 +351,13 @@ const RecipeDetails: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+      {showUpgradeModal && (
+        <UpgradePrompt
+          feature="O Controle de Calorias e informações nutricionais completas"
+          requiredPlan="simple"
+          onClose={() => setShowUpgradeModal(false)}
+        />
       )}
     </div>
   );
