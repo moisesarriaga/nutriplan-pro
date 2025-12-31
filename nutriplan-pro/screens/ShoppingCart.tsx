@@ -11,6 +11,7 @@ import UpgradePrompt from '../../components/UpgradePrompt';
 interface ShoppingItem {
   usuario_id: string;
   nome_item: string;
+  quantidade: number;
   ultimo_preco_informado: number;
   unidade_preco: string;
   comprado?: boolean;
@@ -75,6 +76,7 @@ const ShoppingCart: React.FC = () => {
     const newItems = Array.from(ingredientsToAdd.values()).map(ing => ({
       usuario_id: user.id,
       nome_item: ing.name,
+      quantidade: 1, // Default or extracted
       ultimo_preco_informado: 0,
       unidade_preco: ing.unit,
       comprado: false
@@ -119,6 +121,7 @@ const ShoppingCart: React.FC = () => {
     const newItem: Partial<ShoppingItem> = {
       usuario_id: user.id,
       nome_item: newItemName,
+      quantidade: 1,
       ultimo_preco_informado: 0,
       unidade_preco: 'un'
     };
@@ -236,7 +239,10 @@ const ShoppingCart: React.FC = () => {
                         </button>
                         <div className="flex flex-col min-w-0">
                           <h4 className="text-sm font-bold leading-tight truncate">{item.nome_item}</h4>
-                          <p className="text-[10px] text-slate-500 font-medium">R$ {item.ultimo_preco_informado.toFixed(2)} • {item.unidade_preco || 'un'}</p>
+                          <p className="text-[10px] text-slate-500 font-medium">
+                            {item.quantidade > 0 && <span>{item.quantidade} {item.unidade_preco || 'un'} • </span>}
+                            R$ {item.ultimo_preco_informado.toFixed(2)}
+                          </p>
                         </div>
                       </div>
                       <button

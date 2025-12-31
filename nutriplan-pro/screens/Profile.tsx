@@ -353,6 +353,16 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium mb-1.5 ml-1">Idade</label>
+                <input
+                  type="number"
+                  value={editForm.idade}
+                  onChange={(e) => setEditForm({ ...editForm, idade: Number(e.target.value) })}
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
               <div className="relative">
                 <label className="block text-sm font-medium mb-1.5 ml-1">Objetivo</label>
                 <button

@@ -51,13 +51,19 @@ const WaterLog: React.FC = () => {
         try {
             const { data, error } = await supabase
                 .from('perfis_usuario')
-                .select('consumo_agua_hoje, meta_agua_ml')
+                .select('consumo_agua_hoje, meta_agua_ml, lembretes_agua')
                 .eq('id', user?.id)
                 .single();
 
             if (data) {
                 setCurrentWater(data.consumo_agua_hoje || 0);
                 setGoal(data.meta_agua_ml || 2000);
+                setRemindersActive(data.lembretes_agua || false);
+
+                // If reminders should be active, ensure they are scheduled
+                if (data.lembretes_agua) {
+                    scheduleWaterReminders();
+                }
             }
         } finally {
             setLoading(false);
@@ -153,20 +159,23 @@ const WaterLog: React.FC = () => {
                         </div>
                         <button
                             onClick={async () => {
-                                if (permission !== 'granted') {
+                                const newStatus = !remindersActive;
+                                if (newStatus && permission !== 'granted') {
                                     const granted = await requestPermission();
-                                    if (granted) {
-                                        scheduleWaterReminders();
-                                        setRemindersActive(true);
-                                    }
-                                } else {
-                                    if (!remindersActive) {
-                                        scheduleWaterReminders();
-                                        setRemindersActive(true);
-                                    } else {
-                                        setRemindersActive(false);
-                                    }
+                                    if (!granted) return;
                                 }
+
+                                if (newStatus) {
+                                    scheduleWaterReminders();
+                                }
+
+                                setRemindersActive(newStatus);
+
+                                // Save to Supabase
+                                await supabase
+                                    .from('perfis_usuario')
+                                    .update({ lembretes_agua: newStatus })
+                                    .eq('id', user?.id);
                             }}
                             className={`relative w-12 h-6 rounded-full transition-colors ${remindersActive ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'
                                 }`}

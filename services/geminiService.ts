@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
 
 export interface ExtractedIngredient {
     name: string;
@@ -20,7 +20,7 @@ export interface ExtractedRecipe {
 
 export const extractRecipeFromText = async (recipeText: string): Promise<ExtractedRecipe> => {
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `
 Você é um assistente especializado em nutrição e culinária. Analise o seguinte texto de receita e extraia as informações em formato JSON.
@@ -91,7 +91,7 @@ Retorne APENAS um objeto JSON válido no seguinte formato (sem markdown, sem exp
 // Estimate calories for a single ingredient (fallback function)
 export const estimateIngredientCalories = async (ingredientName: string, quantity: number, unit: string): Promise<number> => {
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `
 Estime as calorias para o seguinte ingrediente:

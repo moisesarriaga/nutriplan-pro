@@ -42,20 +42,45 @@ const MealPlanner: React.FC = () => {
 
   const fetchMealPlan = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('cardapio_semanal')
-      .select('*')
-      .eq('usuario_id', user?.id);
+    try {
+      // 1. Fetch meal plan entries
+      const { data: entries, error: entriesError } = await supabase
+        .from('cardapio_semanal')
+        .select('*')
+        .eq('usuario_id', user?.id);
 
-    if (!error && data) {
-      // Map recipes from MOCK_RECIPES for now (since DB recipes might be empty or different)
-      const enrichedData = data.map(entry => ({
-        ...entry,
-        receita: MOCK_RECIPES.find(r => r.id === entry.receita_id)
-      }));
+      if (entriesError) throw entriesError;
+
+      // 2. Fetch all unique recipe IDs from the plan
+      const recipeIds = Array.from(new Set(entries.map(e => e.receita_id)));
+
+      // 3. Fetch recipes from database
+      const { data: dbRecipes, error: recipesError } = await supabase
+        .from('receitas')
+        .select('*')
+        .in('id', recipeIds);
+
+      // 4. Enrich entries with recipe data (check DB first, then MOCKS)
+      const enrichedData = entries.map(entry => {
+        let recipe = dbRecipes?.find(r => r.id === entry.receita_id);
+
+        // If not in DB, check MOCKS (fallback for static content)
+        if (!recipe) {
+          recipe = MOCK_RECIPES.find(r => r.id === entry.receita_id);
+        }
+
+        return {
+          ...entry,
+          receita: recipe
+        };
+      });
+
       setMealPlan(enrichedData);
+    } catch (err) {
+      console.error('Error fetching meal plan:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const deleteMeal = async (entryId: string) => {
@@ -108,23 +133,45 @@ const MealPlanner: React.FC = () => {
       return;
     }
 
-    const cartItems = itemsToAdd.map(ing => ({
-      usuario_id: user.id,
-      nome_item: ing.name,
-      ultimo_preco_informado: 0,
-      unidade_preco: ing.unit,
-      comprado: false
-    }));
+    try {
+      // 1. Fetch existing items in the cart to handle quantity summing
+      const { data: existingItems } = await supabase
+        .from('lista_precos_mercado')
+        .select('*')
+        .eq('usuario_id', user.id);
 
-    const { error } = await supabase.from('lista_precos_mercado').upsert(cartItems, { onConflict: 'usuario_id,nome_item' });
+      const existingMap = new Map<string, any>();
+      existingItems?.forEach(item => {
+        existingMap.set(item.nome_item, item);
+      });
 
-    if (error) {
-      console.error('Error generating shopping list:', error);
-      alert('Erro ao gerar lista: ' + error.message);
-    } else {
-      alert(`${itemsToAdd.length} itens foram adicionados ao seu carrinho de compras!`);
+      // 2. Prepare final items list (summing with existing)
+      const finalItems = itemsToAdd.map(ing => {
+        const existing = existingMap.get(ing.name);
+        const quantity = existing
+          ? Number(existing.quantidade || 0) + Number(ing.quantity)
+          : Number(ing.quantity);
+
+        return {
+          usuario_id: user.id,
+          nome_item: ing.name,
+          quantidade: quantity,
+          ultimo_preco_informado: existing ? existing.ultimo_preco_informado : 0,
+          unidade_preco: ing.unit,
+          comprado: existing ? existing.comprado : false
+        };
+      });
+
+      const { error } = await supabase.from('lista_precos_mercado').upsert(finalItems, { onConflict: 'usuario_id,nome_item' });
+
+      if (error) throw error;
+
+      alert(`${itemsToAdd.length} itens foram processados e adicionados ao seu carrinho!`);
       setIsGeneratingList(false);
       navigate('/cart');
+    } catch (error: any) {
+      console.error('Error generating shopping list:', error);
+      alert('Erro ao gerar lista: ' + error.message);
     }
   };
 
