@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabaseClient';
 
-const SUPABASE_FUNCTIONS_URL = import.meta.env.VITE_SUPABASE_URL?.replace('/rest/v1', '/functions/v1');
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
 
 export interface CreateSubscriptionParams {
     plan: 'free' | 'simple' | 'premium';

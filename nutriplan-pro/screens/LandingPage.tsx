@@ -8,29 +8,7 @@ const LandingPage: React.FC = () => {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const handleSubscribe = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!email) return;
 
-        setLoading(true);
-        try {
-            const { error } = await supabase
-                .from('leads')
-                .insert([{ email, created_at: new Date().toISOString() }]);
-
-            if (error) {
-                throw error;
-            }
-
-            alert("Obrigado pelo interesse! Em breve entraremos em contato.");
-            setEmail("");
-        } catch (error) {
-            console.error('Error adding lead:', error);
-            alert("Erro ao salvar. Tente novamente mais tarde.");
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <div className="min-h-screen bg-dark-bg text-gray-200 selection:bg-neon-green selection:text-black font-sans">
@@ -70,37 +48,31 @@ const LandingPage: React.FC = () => {
                         A maneira mais inteligente de organizar suas refeições. Planeje, economize e tenha controle total do seu carrinho.
                     </p>
 
-                    <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto mt-8">
-                        <input
-                            type="email"
-                            placeholder="Quer montar sua lista agora? Informe o seu e-mail"
-                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon-green focus:ring-1 focus:ring-neon-green transition-all"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
+                    <div className="pt-12">
                         <button
-                            type="submit"
-                            disabled={loading}
-                            className="bg-neon-green text-black font-bold py-3 px-8 rounded-lg hover:shadow-glow-hover transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                            onClick={() => navigate('/register')}
+                            className="bg-neon-green text-black font-bold py-4 px-12 rounded-xl text-lg hover:shadow-glow-hover transition-all transform hover:-translate-y-1"
                         >
-                            {loading ? "Enviando..." : "Assinar"}
+                            Começar Agora Gratuitamente
                         </button>
-                    </form>
-                </div>
-            </section>
+                    </div>
 
-            {/* Features Section */}
-            <section className="py-20 px-6">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+                    <div className="pt-20 animate-fade-in">
+                        <h2 className="text-2xl md:text-4xl font-bold text-white mb-2">
                             Por que usar a <span className="text-neon-green">MENU LIST</span>?
                         </h2>
-                        <p className="text-gray-400 text-lg">
+                        <p className="text-gray-400 text-base max-w-xl mx-auto">
                             Ferramentas poderosas para transformar sua relação com o supermercado e a cozinha.
                         </p>
                     </div>
+                </div>
+            </section>
+
+            {/* Features Title (already in Hero) */}
+
+            {/* Features Grid */}
+            <section className="py-20 px-6">
+                <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <FeatureCard
                             icon={<ChefHat className="w-6 h-6" />}
@@ -183,10 +155,10 @@ const LandingPage: React.FC = () => {
                         />
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* FAQ Section */}
-            <section className="py-20 px-6">
+            < section className="py-20 px-6" >
                 <div className="max-w-3xl mx-auto space-y-8">
                     <h2 className="text-3xl font-bold text-center text-white">Perguntas Frequentes</h2>
                     <div className="space-y-4">
@@ -196,13 +168,13 @@ const LandingPage: React.FC = () => {
                         <FAQItem question="Quais tipos de listas consigo montar?" answer="Você pode montar listas baseadas em receitas, listas avulsas, e listas compartilhadas com a família." />
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* Footer */}
-            <footer className="py-8 bg-black border-t border-white/10 text-center text-gray-500 text-sm">
+            < footer className="py-8 bg-black border-t border-white/10 text-center text-gray-500 text-sm" >
                 <p>&copy; {new Date().getFullYear()} MENU LIST. Todos os direitos reservados.</p>
-            </footer>
-        </div>
+            </footer >
+        </div >
     );
 };
 

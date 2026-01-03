@@ -1,7 +1,7 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+// Initialize Supabase Function URL
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
+import { supabase } from "../lib/supabaseClient";
 
 export interface ExtractedIngredient {
     name: string;
@@ -20,60 +20,23 @@ export interface ExtractedRecipe {
 
 export const extractRecipeFromText = async (recipeText: string): Promise<ExtractedRecipe> => {
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const { data: { session } } = await supabase.auth.getSession();
 
-        const prompt = `
-Você é um assistente especializado em nutrição e culinária. Analise o seguinte texto de receita e extraia as informações em formato JSON.
+        const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/process-recipe-ai`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session?.access_token || ''}`,
+            },
+            body: JSON.stringify({ recipeText }),
+        });
 
-TEXTO DA RECEITA:
-${recipeText}
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Falha ao processar a receita com IA');
+        }
 
-INSTRUÇÕES:
-1. Extraia o nome da receita
-2. Para cada ingrediente, extraia:
-   - nome (normalizado, sem artigos)
-   - quantidade (número)
-   - unidade (g, kg, ml, L, unidade, xícara, colher, etc.)
-   - caloriesPerUnit: estime as calorias por 100g ou por unidade (use conhecimento nutricional)
-   - totalCalories: calcule (quantidade * caloriesPerUnit / 100) se for em gramas, ou (quantidade * caloriesPerUnit) se for unidade
-
-3. Calcule o total de calorias da receita (soma de todos os ingredientes)
-
-IMPORTANTE:
-- Se a unidade for "xícara", converta para gramas (1 xícara ≈ 240ml ou 120-150g dependendo do ingrediente)
-- Se a unidade for "colher de sopa", converta para gramas (1 colher ≈ 15ml ou 10-15g)
-- Para ingredientes sem quantidade específica (ex: "sal a gosto"), use 0 calorias
-- Normalize as unidades para: g, kg, ml, L, ou unidade
-
-Retorne APENAS um objeto JSON válido no seguinte formato (sem markdown, sem explicações):
-{
-  "name": "Nome da Receita",
-  "ingredients": [
-    {
-      "name": "farinha de trigo",
-      "quantity": 500,
-      "unit": "g",
-      "caloriesPerUnit": 364,
-      "totalCalories": 1820
-    }
-  ],
-  "totalCalories": 0,
-  "instructions": "Modo de preparo extraído (opcional)"
-}
-`;
-
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-
-        // Clean the response to extract JSON
-        let jsonText = text.trim();
-
-        // Remove markdown code blocks if present
-        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-
-        // Parse the JSON
-        const extractedData: ExtractedRecipe = JSON.parse(jsonText);
+        const extractedData: ExtractedRecipe = await response.json();
 
         // Recalculate total calories to ensure accuracy
         extractedData.totalCalories = extractedData.ingredients.reduce(
@@ -84,30 +47,12 @@ Retorne APENAS um objeto JSON válido no seguinte formato (sem markdown, sem exp
         return extractedData;
     } catch (error) {
         console.error('Error extracting recipe:', error);
-        throw new Error('Falha ao processar a receita com IA. Verifique o formato do texto.');
+        throw new Error(error instanceof Error ? error.message : 'Falha ao processar a receita com IA.');
     }
 };
 
 // Estimate calories for a single ingredient (fallback function)
 export const estimateIngredientCalories = async (ingredientName: string, quantity: number, unit: string): Promise<number> => {
-    try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-        const prompt = `
-Estime as calorias para o seguinte ingrediente:
-Ingrediente: ${ingredientName}
-Quantidade: ${quantity} ${unit}
-
-Retorne APENAS um número (as calorias totais estimadas). Sem texto adicional.
-`;
-
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text().trim();
-
-        return parseInt(text) || 0;
-    } catch (error) {
-        console.error('Error estimating calories:', error);
-        return 0;
-    }
+    // This could also be moved to Edge Function if needed, for now we keep it simple
+    return 0;
 };

@@ -21,6 +21,16 @@ import ThankYou from './nutriplan-pro/screens/ThankYou';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 
+const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <div className="min-h-screen bg-slate-100 dark:bg-black flex justify-center">
+      <div className="w-full max-w-md bg-background-light dark:bg-background-dark min-h-screen relative shadow-2xl overflow-x-hidden">
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
 
@@ -33,68 +43,40 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display">
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login onLogin={() => { }} />} />
-        <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register onRegister={() => { }} />} />
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login onLogin={() => { }} />} />
+      <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register onRegister={() => { }} />} />
 
-        <Route
-          path="/dashboard"
-          element={user ? <Dashboard /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/search"
-          element={user ? <Search /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/recipe/:id"
-          element={user ? <RecipeDetails /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/planner"
-          element={user ? <MealPlanner /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/create-recipe"
-          element={user ? <CreateRecipe /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/cart"
-          element={user ? <ShoppingCart /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/profile"
-          element={user ? <Profile onLogout={() => { }} /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/favorites"
-          element={user ? <Favorites /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/history"
-          element={user ? <MealHistory /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/saved-lists"
-          element={user ? <SavedLists /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/water-log"
-          element={user ? <WaterLog /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/notifications"
-          element={user ? <Notifications /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/scan"
-          element={user ? <Scan /> : <Navigate to="/login" />}
-        />
-        <Route path="/checkout/:plan" element={<Checkout />} />
-        <Route path="/thank-you" element={<ThankYou />} />
-      </Routes>
-    </div>
+      <Route
+        path="/*"
+        element={
+          user ? (
+            <AppLayout>
+              <Routes>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/search" element={<Search />} />
+                <Route path="/recipe/:id" element={<RecipeDetails />} />
+                <Route path="/planner" element={<MealPlanner />} />
+                <Route path="/create-recipe" element={<CreateRecipe />} />
+                <Route path="/cart" element={<ShoppingCart />} />
+                <Route path="/profile" element={<Profile onLogout={() => { }} />} />
+                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/history" element={<MealHistory />} />
+                <Route path="/saved-lists" element={<SavedLists />} />
+                <Route path="/water-log" element={<WaterLog />} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/scan" element={<Scan />} />
+                <Route path="/checkout/:plan" element={<Checkout />} />
+                <Route path="/thank-you" element={<ThankYou />} />
+              </Routes>
+            </AppLayout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+    </Routes>
   );
 };
 
