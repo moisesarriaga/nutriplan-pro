@@ -83,11 +83,12 @@ Retorne APENAS um objeto JSON válido no seguinte formato (sem markdown, sem exp
             }
         )
     } catch (error) {
-        console.error('AI Error:', error)
+        console.error('AI Error processing recipe:', error)
         return new Response(
             JSON.stringify({
                 success: false,
-                error: error.message,
+                error: `AI Error: ${error.message || 'Unknown error during processing'}`,
+                details: error.toString()
             }),
             {
                 status: 400,

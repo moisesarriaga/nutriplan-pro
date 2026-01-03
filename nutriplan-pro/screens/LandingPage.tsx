@@ -14,7 +14,7 @@ const LandingPage: React.FC = () => {
         <div className="min-h-screen bg-dark-bg text-gray-200 selection:bg-neon-green selection:text-black font-sans">
             {/* Navbar */}
             <nav className="fixed top-0 w-full z-50 bg-dark-bg/80 backdrop-blur-md border-b border-white/5">
-                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                <div className="max-w-[1000px] mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-white font-bold text-xl tracking-tight">
                         <span>MENU</span>
                         <span className="text-neon-green">LIST</span>
@@ -72,7 +72,7 @@ const LandingPage: React.FC = () => {
 
             {/* Features Grid */}
             <section className="py-20 px-6">
-                <div className="max-w-7xl mx-auto">
+                <div className="max-w-[1000px] mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <FeatureCard
                             icon={<ChefHat className="w-6 h-6" />}
@@ -100,7 +100,7 @@ const LandingPage: React.FC = () => {
 
             {/* Pricing Section */}
             <section className="py-20 px-6">
-                <div className="max-w-7xl mx-auto">
+                <div className="max-w-[1000px] mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Escolha o plano ideal</h2>
                         <p className="text-gray-400 text-lg">

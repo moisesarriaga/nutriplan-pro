@@ -123,8 +123,8 @@ serve(async (req) => {
 
         if (!mpResponse.ok) {
             const errorData = await mpResponse.json()
-            console.error('Mercado Pago error:', errorData)
-            throw new Error('Failed to create subscription in Mercado Pago')
+            console.error('Mercado Pago error details:', JSON.stringify(errorData))
+            throw new Error(`Mercado Pago Error: ${errorData.message || 'Failed to create subscription'}`)
         }
 
         const mpData = await mpResponse.json()
