@@ -32,7 +32,7 @@ const CreateRecipe: React.FC = () => {
       setShowPreview(true);
     } catch (error) {
       console.error('Error processing recipe:', error);
-      alert('Erro ao processar receita com IA. Verifique sua API key do Gemini.');
+      alert('Erro ao processar receita: ' + (error instanceof Error ? error.message : 'Verifique sua configuração da API do Gemini e se o serviço está ativo.'));
     } finally {
       setIsProcessing(false);
     }

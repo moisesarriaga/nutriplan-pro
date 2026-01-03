@@ -1,7 +1,6 @@
 // Initialize Supabase Function URL
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
-import { supabase } from "../lib/supabaseClient";
+import { supabase, supabaseUrl } from "../lib/supabaseClient";
+const SUPABASE_FUNCTIONS_URL = `${supabaseUrl}/functions/v1`;
 
 export interface ExtractedIngredient {
     name: string;

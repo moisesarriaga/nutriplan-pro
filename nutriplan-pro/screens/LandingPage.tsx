@@ -40,7 +40,7 @@ const LandingPage: React.FC = () => {
                 {/* Glow Effect */}
                 <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-neon-green/20 rounded-full blur-[100px] -z-10" />
 
-                <div className="max-w-4xl mx-auto text-center space-y-8">
+                <div className="max-w-[1000px] mx-auto text-center space-y-8">
                     <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-tight">
                         Economize <span className="text-neon-green">tempo</span> e <span className="text-neon-green">dinheiro</span> nas suas compras!
                     </h1>
