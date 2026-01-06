@@ -1,0 +1,22 @@
+{
+  "devFiles": [],
+  "ampDevFiles": [],
+  "polyfillFiles": [
+    "static/chunks/ef507_next_dist_build_polyfills_polyfill-nomodule.js"
+  ],
+  "lowPriorityFiles": [],
+  "rootMainFiles": [
+    "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_68f42592._.js",
+    "static/chunks/ef507_next_dist_compiled_react-dom_43f10383._.js",
+    "static/chunks/ef507_next_dist_compiled_react-server-dom-turbopack_dc74d7c9._.js",
+    "static/chunks/ef507_next_dist_compiled_next-devtools_index_82e7cecf.js",
+    "static/chunks/ef507_next_dist_compiled_d695239e._.js",
+    "static/chunks/ef507_next_dist_client_6c69c39c._.js",
+    "static/chunks/ef507_next_dist_457bc8d1._.js",
+    "static/chunks/ef507_@swc_helpers_cjs_7f6a391c._.js",
+    "static/chunks/OneDrive_Downloads_nutriplan-pro_menu-list-lp_a0ff3932._.js",
+    "static/chunks/turbopack-OneDrive_Downloads_nutriplan-pro_menu-list-lp_acdd2f9e._.js"
+  ],
+  "pages": {},
+  "ampFirstPages": []
+}
