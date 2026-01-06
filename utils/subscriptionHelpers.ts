@@ -26,8 +26,12 @@ export const createSubscription = async (
             throw new Error('Usuário não autenticado');
         }
 
-        const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://uuhebbtjphitogxcxlix.supabase.co';
-        const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1aGViYnRqcGhpdG9neGN4bGl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MjIxMDEsImV4cCI6MjA4MjA5ODEwMX0.w-myAcVCtxaIyRiPqTAXrBdokMDCsS1QCZUuFnQUlr4';
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+        if (!supabaseUrl || !supabaseAnonKey) {
+            throw new Error('Missing Supabase configuration');
+        }
 
         const response = await fetch(`${supabaseUrl}/functions/v1/create-subscription`, {
             method: 'POST',
@@ -67,8 +71,12 @@ export const getPaymentMethods = async () => {
             return [];
         }
 
-        const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://uuhebbtjphitogxcxlix.supabase.co';
-        const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1aGViYnRqcGhpdG9neGN4bGl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MjIxMDEsImV4cCI6MjA4MjA5ODEwMX0.w-myAcVCtxaIyRiPqTAXrBdokMDCsS1QCZUuFnQUlr4';
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+        if (!supabaseUrl || !supabaseAnonKey) {
+            throw new Error('Missing Supabase configuration');
+        }
 
         const response = await fetch(`${supabaseUrl}/functions/v1/payment-methods`, {
             method: 'POST',
