@@ -33,37 +33,33 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const authHeader = req.headers.get('authorization')
+        const authHeader = req.headers.get("authorization")
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!authHeader) {
             return new Response(
-                JSON.stringify({ success: false, error: 'Missing or invalid Authorization header' }),
-                { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                JSON.stringify({ success: false, error: "Missing Authorization header" }),
+                { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             )
         }
 
-        const jwt = authHeader.replace('Bearer ', '')
+        const jwt = authHeader.replace("Bearer ", "")
 
         const supabaseAuth = createClient(
-            Deno.env.get('SUPABASE_URL')!,
-            Deno.env.get('SUPABASE_ANON_KEY')!,
-            {
-                global: {
-                    headers: {
-                        Authorization: `Bearer ${jwt}`,
-                    },
-                },
-            }
+            Deno.env.get("SUPABASE_URL")!,
+            Deno.env.get("SUPABASE_ANON_KEY")!
         )
 
-        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
+        const { data: { user }, error } =
+            await supabaseAuth.auth.getUser(jwt)
 
-        if (userError || !user) {
-            return new Response(JSON.stringify({ success: false, error: 'Invalid JWT' }), {
-                status: 401,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
+        if (error || !user) {
+            console.error("JWT validation error:", error)
+            return new Response(
+                JSON.stringify({ success: false, error: "Invalid JWT" }),
+                { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            )
         }
+
 
         console.log("Authenticated user:", user.id);
 
