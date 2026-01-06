@@ -26,12 +26,15 @@ const PLANS = {
 };
 
 Deno.serve(async (req) => {
+    console.log("Function create-subscription called");
+
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders });
     }
 
     try {
         const authHeader = req.headers.get('Authorization');
+        console.log('Auth header present:', !!authHeader);
         if (!authHeader) {
             return new Response(JSON.stringify({ success: false, error: 'Missing Authorization header' }), {
                 status: 401,
