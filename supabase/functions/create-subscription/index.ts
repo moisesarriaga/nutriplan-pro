@@ -55,21 +55,18 @@ Deno.serve(async (req) => {
         if (user) console.log("User verified:", user.id);
 
         if (userError || !user) {
-            console.error("AUTH FAILED DETAILS:", JSON.stringify(userError));
-
+            console.error("Auth Fail:", userError);
             return new Response(JSON.stringify({
                 success: false,
                 error: 'Authentication Failed',
-                details: userError?.message || 'No user found from getUser()',
-                debug_header_present: !!authHeader,
-                debug_header_len: authHeader?.length
+                details: userError?.message || 'User is null'
             }), {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
         }
 
-        console.log("Authenticated user:", user.id);
+        console.log("User verified");
 
         // Client 2: Service Role for Admin operations (DB/Mercado Pago)
         const supabaseAdmin = createClient(
