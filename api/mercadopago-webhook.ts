@@ -50,6 +50,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             id: data.data?.id || data.id,
         });
 
+        if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+            return res.status(200).json({
+                success: false,
+                error: `Supabase configuration missing on server. URL: ${!!SUPABASE_URL}, KEY: ${!!SUPABASE_SERVICE_ROLE_KEY}`
+            });
+        }
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
         // Handle different webhook events

@@ -64,6 +64,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const selectedPlan = PLANS[plan as keyof typeof PLANS];
 
         // Initialize Supabase client
+        if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+            return res.status(500).json({
+                success: false,
+                error: `Supabase configuration missing on server. URL: ${!!SUPABASE_URL}, KEY: ${!!SUPABASE_SERVICE_ROLE_KEY}`
+            });
+        }
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
         // Check if user already has a subscription
