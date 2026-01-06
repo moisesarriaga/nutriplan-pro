@@ -33,25 +33,47 @@ Deno.serve(async (req) => {
     }
 
     try {
-        // Initialize Supabase Client with Service Role Key for Admin privileges (DB writes)
-        // We trust the Gateway validation for user identity
-        const supabaseClient = createClient(
-            Deno.env.get('SUPABASE_URL')!,
-            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        );
+        const authHeader = req.headers.get('Authorization');
 
-        // Check for x-supabase-user header injected by Gateway (verify_jwt = true)
-        const userHeader = req.headers.get("x-supabase-user");
-
-        if (!userHeader) {
-            return new Response(JSON.stringify({ success: false, error: 'Unauthorized: Missing user header' }), {
+        if (!authHeader) {
+            return new Response(JSON.stringify({ success: false, error: 'Missing Authorization header' }), {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
         }
 
-        const user = JSON.parse(userHeader);
+        // Client 1: Validate JWT with Anon Key
+        const supabaseAuth = createClient(
+            Deno.env.get('SUPABASE_URL')!,
+            Deno.env.get('SUPABASE_ANON_KEY')!,
+            {
+                global: {
+                    headers: {
+                        Authorization: authHeader,
+                    },
+                },
+            }
+        );
+
+        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
+
+        if (userError || !user) {
+            return new Response(JSON.stringify({ success: false, error: 'Invalid JWT' }), {
+                status: 401,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+        }
+
         console.log("Authenticated user:", user.id);
+
+        // Client 2: Service Role for Admin operations (DB/Mercado Pago)
+        const supabaseAdmin = createClient(
+            Deno.env.get('SUPABASE_URL')!,
+            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+        );
+
+        // Alias for compatibility with rest of code using supabaseClient
+        const supabaseClient = supabaseAdmin;
 
         const { plan, userId } = await req.json();
 
