@@ -27,13 +27,13 @@ export const createSubscription = async (
         }
 
         const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://uuhebbtjphitogxcxlix.supabase.co';
-        const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1aGViYnRqcGhpdG9neGN4bGl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MjIxMDEsImV4cCI6MjA4MjA5ODEwMX0.w-myAcVCtxaIyRiPqTAXrBdokMDCsS1QCZUuFnQUlr4';
+        const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 'sb_publishable_sDrDGEtCFmMKKYJDtPRCKQ_fLTd8Jbq';
 
         const response = await fetch(`${supabaseUrl}/functions/v1/create-subscription`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'apikey': (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || supabaseAnonKey,
+                'apikey': supabaseAnonKey,
                 'Authorization': `Bearer ${session.access_token}`
             },
             body: JSON.stringify(params)
@@ -68,13 +68,13 @@ export const getPaymentMethods = async () => {
         }
 
         const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://uuhebbtjphitogxcxlix.supabase.co';
-        const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1aGViYnRqcGhpdG9neGN4bGl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MjIxMDEsImV4cCI6MjA4MjA5ODEwMX0.w-myAcVCtxaIyRiPqTAXrBdokMDCsS1QCZUuFnQUlr4';
+        const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 'sb_publishable_sDrDGEtCFmMKKYJDtPRCKQ_fLTd8Jbq';
 
         const response = await fetch(`${supabaseUrl}/functions/v1/payment-methods`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'apikey': (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || supabaseAnonKey,
+                'apikey': supabaseAnonKey,
                 'Authorization': `Bearer ${session.access_token}`
             }
         });
