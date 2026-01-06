@@ -60,10 +60,9 @@ const Checkout: React.FC = () => {
         setError(null);
 
         try {
-            const response = await createSubscription({
-                plan: plan as 'free' | 'simple' | 'premium',
-                userId: user.id,
-            });
+            const response = await createSubscription(
+                plan as 'free' | 'simple' | 'premium'
+            );
 
             if (!response.success) {
                 throw new Error(response.error || 'Erro ao criar assinatura');

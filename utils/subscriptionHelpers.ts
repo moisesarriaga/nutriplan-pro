@@ -1,9 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 
-export interface CreateSubscriptionParams {
-    plan: 'free' | 'simple' | 'premium';
-    userId: string;
-}
+
 
 export interface CreateSubscriptionResponse {
     success: boolean;
@@ -17,7 +14,7 @@ export interface CreateSubscriptionResponse {
  * Creates a subscription via Supabase Edge Function
  */
 export const createSubscription = async (
-    params: CreateSubscriptionParams
+    plan: string
 ): Promise<CreateSubscriptionResponse> => {
     try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -40,7 +37,10 @@ export const createSubscription = async (
                 'apikey': supabaseAnonKey,
                 'Authorization': `Bearer ${session.access_token}`
             },
-            body: JSON.stringify(params)
+            body: JSON.stringify({
+                plan,
+                userId: session.user.id
+            })
         });
 
         const data = await response.json();
@@ -52,10 +52,7 @@ export const createSubscription = async (
         return data;
     } catch (error) {
         console.error('Error creating subscription:', error);
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
-        };
+        throw error; // Re-throw to be caught by caller
     }
 };
 
