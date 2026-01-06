@@ -30,7 +30,7 @@ const Checkout: React.FC = () => {
         const initMP = async () => {
             try {
                 await loadMercadoPago();
-                const publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
+                const publicKey = (import.meta as any).env.VITE_MERCADOPAGO_PUBLIC_KEY;
                 if (publicKey) {
                     new (window as any).MercadoPago(publicKey);
                     setMpInitialized(true);
