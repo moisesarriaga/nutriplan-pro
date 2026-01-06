@@ -16,29 +16,20 @@ export interface CreateSubscriptionResponse {
 }
 
 /**
- * Creates a subscription via Node.js API
+ * Creates a subscription via Supabase Edge Function
  */
 export const createSubscription = async (
     params: CreateSubscriptionParams
 ): Promise<CreateSubscriptionResponse> => {
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-
-        const response = await fetch(`${API_BASE_URL}/create-subscription`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` }),
-            },
-            body: JSON.stringify(params),
+        const { data, error } = await supabase.functions.invoke('create-subscription', {
+            body: params,
+            method: 'POST'
         });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to create subscription');
+        if (error) {
+            throw error;
         }
-
 
         return data;
     } catch (error) {
@@ -51,21 +42,16 @@ export const createSubscription = async (
 };
 
 /**
- * Gets available payment methods from Mercado Pago
+ * Gets available payment methods from Mercado Pago via Supabase Edge Function
  */
 export const getPaymentMethods = async () => {
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-
-        const response = await fetch(`${API_BASE_URL}/payment-methods`, {
-            headers: {
-                ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` }),
-            }
+        const { data, error } = await supabase.functions.invoke('payment-methods', {
+            method: 'POST'
         });
-        const data = await response.json();
 
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to fetch payment methods');
+        if (error) {
+            throw error;
         }
 
         return data;
