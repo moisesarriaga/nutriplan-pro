@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const authHeader = req.headers.get('Authorization');
+        const authHeader = req.headers.get('authorization');
 
         if (!authHeader) {
             return new Response(JSON.stringify({ success: false, error: 'Missing Authorization header' }), {
