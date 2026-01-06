@@ -26,16 +26,23 @@ export const createSubscription = async (
             throw new Error('Usuário não autenticado');
         }
 
-        const { data, error } = await supabase.functions.invoke('create-subscription', {
-            body: params,
+        const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL || 'https://uuhebbtjphitogxcxlix.supabase.co';
+        const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY || 'sb_publishable_wEjqiGpgZNfxWXKg9p68nw_NrvegKNb';
+
+        const response = await fetch(`${supabaseUrl}/functions/v1/create-subscription`, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${session.access_token}`
-            }
+                'Content-Type': 'application/json',
+                'apikey': supabaseAnonKey,
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify(params)
         });
 
-        if (error) {
-            throw error;
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || data.message || `Erro ${response.status}: ${response.statusText}`);
         }
 
         return data;
@@ -60,18 +67,24 @@ export const getPaymentMethods = async () => {
             return [];
         }
 
-        const { data, error } = await supabase.functions.invoke('payment-methods', {
+        const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL || 'https://uuhebbtjphitogxcxlix.supabase.co';
+        const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY || 'sb_publishable_wEjqiGpgZNfxWXKg9p68nw_NrvegKNb';
+
+        const response = await fetch(`${supabaseUrl}/functions/v1/payment-methods`, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${session.access_token}`
+                'Content-Type': 'application/json',
+                'apikey': supabaseAnonKey,
+                'Authorization': `Bearer ${session.access_token}`
             }
         });
 
-        if (error) {
-            throw error;
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || errorData.message || `Erro ${response.status}`);
         }
 
-        return data;
+        return await response.json();
     } catch (error) {
         console.error('Error fetching payment methods:', error);
         return [];
