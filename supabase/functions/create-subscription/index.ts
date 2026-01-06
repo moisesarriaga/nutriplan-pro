@@ -42,28 +42,22 @@ Deno.serve(async (req) => {
             });
         }
 
-        // Client 1: Validate JWT with Anon Key
-        const supabaseAuth = createClient(
+        const authHeader = req.headers.get('authorization')!;
+        const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL')!,
             Deno.env.get('SUPABASE_ANON_KEY')!,
-            {
-                global: {
-                    headers: {
-                        authorization: authHeader,
-                    },
-                },
-            }
+            { global: { headers: { Authorization: authHeader } } }
         );
 
-        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
+        // Pega o usuário do JWT que o Gateway já confirmou ser válido
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
         if (userError || !user) {
-            return new Response(JSON.stringify({ success: false, error: 'Invalid JWT' }), {
+            return new Response(JSON.stringify({ error: 'Invalid user session' }), {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
         }
-
         console.log("Authenticated user:", user.id);
 
         // Client 2: Service Role for Admin operations (DB/Mercado Pago)
