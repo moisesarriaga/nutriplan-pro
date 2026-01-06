@@ -23,12 +23,10 @@ export const createSubscription = async (
             throw new Error('Usuário não autenticado');
         }
 
-        const { data, error } = await supabase.functions.invoke('create-subscription', {
-            body: {
-                plan,
-                userId: session.user.id
-            }
-        });
+        const { data, error } = await supabase.functions.invoke(
+            "create-subscription",
+            { body: { plan, userId: session.user.id } }
+        );
 
         if (error) {
             throw new Error(error.message || 'Erro ao criar assinatura');
