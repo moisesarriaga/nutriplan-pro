@@ -46,8 +46,7 @@ Deno.serve(async (req) => {
             }
         );
 
-        const { data: { session } } = await supabase.auth.getSession()
-        console.log("access_token:", session.access_token)
+        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
 
         if (userError || !user) {
             return new Response(JSON.stringify({ success: false, error: 'Invalid User' }), {
