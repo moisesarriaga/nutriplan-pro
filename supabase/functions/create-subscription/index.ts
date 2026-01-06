@@ -33,14 +33,17 @@ Deno.serve(async (req) => {
     }
 
     try {
-        // Client 1: Validate JWT with Anon Key (Gateway verified)
+        const authHeader = req.headers.get('Authorization');
+        console.log("Auth Header present:", !!authHeader);
+
+        // Client 1: Validate JWT with Anon Key
         const supabaseAuth = createClient(
             Deno.env.get('SUPABASE_URL')!,
             Deno.env.get('SUPABASE_ANON_KEY')!,
             {
                 global: {
                     headers: {
-                        authorization: req.headers.get('Authorization')!,
+                        authorization: authHeader!,
                     },
                 },
             }
@@ -48,8 +51,11 @@ Deno.serve(async (req) => {
 
         const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
 
+        if (userError) console.error("Auth Error:", userError);
+        if (user) console.log("User verified:", user.id);
+
         if (userError || !user) {
-            return new Response(JSON.stringify({ success: false, error: 'Invalid User' }), {
+            return new Response(JSON.stringify({ success: false, error: 'Invalid User', details: userError }), {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
