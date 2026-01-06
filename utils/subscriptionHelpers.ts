@@ -1,6 +1,6 @@
 import { supabase, supabaseUrl } from '../lib/supabaseClient';
 
-const SUPABASE_FUNCTIONS_URL = `${supabaseUrl}/functions/v1`;
+const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 
 export interface CreateSubscriptionParams {
     plan: 'free' | 'simple' | 'premium';
@@ -16,23 +16,16 @@ export interface CreateSubscriptionResponse {
 }
 
 /**
- * Creates a subscription via Supabase Edge Function
+ * Creates a subscription via Node.js API
  */
 export const createSubscription = async (
     params: CreateSubscriptionParams
 ): Promise<CreateSubscriptionResponse> => {
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!session) {
-            throw new Error('User not authenticated');
-        }
-
-        const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/create-subscription`, {
+        const response = await fetch(`${API_BASE_URL}/create-subscription`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`,
             },
             body: JSON.stringify(params),
         });
@@ -42,6 +35,7 @@ export const createSubscription = async (
         if (!response.ok) {
             throw new Error(data.error || 'Failed to create subscription');
         }
+
 
         return data;
     } catch (error) {

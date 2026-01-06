@@ -1,0 +1,148 @@
+import { createClient } from '@supabase/supabase-js';
+import mercadopago from 'mercadopago';
+import { VercelRequest, VercelResponse } from '@vercel/node';
+
+// Configure Mercado Pago
+const client = new mercadopago.MercadoPagoConfig({
+    accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || ''
+});
+const preApproval = new mercadopago.PreApproval(client);
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const APP_URL = process.env.APP_URL || 'https://nutriplan-pro-six.vercel.app/';
+
+const PLANS = {
+    free: {
+        name: 'Grátis',
+        price: 0,
+        description: 'Para quem está começando a se organizar',
+    },
+    simple: {
+        name: 'Simples',
+        price: 39.90,
+        description: 'O essencial para ter controle total',
+    },
+    premium: {
+        name: 'Premium',
+        price: 59.90,
+        description: 'Para famílias que buscam praticidade máxima',
+    },
+};
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+    // Handle CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    try {
+        const { plan, userId } = req.body;
+
+        if (!plan || !userId) {
+            return res.status(400).json({ error: 'Plan and userId are required' });
+        }
+
+        if (!PLANS[plan as keyof typeof PLANS]) {
+            return res.status(400).json({ error: 'Invalid plan' });
+        }
+
+        const selectedPlan = PLANS[plan as keyof typeof PLANS];
+
+        // Initialize Supabase client
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+        // Check if user already has a subscription
+        const { data: existingSubscription } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+        // If free plan, just create/update subscription
+        if (plan === 'free') {
+            if (existingSubscription) {
+                await supabase
+                    .from('subscriptions')
+                    .update({
+                        plan_type: 'free',
+                        status: 'active',
+                        next_payment_date: null,
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq('user_id', userId);
+            } else {
+                await supabase
+                    .from('subscriptions')
+                    .insert({
+                        user_id: userId,
+                        plan_type: 'free',
+                        status: 'active',
+                        next_payment_date: null,
+                    });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: 'Free plan activated',
+                redirect: `${APP_URL}/#/thank-you`,
+            });
+        }
+
+        // For paid plans, create Mercado Pago subscription
+        const preapprovalBody = {
+            reason: `Assinatura ${selectedPlan.name} - MENU LIST`,
+            auto_recurring: {
+                frequency: 1,
+                frequency_type: 'months',
+                transaction_amount: selectedPlan.price,
+                currency_id: 'BRL',
+            },
+            back_url: `${APP_URL}/#/thank-you`,
+            payer_email: '', // Will be filled by Mercado Pago checkout
+            status: 'pending',
+        };
+
+        const mpData = await preApproval.create({ body: preapprovalBody });
+
+        // Store subscription in database
+        const subscriptionData = {
+            user_id: userId,
+            plan_type: plan,
+            status: 'pending',
+            mercadopago_preapproval_id: mpData.id,
+            next_payment_date: null, // Will be set after first payment
+        };
+
+        if (existingSubscription) {
+            await supabase
+                .from('subscriptions')
+                .update(subscriptionData)
+                .eq('user_id', userId);
+        } else {
+            await supabase
+                .from('subscriptions')
+                .insert(subscriptionData);
+        }
+
+        return res.status(200).json({
+            success: true,
+            init_point: mpData.init_point,
+            preapproval_id: mpData.id,
+        });
+    } catch (error: any) {
+        console.error('Error creating subscription:', error);
+        return res.status(500).json({
+            success: false,
+            error: error.message || 'Internal server error',
+        });
+    }
+}
