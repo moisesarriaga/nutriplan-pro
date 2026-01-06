@@ -7,8 +7,6 @@ import path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 dotenv.config();
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || '';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Handle CORS
@@ -21,6 +19,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
+        // Initialize Supabase variables inside handler
+        const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://uuhebbtjphitogxcxlix.supabase.co';
+        const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ||
+            process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
+            process.env.SUPABASE_ANON_KEY ||
+            process.env.VITE_SUPABASE_ANON_KEY ||
+            'sb_publishable_wEjqiGpgZNfxWXKg9p68nw_NrvegKNb';
+
         if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
             return res.status(500).json({
                 success: false,
