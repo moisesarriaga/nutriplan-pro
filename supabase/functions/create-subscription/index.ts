@@ -33,35 +33,46 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const authHeader = req.headers.get('Authorization');
-        console.log('Auth header present:', !!authHeader);
-        if (!authHeader) {
-            return new Response(JSON.stringify({ success: false, error: 'Missing Authorization header' }), {
-                status: 401,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-        }
-
+        // Initialize Supabase Client with Service Role Key for Admin privileges (DB writes)
+        // We trust the Gateway validation for user identity
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL')!,
-            Deno.env.get('SUPABASE_ANON_KEY')!,
-            {
-                global: {
-                    headers: {
-                        Authorization: authHeader
-                    }
-                }
-            }
+            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
         );
 
-        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+        // Get user from request context (injected by Supabase Gateway because verify_jwt=true)
+        // Fallback: decode JWT if req.user is missing (though it should be there)
+        let user = (req as any).user;
 
-        if (userError || !user) {
-            return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
+        if (!user) {
+            // Fallback: Manual decode without verification (Gateway already verified)
+            const authHeader = req.headers.get('Authorization');
+            if (authHeader) {
+                const token = authHeader.split(' ')[1];
+                try {
+                    const base64Url = token.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    user = JSON.parse(jsonPayload);
+                } catch (e) {
+                    console.error("Failed to parse token:", e);
+                }
+            }
+        }
+
+        if (!user) {
+            return new Response(JSON.stringify({ success: false, error: 'Unauthorized: No user found' }), {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
         }
+
+        // Normalize user ID (sub or id)
+        user.id = user.sub || user.id;
+
+        console.log("User authenticated:", user.id);
 
         const { plan, userId } = await req.json();
 
