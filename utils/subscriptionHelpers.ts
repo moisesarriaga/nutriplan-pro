@@ -48,6 +48,25 @@ export const createSubscription = async (
 };
 
 /**
+ * Gets available payment methods from Mercado Pago
+ */
+export const getPaymentMethods = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/payment-methods`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to fetch payment methods');
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Error fetching payment methods:', error);
+        return [];
+    }
+};
+
+/**
  * Gets the current user's subscription
  */
 export const getUserSubscription = async (userId: string) => {

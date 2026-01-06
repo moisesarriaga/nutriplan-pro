@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CreditCard, QrCode, ArrowLeft, Check, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { createSubscription } from '../../utils/subscriptionHelpers';
+import { createSubscription, getPaymentMethods } from '../../utils/subscriptionHelpers';
+import { loadMercadoPago } from "@mercadopago/sdk-js";
 
 const Checkout: React.FC = () => {
     const navigate = useNavigate();
@@ -10,6 +11,7 @@ const Checkout: React.FC = () => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [mpInitialized, setMpInitialized] = useState(false);
 
     const planDetails = {
         free: { name: 'Grátis', price: 0, description: 'Para quem está começando a se organizar.' },
@@ -22,7 +24,28 @@ const Checkout: React.FC = () => {
     useEffect(() => {
         if (!user) {
             navigate('/login');
+            return;
         }
+
+        const initMP = async () => {
+            try {
+                await loadMercadoPago();
+                const publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
+                if (publicKey) {
+                    new (window as any).MercadoPago(publicKey);
+                    setMpInitialized(true);
+                    console.log('Mercado Pago SDK initialized');
+                }
+
+                // Optional: verify payment methods API
+                const methods = await getPaymentMethods();
+                console.log('Available payment methods:', methods);
+            } catch (err) {
+                console.error('Error initializing Mercado Pago:', err);
+            }
+        };
+
+        initMP();
     }, [user, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
