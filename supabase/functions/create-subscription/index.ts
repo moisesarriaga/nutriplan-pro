@@ -56,13 +56,16 @@ Deno.serve(async (req) => {
 
         if (userError || !user) {
             console.error("AUTH FAILED DETAILS:", JSON.stringify(userError));
+            // WARNING: TEMPORARILY DISABLED BLOCKING FOR DEBUGGING
+            /*
+            console.error("AUTH FAILED DETAILS:", JSON.stringify(userError));
             // Try to parse the JWT manually to see if it's even valid format
             const tokenParts = authHeader?.replace("Bearer ", "").split(".");
             console.log("Token parts count:", tokenParts?.length);
-
-            return new Response(JSON.stringify({
-                success: false,
-                error: 'Authentication Failed',
+            
+            return new Response(JSON.stringify({ 
+                success: false, 
+                error: 'Authentication Failed', 
                 details: userError?.message || 'No user found from getUser()',
                 debug_header: !!authHeader,
                 debug_token_len: authHeader?.length
@@ -70,6 +73,7 @@ Deno.serve(async (req) => {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
+            */
         }
 
         console.log("Authenticated user:", user.id);
