@@ -1,10 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'crypto';
-import { TestTube } from 'lucide-react';
+import dotenv from 'dotenv';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+dotenv.config();
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || '';
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || '';
 const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || '';
 
