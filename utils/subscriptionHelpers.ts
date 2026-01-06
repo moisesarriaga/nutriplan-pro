@@ -22,10 +22,13 @@ export const createSubscription = async (
     params: CreateSubscriptionParams
 ): Promise<CreateSubscriptionResponse> => {
     try {
+        const { data: { session } } = await supabase.auth.getSession();
+
         const response = await fetch(`${API_BASE_URL}/create-subscription`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` }),
             },
             body: JSON.stringify(params),
         });
@@ -52,7 +55,13 @@ export const createSubscription = async (
  */
 export const getPaymentMethods = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/payment-methods`);
+        const { data: { session } } = await supabase.auth.getSession();
+
+        const response = await fetch(`${API_BASE_URL}/payment-methods`, {
+            headers: {
+                ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` }),
+            }
+        });
         const data = await response.json();
 
         if (!response.ok) {
