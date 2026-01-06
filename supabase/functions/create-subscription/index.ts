@@ -33,33 +33,36 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const authHeader = req.headers.get("authorization")
+        const authHeader = req.headers.get('authorization');
 
         if (!authHeader) {
-            return new Response(
-                JSON.stringify({ success: false, error: "Missing Authorization header" }),
-                { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            )
+            return new Response(JSON.stringify({ success: false, error: 'Missing Authorization header' }), {
+                status: 401,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
         }
 
-        const jwt = authHeader.replace("Bearer ", "")
-
+        // Client 1: Validate JWT with Anon Key
         const supabaseAuth = createClient(
-            Deno.env.get("SUPABASE_URL")!,
-            Deno.env.get("SUPABASE_ANON_KEY")!
-        )
+            Deno.env.get('SUPABASE_URL')!,
+            Deno.env.get('SUPABASE_ANON_KEY')!,
+            {
+                global: {
+                    headers: {
+                        authorization: authHeader,
+                    },
+                },
+            }
+        );
 
-        const { data: { user }, error } =
-            await supabaseAuth.auth.getUser(jwt)
+        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
 
-        if (error || !user) {
-            console.error("JWT validation error:", error)
-            return new Response(
-                JSON.stringify({ success: false, error: "Invalid JWT" }),
-                { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            )
+        if (userError || !user) {
+            return new Response(JSON.stringify({ success: false, error: 'Invalid JWT' }), {
+                status: 401,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
         }
-
 
         console.log("Authenticated user:", user.id);
 
