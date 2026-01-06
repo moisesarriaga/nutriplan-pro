@@ -40,39 +40,18 @@ Deno.serve(async (req) => {
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
         );
 
-        // Get user from request context (injected by Supabase Gateway because verify_jwt=true)
-        // Fallback: decode JWT if req.user is missing (though it should be there)
-        let user = (req as any).user;
+        // Check for x-supabase-user header injected by Gateway (verify_jwt = true)
+        const userHeader = req.headers.get("x-supabase-user");
 
-        if (!user) {
-            // Fallback: Manual decode without verification (Gateway already verified)
-            const authHeader = req.headers.get('Authorization');
-            if (authHeader) {
-                const token = authHeader.split(' ')[1];
-                try {
-                    const base64Url = token.split('.')[1];
-                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
-                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                    }).join(''));
-                    user = JSON.parse(jsonPayload);
-                } catch (e) {
-                    console.error("Failed to parse token:", e);
-                }
-            }
-        }
-
-        if (!user) {
-            return new Response(JSON.stringify({ success: false, error: 'Unauthorized: No user found' }), {
+        if (!userHeader) {
+            return new Response(JSON.stringify({ success: false, error: 'Unauthorized: Missing user header' }), {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
         }
 
-        // Normalize user ID (sub or id)
-        user.id = user.sub || user.id;
-
-        console.log("User authenticated:", user.id);
+        const user = JSON.parse(userHeader);
+        console.log("Authenticated user:", user.id);
 
         const { plan, userId } = await req.json();
 
