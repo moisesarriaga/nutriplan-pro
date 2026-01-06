@@ -23,36 +23,21 @@ export const createSubscription = async (
             throw new Error('Usuário não autenticado');
         }
 
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-        if (!supabaseUrl || !supabaseAnonKey) {
-            throw new Error('Missing Supabase configuration');
-        }
-
-        const response = await fetch(`${supabaseUrl}/functions/v1/create-subscription`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': supabaseAnonKey,
-                'Authorization': `Bearer ${session.access_token}`
-            },
-            body: JSON.stringify({
+        const { data, error } = await supabase.functions.invoke('create-subscription', {
+            body: {
                 plan,
                 userId: session.user.id
-            })
+            }
         });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || data.message || `Erro ${response.status}: ${response.statusText}`);
+        if (error) {
+            throw new Error(error.message || 'Erro ao criar assinatura');
         }
 
         return data;
     } catch (error) {
         console.error('Error creating subscription:', error);
-        throw error; // Re-throw to be caught by caller
+        throw error;
     }
 };
 

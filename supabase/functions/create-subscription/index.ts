@@ -33,28 +33,23 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const authHeader = req.headers.get('authorization');
-
-        if (!authHeader) {
-            return new Response(JSON.stringify({ success: false, error: 'Missing Authorization header' }), {
-                status: 401,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-        }
-
-        // Remove "Bearer " and send only the token
-        const jwt = authHeader.replace("Bearer ", "");
-
+        // Client 1: Validate JWT with Anon Key (Gateway verified)
         const supabaseAuth = createClient(
             Deno.env.get('SUPABASE_URL')!,
-            Deno.env.get('SUPABASE_ANON_KEY')!
+            Deno.env.get('SUPABASE_ANON_KEY')!,
+            {
+                global: {
+                    headers: {
+                        authorization: req.headers.get('Authorization')!,
+                    },
+                },
+            }
         );
 
-        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(jwt);
+        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
 
         if (userError || !user) {
-            console.error("JWT validation error:", userError);
-            return new Response(JSON.stringify({ success: false, error: 'Invalid JWT' }), {
+            return new Response(JSON.stringify({ success: false, error: 'Invalid User' }), {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
