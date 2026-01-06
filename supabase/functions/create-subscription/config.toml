@@ -1,1 +1,2 @@
+[functions.create-subscription]
 verify_jwt = false
