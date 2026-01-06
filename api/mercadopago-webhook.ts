@@ -2,7 +2,10 @@ import { createClient } from '@supabase/supabase-js';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
+import path from 'path';
 
+// Load environmental variables from .env.local
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 dotenv.config();
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';

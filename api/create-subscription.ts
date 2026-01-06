@@ -1,19 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
-import mercadopago from 'mercadopago';
+import { MercadoPagoConfig, PreApproval } from 'mercadopago';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import dotenv from 'dotenv';
+import path from 'path';
 
+// Load environmental variables from .env.local
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 dotenv.config();
-
-// Configure Mercado Pago
-const client = new mercadopago.MercadoPagoConfig({
-    accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || ''
-});
-const preApproval = new mercadopago.PreApproval(client);
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || '';
 const APP_URL = process.env.APP_URL || 'https://nutriplan-pro-six.vercel.app/';
+
+// Configure Mercado Pago
+const client = new MercadoPagoConfig({
+    accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || ''
+});
+const preApproval = new PreApproval(client);
 
 const PLANS = {
     free: {
