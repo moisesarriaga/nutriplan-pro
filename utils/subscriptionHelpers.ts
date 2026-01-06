@@ -33,7 +33,7 @@ export const createSubscription = async (
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'apikey': (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || supabaseAnonKey,
+                'apikey': (import.meta as any).env.VITE_SUPABASE_ANON_KEY,
                 'Authorization': `Bearer ${session.access_token}`
             },
             body: JSON.stringify(params)
@@ -74,7 +74,7 @@ export const getPaymentMethods = async () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'apikey': (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || supabaseAnonKey,
+                'apikey': (import.meta as any).env.VITE_SUPABASE_ANON_KEY,
                 'Authorization': `Bearer ${session.access_token}`
             }
         });
