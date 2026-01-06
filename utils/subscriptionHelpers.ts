@@ -20,9 +20,18 @@ export const createSubscription = async (
     params: CreateSubscriptionParams
 ): Promise<CreateSubscriptionResponse> => {
     try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+            throw new Error('Usuário não autenticado');
+        }
+
         const { data, error } = await supabase.functions.invoke('create-subscription', {
             body: params,
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${session.access_token}`
+            }
         });
 
         if (error) {
@@ -44,8 +53,18 @@ export const createSubscription = async (
  */
 export const getPaymentMethods = async () => {
     try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+            console.warn('User not authenticated, skipping payment methods fetch');
+            return [];
+        }
+
         const { data, error } = await supabase.functions.invoke('payment-methods', {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${session.access_token}`
+            }
         });
 
         if (error) {
