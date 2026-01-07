@@ -32,174 +32,174 @@ Deno.serve(async (req) => {
         return new Response('ok', { headers: corsHeaders });
     }
 
+
     try {
-        try {
-            const authHeader = req.headers.get('Authorization');
-            if (!authHeader) {
-                return new Response(JSON.stringify({ success: false, error: 'Missing Authorization header' }), {
-                    status: 401,
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                });
-            }
-
-            const supabaseAuth = createClient(
-                Deno.env.get('SUPABASE_URL')!,
-                Deno.env.get('SUPABASE_ANON_KEY')!,
-                {
-                    global: {
-                        headers: {
-                            authorization: authHeader,
-                        },
-                    },
-                }
-            );
-
-            const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
-
-            if (userError || !user) {
-                console.error("Auth Fail:", userError);
-                return new Response(JSON.stringify({
-                    success: false,
-                    error: 'Authentication Failed',
-                    details: userError?.message || 'Invalid JWT'
-                }), {
-                    status: 401,
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                });
-            }
-
-            console.log("User verified:", user.id);
-
-            // Client 2: Service Role for Admin operations (DB/Mercado Pago)
-            const supabaseAdmin = createClient(
-                Deno.env.get('SUPABASE_URL')!,
-                Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-            );
-
-            // Alias for compatibility with rest of code using supabaseClient
-            const supabaseClient = supabaseAdmin;
-
-            const { plan, userId } = await req.json();
-
-            if (!plan || !userId) {
-                return new Response(JSON.stringify({ error: 'Plan and userId are required' }), {
-                    status: 400,
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                });
-            }
-
-            // Enforce ID match for security
-            if (user.id !== userId) {
-                return new Response(JSON.stringify({ error: 'User ID mismatch' }), {
-                    status: 403,
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                });
-            }
-
-            const selectedPlan = PLANS[plan as keyof typeof PLANS];
-            if (!selectedPlan) {
-                return new Response(JSON.stringify({ error: 'Invalid plan' }), {
-                    status: 400,
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                });
-            }
-
-            // Initialize Mercado Pago
-            const client = new MercadoPagoConfig({
-                accessToken: Deno.env.get('MERCADOPAGO_ACCESS_TOKEN') || '',
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) {
+            return new Response(JSON.stringify({ success: false, error: 'Missing Authorization header' }), {
+                status: 401,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
-            const preApproval = new PreApproval(client);
+        }
 
-            // If free plan, just update subscription in DB
-            const { data: existingSubscription } = await supabaseClient
-                .from('subscriptions')
-                .select('*')
-                .eq('user_id', userId)
-                .single();
-
-            const APP_URL = Deno.env.get('APP_URL') || 'https://nutriplan-pro-six.vercel.app/';
-
-            if (plan === 'free') {
-                if (existingSubscription) {
-                    await supabaseClient
-                        .from('subscriptions')
-                        .update({
-                            plan_type: 'free',
-                            status: 'active',
-                            next_payment_date: null,
-                            updated_at: new Date().toISOString(),
-                        })
-                        .eq('user_id', userId);
-                } else {
-                    await supabaseClient
-                        .from('subscriptions')
-                        .insert({
-                            user_id: userId,
-                            plan_type: 'free',
-                            status: 'active',
-                            next_payment_date: null,
-                            updated_at: new Date().toISOString(),
-                        });
-                }
-
-                return new Response(JSON.stringify({
-                    success: true,
-                    message: 'Free plan activated',
-                    redirect: `${APP_URL}/#/thank-you`,
-                }), {
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                });
-            }
-
-            // For paid plans, create Mercado Pago subscription
-            const preapprovalBody = {
-                reason: `Assinatura ${selectedPlan.name} - MENU LIST`,
-                auto_recurring: {
-                    frequency: 1,
-                    frequency_type: 'months',
-                    transaction_amount: selectedPlan.price,
-                    currency_id: 'BRL',
+        const supabaseAuth = createClient(
+            Deno.env.get('SUPABASE_URL')!,
+            Deno.env.get('SUPABASE_ANON_KEY')!,
+            {
+                global: {
+                    headers: {
+                        authorization: authHeader,
+                    },
                 },
-                back_url: `${APP_URL}/#/thank-you`,
-                payer_email: user.email,
-                status: 'pending',
-            };
+            }
+        );
 
-            const mpData = await preApproval.create({ body: preapprovalBody });
+        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
 
-            // Store subscription in database
-            const subscriptionData = {
-                user_id: userId,
-                plan_type: plan,
-                status: 'pending',
-                mercadopago_preapproval_id: mpData.id,
-                next_payment_date: null,
-            };
+        if (userError || !user) {
+            console.error("Auth Fail:", userError);
+            return new Response(JSON.stringify({
+                success: false,
+                error: 'Authentication Failed',
+                details: userError?.message || 'Invalid JWT'
+            }), {
+                status: 401,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+        }
 
+        console.log("User verified:", user.id);
+
+        // Client 2: Service Role for Admin operations (DB/Mercado Pago)
+        const supabaseAdmin = createClient(
+            Deno.env.get('SUPABASE_URL')!,
+            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+        );
+
+        // Alias for compatibility with rest of code using supabaseClient
+        const supabaseClient = supabaseAdmin;
+
+        const { plan, userId } = await req.json();
+
+        if (!plan || !userId) {
+            return new Response(JSON.stringify({ error: 'Plan and userId are required' }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+        }
+
+        // Enforce ID match for security
+        if (user.id !== userId) {
+            return new Response(JSON.stringify({ error: 'User ID mismatch' }), {
+                status: 403,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+        }
+
+        const selectedPlan = PLANS[plan as keyof typeof PLANS];
+        if (!selectedPlan) {
+            return new Response(JSON.stringify({ error: 'Invalid plan' }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+        }
+
+        // Initialize Mercado Pago
+        const client = new MercadoPagoConfig({
+            accessToken: Deno.env.get('MERCADOPAGO_ACCESS_TOKEN') || '',
+        });
+        const preApproval = new PreApproval(client);
+
+        // If free plan, just update subscription in DB
+        const { data: existingSubscription } = await supabaseClient
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+        const APP_URL = Deno.env.get('APP_URL') || 'https://nutriplan-pro-six.vercel.app/';
+
+        if (plan === 'free') {
             if (existingSubscription) {
                 await supabaseClient
                     .from('subscriptions')
-                    .update(subscriptionData)
+                    .update({
+                        plan_type: 'free',
+                        status: 'active',
+                        next_payment_date: null,
+                        updated_at: new Date().toISOString(),
+                    })
                     .eq('user_id', userId);
             } else {
                 await supabaseClient
                     .from('subscriptions')
-                    .insert(subscriptionData);
+                    .insert({
+                        user_id: userId,
+                        plan_type: 'free',
+                        status: 'active',
+                        next_payment_date: null,
+                        updated_at: new Date().toISOString(),
+                    });
             }
 
             return new Response(JSON.stringify({
                 success: true,
-                init_point: mpData.init_point,
-                preapproval_id: mpData.id,
+                message: 'Free plan activated',
+                redirect: `${APP_URL}/#/thank-you`,
             }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
-
-        } catch (error: any) {
-            console.error('Error:', error);
-            return new Response(JSON.stringify({ error: error.message }), {
-                status: 500,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
         }
-    });
+
+        // For paid plans, create Mercado Pago subscription
+        const preapprovalBody = {
+            reason: `Assinatura ${selectedPlan.name} - MENU LIST`,
+            auto_recurring: {
+                frequency: 1,
+                frequency_type: 'months',
+                transaction_amount: selectedPlan.price,
+                currency_id: 'BRL',
+            },
+            back_url: `${APP_URL}/#/thank-you`,
+            payer_email: user.email,
+            status: 'pending',
+        };
+
+        const mpData = await preApproval.create({ body: preapprovalBody });
+
+        // Store subscription in database
+        const subscriptionData = {
+            user_id: userId,
+            plan_type: plan,
+            status: 'pending',
+            mercadopago_preapproval_id: mpData.id,
+            next_payment_date: null,
+        };
+
+        if (existingSubscription) {
+            await supabaseClient
+                .from('subscriptions')
+                .update(subscriptionData)
+                .eq('user_id', userId);
+        } else {
+            await supabaseClient
+                .from('subscriptions')
+                .insert(subscriptionData);
+        }
+
+        return new Response(JSON.stringify({
+            success: true,
+            init_point: mpData.init_point,
+            preapproval_id: mpData.id,
+        }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+
+    } catch (error: any) {
+        console.error('Error:', error);
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+    }
+});
