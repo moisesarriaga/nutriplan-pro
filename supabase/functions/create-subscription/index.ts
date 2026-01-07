@@ -45,19 +45,26 @@ Deno.serve(async (req) => {
             });
         }
 
-        const supabaseAuth = createClient(
+        const token = authHeader.replace('Bearer ', '');
+
+        // Initialize Admin Client (Service Role)
+        const supabaseAdmin = createClient(
             Deno.env.get('SUPABASE_URL')!,
-            Deno.env.get('SUPABASE_ANON_KEY')!,
+            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
             {
-                global: {
-                    headers: {
-                        authorization: authHeader,
-                    },
-                },
+                auth: {
+                    autoRefreshToken: false,
+                    persistSession: false
+                }
             }
         );
 
-        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
+        // Alias for compatibility with rest of code using supabaseClient
+        const supabaseClient = supabaseAdmin;
+
+        // Verify User Token using Admin Client
+        const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+
         console.log("getUser result:", { user: user ? { id: user.id, email: user.email } : null, error: userError });
 
         if (userError || !user) {
@@ -78,15 +85,6 @@ Deno.serve(async (req) => {
         }
 
         console.log("User verified:", user.id);
-
-        // Client 2: Service Role for Admin operations (DB/Mercado Pago)
-        const supabaseAdmin = createClient(
-            Deno.env.get('SUPABASE_URL')!,
-            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        );
-
-        // Alias for compatibility with rest of code using supabaseClient
-        const supabaseClient = supabaseAdmin;
 
         const { plan, userId } = await req.json();
 
