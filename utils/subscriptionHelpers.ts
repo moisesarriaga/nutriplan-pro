@@ -23,16 +23,25 @@ export const createSubscription = async (
             throw new Error('Usuário não autenticado');
         }
 
-        const { data, error } = await supabase.functions.invoke(
-            "create-subscription",
-            { body: { plan, userId: session.user.id } }
-        );
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://uuhebbtjphitogxcxlix.supabase.co';
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1aGViYnRqcGhpdG9neGN4bGl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MjIxMDEsImV4cCI6MjA4MjA5ODEwMX0.w-myAcVCtxaIyRiPqTAXrBdokMDCsS1QCZUuFnQUlr4';
 
-        if (error) {
-            throw new Error(error.message || 'Erro ao criar assinatura');
+        const response = await fetch(`${supabaseUrl}/functions/v1/create-subscription`, {
+            method: 'POST',
+            headers: {
+                'apikey': supabaseAnonKey,
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ plan, userId: session.user.id }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || errorData.message || `Erro ${response.status}`);
         }
 
-        return data;
+        return await response.json();
     } catch (error) {
         console.error('Error creating subscription:', error);
         throw error;
