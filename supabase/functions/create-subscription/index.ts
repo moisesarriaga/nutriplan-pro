@@ -35,7 +35,10 @@ Deno.serve(async (req) => {
 
     try {
         const authHeader = req.headers.get('Authorization');
+        console.log("Auth Header present:", !!authHeader);
+
         if (!authHeader) {
+            console.error("Missing Authorization header");
             return new Response(JSON.stringify({ success: false, error: 'Missing Authorization header' }), {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -55,9 +58,10 @@ Deno.serve(async (req) => {
         );
 
         const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
+        console.log("getUser result:", { user: user ? { id: user.id, email: user.email } : null, error: userError });
 
         if (userError || !user) {
-            console.error("Auth Fail:", userError);
+            console.error("Auth Fail - Error:", userError, "User:", user);
             return new Response(JSON.stringify({
                 success: false,
                 error: 'Authentication Failed',
@@ -66,6 +70,11 @@ Deno.serve(async (req) => {
                 status: 401,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
+        }
+
+        // PARANOID CHECK: Ensure user is absolutely not null here
+        if (!user) {
+            throw new Error("User became null unexpectedly after check");
         }
 
         console.log("User verified:", user.id);
@@ -165,7 +174,17 @@ Deno.serve(async (req) => {
             status: 'pending',
         };
 
+        console.log("Creating PreApproval with body:", JSON.stringify(preapprovalBody));
         const mpData = await preApproval.create({ body: preapprovalBody });
+        console.log("Mercado Pago Response:", mpData);
+
+        if (!mpData) {
+            throw new Error("Mercado Pago returned null response");
+        }
+        if (!mpData.id) {
+            console.error("Mercado Pago response missing ID:", mpData);
+            throw new Error("Mercado Pago response missing ID");
+        }
 
         // Store subscription in database
         const subscriptionData = {
