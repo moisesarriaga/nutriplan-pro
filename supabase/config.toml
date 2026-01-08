@@ -6,3 +6,6 @@ verify_jwt = false
 
 [functions.mercadopago-webhook]
 verify_jwt = false
+
+[functions.extract-recipe-details]
+verify_jwt = false
