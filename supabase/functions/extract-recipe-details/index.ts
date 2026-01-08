@@ -13,15 +13,21 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const apiKey = Deno.env.get('GEMINI_API_KEY');
+        // Try to get key from both possible names
+        const apiKey = Deno.env.get('GEMINI_API_KEY') || Deno.env.get('VITE_GEMINI_API_KEY');
+
         if (!apiKey) {
-            throw new Error('GEMINI_API_KEY not found in environment');
+            console.error('API Key not found in environment (checked GEMINI_API_KEY and VITE_GEMINI_API_KEY)');
+            return new Response(JSON.stringify({ error: 'Configuração da IA incompleta no servidor. Verifique as chaves no Supabase.' }), {
+                status: 500,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
         }
 
         const { text } = await req.json();
 
         if (!text) {
-            return new Response(JSON.stringify({ error: 'Recipe text is required' }), {
+            return new Response(JSON.stringify({ error: 'Texto da receita é obrigatório.' }), {
                 status: 400,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
@@ -53,19 +59,17 @@ ${text}
             ingredientsList = JSON.parse(jsonText);
         } catch (e) {
             console.error("Failed to parse AI response:", rawText);
-            throw new Error("Failed to parse AI response as JSON");
+            throw new Error("Falha ao analisar resposta da IA.");
         }
 
         if (!Array.isArray(ingredientsList)) {
-            throw new Error("AI response is not an array");
+            throw new Error("Resposta da IA não é um formato válido.");
         }
 
         const ingredients = ingredientsList.map((item: any) => ({
             name: item.item,
             quantity: item.quantidade,
             unit: item.unidade,
-            // Calculate cal/100g or unit if possible, otherwise rely on total.
-            // Simplified logic: store total as provided by AI
             caloriesPerUnit: item.quantidade > 0 ? (item.calorias / item.quantidade) * 100 : item.calorias,
             totalCalories: item.calorias
         }));
