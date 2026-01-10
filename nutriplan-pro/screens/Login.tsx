@@ -34,8 +34,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="flex flex-col justify-between min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-white">
-      <div className="flex-1 flex flex-col justify-center px-6 pt-12 pb-6 w-full max-w-md mx-auto">
+    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-white">
+      <div className="flex items-center px-4 py-4 justify-between sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
+        <button onClick={() => navigate(-1)} className="flex items-center justify-center rounded-full h-10 w-10 text-slate-900 dark:text-white hover:bg-black/5">
+          <span className="material-symbols-outlined">arrow_back</span>
+        </button>
+        <div className="w-10"></div>
+      </div>
+
+      <div className="flex-1 flex flex-col px-6 pt-4 pb-12 w-full max-w-md mx-auto">
         <div className="mb-10 text-center">
           <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-primary mb-6 shadow-lg shadow-primary/20">
             <span className="material-symbols-outlined text-4xl text-black filled">nutrition</span>
