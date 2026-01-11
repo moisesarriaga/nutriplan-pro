@@ -49,7 +49,7 @@ const LandingPage: React.FC = () => {
                     <div className="flex items-center gap-4">
                         {user ? (
                             <div
-                                onClick={() => navigate('/profile')}
+                                onClick={() => navigate('/dashboard')}
                                 className="flex items-center gap-3 cursor-pointer group"
                             >
                                 <div className="relative">

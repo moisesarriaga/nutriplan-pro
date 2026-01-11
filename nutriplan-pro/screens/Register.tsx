@@ -74,6 +74,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleRegister(e as any)}
               />
             </div>
           </div>
@@ -91,6 +92,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleRegister(e as any)}
               />
             </div>
           </div>
@@ -108,6 +110,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleRegister(e as any)}
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-slate-400">
                 <span className="material-symbols-outlined text-[20px]">visibility_off</span>
