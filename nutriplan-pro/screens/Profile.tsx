@@ -6,6 +6,7 @@ import { MOCK_USER } from '../../constants';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useSubscription } from '../../contexts/SubscriptionContext';
 
 interface ProfileProps {
   onLogout: () => void;
@@ -24,6 +25,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { subscription } = useSubscription();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -189,9 +191,21 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-center">{profile?.nome || user?.user_metadata?.full_name || 'Usuário'}</h1>
         <p className="text-slate-500 dark:text-slate-400 text-base font-normal mt-1 text-center">{user?.email}</p>
-        <div className="mt-3 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-[16px] filled">verified</span>
-          <span className="text-xs font-semibold text-primary uppercase tracking-wide">Membro Pro</span>
+        <div className={`mt-3 px-3 py-1 rounded-full border flex items-center gap-2 ${subscription?.plan_type === 'simple' || subscription?.plan_type === 'premium'
+            ? 'bg-primary/20 border-primary/30'
+            : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+          }`}>
+          {subscription?.plan_type === 'simple' || subscription?.plan_type === 'premium' ? (
+            <>
+              <span className="material-symbols-outlined text-primary text-[16px] filled">verified</span>
+              <span className="text-xs font-semibold text-primary uppercase tracking-wide">Membro Pro</span>
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-slate-500 text-[16px]">stars</span>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Plano Grátis</span>
+            </>
+          )}
         </div>
       </div>
 
