@@ -215,45 +215,52 @@ const CreateRecipe: React.FC = () => {
               </span>
             </div>
 
-            <section className="flex flex-col gap-3">
+            <section className="flex flex-col gap-4">
               {ingredients.map((ing, idx) => (
-                <div key={idx} className="p-4 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-gray-800 shadow-sm">
-                  <div className="flex justify-between items-start mb-3">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Ingrediente {idx + 1}</label>
-                    <span className="text-xs font-bold text-primary">{Math.round(ing.totalCalories)} kcal</span>
+                <div key={idx} className="p-5 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-gray-800 shadow-sm">
+                  <div className="flex justify-between items-center mb-4">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Ingrediente {idx + 1}</label>
+                    <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">{Math.round(ing.totalCalories)} kcal</span>
                   </div>
 
-                  <input
-                    className="w-full border-0 border-b border-slate-200 dark:border-gray-700 bg-transparent px-0 py-2 font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-0 focus:border-primary transition-colors mb-3"
-                    placeholder="Nome do item"
-                    type="text"
-                    value={ing.name}
-                    onChange={(e) => updateIngredient(idx, 'name', e.target.value)}
-                  />
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] text-slate-500">Quantidade</span>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Nome do Ingrediente</label>
                       <input
-                        className="w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-center font-medium focus:ring-primary transition-all"
-                        type="number"
-                        value={ing.quantity}
-                        onChange={(e) => updateIngredient(idx, 'quantity', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] text-slate-500">Unidade</span>
-                      <input
-                        className="w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-center font-medium focus:ring-primary transition-all"
+                        className="w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                        placeholder="Ex: Arroz, Feijão, Frango..."
                         type="text"
-                        value={ing.unit}
-                        onChange={(e) => updateIngredient(idx, 'unit', e.target.value)}
+                        value={ing.name}
+                        onChange={(e) => updateIngredient(idx, 'name', e.target.value)}
                       />
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] text-slate-500">Cal/100g</span>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Quantidade</label>
+                        <input
+                          className="w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-center font-semibold focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                          type="number"
+                          step="0.001"
+                          value={ing.quantity}
+                          onChange={(e) => updateIngredient(idx, 'quantity', parseFloat(e.target.value) || 0)}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Unidade</label>
+                        <input
+                          className="w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-center font-semibold focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                          type="text"
+                          value={ing.unit}
+                          onChange={(e) => updateIngredient(idx, 'unit', e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Calorias por 100g/ml</label>
                       <input
-                        className="w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-center font-medium focus:ring-primary transition-all"
+                        className="w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-center font-semibold focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                         type="number"
                         value={ing.caloriesPerUnit}
                         onChange={(e) => updateIngredient(idx, 'caloriesPerUnit', parseFloat(e.target.value) || 0)}
