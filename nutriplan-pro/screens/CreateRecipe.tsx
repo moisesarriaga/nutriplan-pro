@@ -265,6 +265,14 @@ const CreateRecipe: React.FC = () => {
             </section>
 
             <button
+              onClick={() => setShowManualModal(true)}
+              className="flex items-center justify-center gap-2 w-full rounded-xl bg-slate-200 dark:bg-slate-700 px-6 py-3 text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition-all active:scale-[0.98]"
+            >
+              <Plus size={20} />
+              Adicionar mais ingredientes
+            </button>
+
+            <button
               onClick={() => setShowPreview(false)}
               className="text-sm font-medium text-slate-500 hover:text-primary transition-colors"
             >
