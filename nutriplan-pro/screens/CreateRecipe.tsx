@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { extractRecipeFromText, ExtractedRecipe, ExtractedIngredient } from '../../services/openaiService';
+import { extractRecipeFromText, ExtractedRecipe, ExtractedIngredient } from '@/services/openaiService';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { ArrowLeft, Sparkles, Check } from 'lucide-react';
