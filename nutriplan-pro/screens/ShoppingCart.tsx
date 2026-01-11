@@ -30,6 +30,18 @@ const ShoppingCart: React.FC = () => {
 
   const canSumPrices = hasFeature('price_sum');
 
+  // Efeito para travar o scroll da página de fundo quando o modal de upgrade estiver aberto
+  useEffect(() => {
+    if (showUpgradeModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showUpgradeModal]);
+
   useEffect(() => {
     if (user) {
       fetchItems().then(() => {

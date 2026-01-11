@@ -45,6 +45,18 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
     avatar_url: ''
   });
 
+  // Efeito para travar o scroll da página de fundo quando o modal de edição estiver aberto
+  useEffect(() => {
+    if (isEditing) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isEditing]);
+
   useEffect(() => {
     if (user) {
       fetchProfile();
@@ -342,7 +354,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
 
       {isEditing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold">Editar Perfil</h3>
               <button
