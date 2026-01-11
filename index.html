@@ -46,10 +46,17 @@
             scrollbar-width: none;
         }
 
+        /* Transição suave global para todos os elementos durante a troca de tema */
+        *,
+        *::before,
+        *::after {
+            transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 300ms;
+        }
 
         body {
             background-color: #fffff6;
-            transition: background-color 0.3s ease-in-out;
         }
 
         html.dark body {

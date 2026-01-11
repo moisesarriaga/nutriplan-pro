@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { extractRecipeFromText, ExtractedRecipe, ExtractedIngredient } from '@/services/openaiService';
 import { supabase } from '../../lib/supabaseClient';
@@ -18,6 +18,18 @@ const CreateRecipe: React.FC = () => {
   const [ingredients, setIngredients] = useState<ExtractedIngredient[]>([]);
   const [showManualModal, setShowManualModal] = useState(false);
   const [manualIngredient, setManualIngredient] = useState({ name: '', quantity: 0, unit: 'g', caloriesPerUnit: 0 });
+
+  // Efeito para travar o scroll da página de fundo quando o modal estiver aberto
+  useEffect(() => {
+    if (showManualModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showManualModal]);
 
   const processWithAI = async () => {
     if (!recipeText.trim()) {
@@ -304,7 +316,7 @@ const CreateRecipe: React.FC = () => {
       {/* Modal de Adição Manual */}
       {showManualModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-          <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
+          <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-2xl w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setShowManualModal(false)}
               className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
