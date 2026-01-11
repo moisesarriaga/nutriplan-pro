@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export const useWaterNotifications = (iconPath = '/favicon.ico') => {
+export const useWaterNotifications = (iconPath = '/favicon.svg') => {
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [permission, setPermission] = useState<NotificationPermission>('default');
 
