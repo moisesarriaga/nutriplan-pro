@@ -12,12 +12,12 @@ Deno.serve(async (req) => {
     }
 
     try {
-        // Try to get key from both possible names
-        const apiKey = Deno.env.get('GEMINI_API_KEY') || Deno.env.get('VITE_GEMINI_API_KEY');
+        // Support both OpenAI and generic AI key names
+        const apiKey = Deno.env.get('OPENAI_API_KEY') || Deno.env.get('GEMINI_API_KEY') || Deno.env.get('VITE_GEMINI_API_KEY');
 
         if (!apiKey) {
-            console.error('API Key not found in environment (checked GEMINI_API_KEY and VITE_GEMINI_API_KEY)');
-            return new Response(JSON.stringify({ error: 'Configuração da IA incompleta no servidor. Verifique as chaves no Supabase.' }), {
+            console.error('AI API Key not found in environment');
+            return new Response(JSON.stringify({ error: 'Configuração da IA incompleta no servidor. Verifique as chaves (OPENAI_API_KEY) no Supabase.' }), {
                 status: 500,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
@@ -51,30 +51,34 @@ TEXTO DA RECEITA:
 ${text}
 `;
 
-        const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-001:generateContent?key=${apiKey}`;
+        // Use OpenAI GPT-5-nano as requested
+        const openAiKey = Deno.env.get('OPENAI_API_KEY') || apiKey; // Fallback to provided key if environment not set
+        const apiUrl = 'https://api.openai.com/v1/responses';
 
-        const geminiRes = await fetch(apiUrl, {
+        const openAiRes = await fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${openAiKey}`,
             },
             body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: prompt }]
-                }]
+                model: 'gpt-5-nano',
+                input: prompt,
+                store: true
             })
         });
 
-        if (!geminiRes.ok) {
-            const errorMsg = await geminiRes.text();
-            console.error('Gemini API Error:', errorMsg);
-            throw new Error(`Erro na API do Gemini: ${geminiRes.statusText}`);
+        if (!openAiRes.ok) {
+            const errorMsg = await openAiRes.text();
+            console.error('OpenAI API Error:', errorMsg);
+            throw new Error(`Erro na API da OpenAI: ${openAiRes.statusText}`);
         }
 
-        const result = await geminiRes.json();
-        const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+        const result = await openAiRes.json();
+        const rawText = result.output_text; // Using output_text as per user example
 
         if (!rawText) {
+            console.error("OpenAI result structure:", result);
             throw new Error("A IA não retornou uma resposta válida.");
         }
 

@@ -296,19 +296,21 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
         </h3>
         <div className="mx-4 p-1 rounded-2xl bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-slate-800 flex items-center relative h-12">
           {[
-            { id: 'light', label: 'Light' },
-            { id: 'dark', label: 'Dark' },
-            { id: 'auto', label: 'Auto' }
+            { id: 'light', icon: 'light_mode' },
+            { id: 'dark', icon: 'dark_mode' },
+            { id: 'auto', icon: 'desktop_windows' }
           ].map((opt) => (
             <button
               key={opt.id}
               onClick={() => setTheme(opt.id as any)}
-              className={`flex-1 flex items-center justify-center h-10 rounded-xl text-sm font-bold transition-all relative z-10 ${theme === opt.id
+              className={`flex-1 flex items-center justify-center h-10 rounded-xl transition-all relative z-10 ${theme === opt.id
                 ? 'text-white'
                 : 'text-slate-500 dark:text-slate-400'
                 }`}
             >
-              {opt.label}
+              <span className={`material-symbols-outlined text-[20px] ${theme === opt.id ? 'filled' : ''}`}>
+                {opt.icon}
+              </span>
             </button>
           ))}
           <div
@@ -321,10 +323,10 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
         </div>
       </div>
 
-      <div className="mt-8 mb-8 px-4">
+      <div className="px-4 mt-8 pb-32">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 p-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 font-bold active:scale-[0.98] transition-transform"
+          className="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold bg-white dark:bg-surface-dark text-red-500 border border-slate-200 dark:border-slate-800 shadow-sm active:scale-[0.98] transition-all"
         >
           <span className="material-symbols-outlined">logout</span>
           Sair da Conta

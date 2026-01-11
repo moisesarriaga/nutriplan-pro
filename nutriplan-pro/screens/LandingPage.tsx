@@ -223,37 +223,36 @@ const LandingPage: React.FC = () => {
             </section >
 
             {/* Footer */}
-            < footer className="py-12 bg-background-light dark:bg-background-dark border-t border-black/5 dark:border-white/10 text-center" >
-                <div className="max-w-[400px] mx-auto mb-8">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Aparência do Sistema</p>
-                    <div className="p-1 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 flex items-center relative h-12">
+            <footer className="py-12 px-6 bg-background-light dark:bg-background-dark border-t border-black/5 dark:border-white/10">
+                <div className="max-w-[1000px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+                    <p className="text-gray-500 text-sm">&copy; {new Date().getFullYear()} MENU LIST. Todos os direitos reservados.</p>
+
+                    {/* Static Theme Toggle (Footer) */}
+                    <div className="flex items-center bg-[#1b1b1b] rounded-[18px] p-1.5 shadow-xl border border-white/5">
                         {[
-                            { id: 'light', label: 'Claro' },
-                            { id: 'dark', label: 'Escuro' },
-                            { id: 'auto', label: 'Auto' }
+                            { id: 'light', icon: 'light_mode' },
+                            { id: 'dark', icon: 'dark_mode' },
+                            { id: 'auto', icon: 'desktop_windows' }
                         ].map((opt) => (
                             <button
                                 key={opt.id}
                                 onClick={() => setTheme(opt.id as any)}
-                                className={`flex-1 flex items-center justify-center h-10 rounded-xl text-sm font-bold transition-all relative z-10 ${theme === opt.id
-                                    ? 'text-white'
-                                    : 'text-slate-500 dark:text-slate-400'
+                                className={`relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 ${theme === opt.id
+                                    ? 'bg-[#333333] text-white'
+                                    : 'text-slate-400 hover:text-white'
                                     }`}
                             >
-                                {opt.label}
+                                <span className={`material-symbols-outlined text-[20px] ${theme === opt.id ? 'filled' : ''}`}>
+                                    {opt.icon}
+                                </span>
+                                {theme === opt.id && (
+                                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-neon-green rounded-full border-2 border-[#1b1b1b]"></span>
+                                )}
                             </button>
                         ))}
-                        <div
-                            className="absolute h-10 bg-primary rounded-xl transition-all duration-300 shadow-sm"
-                            style={{
-                                width: 'calc((100% - 8px) / 3)',
-                                left: theme === 'light' ? '4px' : theme === 'dark' ? 'calc(4px + (100% - 8px) / 3)' : 'calc(4px + 2 * (100% - 8px) / 3)'
-                            }}
-                        />
                     </div>
                 </div>
-                <p className="text-gray-500 text-sm">&copy; {new Date().getFullYear()} MENU LIST. Todos os direitos reservados.</p>
-            </footer >
+            </footer>
         </div >
     );
 };
