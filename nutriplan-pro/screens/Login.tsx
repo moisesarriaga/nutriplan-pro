@@ -155,6 +155,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </svg>
           </button>
         </div>
+
+        <div className="mt-8 text-center pb-6">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            Não tem uma conta?
+            <button
+              onClick={() => navigate('/register')}
+              className="font-bold text-primary ml-1 hover:underline transition-all"
+            >
+              Criar conta
+            </button>
+          </p>
+        </div>
       </div>
     </div >
   );
