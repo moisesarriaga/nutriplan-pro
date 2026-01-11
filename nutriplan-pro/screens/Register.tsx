@@ -40,7 +40,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-white">
+    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-gray-200">
       <div className="flex items-center px-4 py-4 justify-between sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
         <button onClick={() => navigate(-1)} className="flex items-center justify-center rounded-full h-10 w-10 text-slate-900 dark:text-white hover:bg-black/5">
           <span className="material-symbols-outlined">arrow_back</span>
@@ -50,8 +50,8 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
 
       <div className="flex-1 flex flex-col px-6 pt-4 pb-12 w-full max-w-md mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Criar Conta</h1>
-          <p className="text-slate-500">Junte-se a nós para gerenciar sua nutrição e compras de forma simples.</p>
+          <h1 className="text-3xl font-bold tracking-tight mb-2 text-slate-900 dark:text-white">Criar Conta</h1>
+          <p className="text-slate-500 dark:text-gray-400">Junte-se a nós para gerenciar sua nutrição e compras de forma simples.</p>
         </div>
 
         {error && (
@@ -62,7 +62,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
 
         <form className="space-y-5" onSubmit={handleRegister}>
           <div>
-            <label className="block text-sm font-medium mb-1.5">Nome Completo</label>
+            <label className="block text-sm font-medium mb-1.5 text-slate-700 dark:text-gray-300">Nome Completo</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                 <span className="material-symbols-outlined text-[20px]">person</span>
@@ -79,7 +79,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5">E-mail</label>
+            <label className="block text-sm font-medium mb-1.5 text-slate-700 dark:text-gray-300">E-mail</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                 <span className="material-symbols-outlined text-[20px]">mail</span>
@@ -96,7 +96,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5">Senha</label>
+            <label className="block text-sm font-medium mb-1.5 text-slate-700 dark:text-gray-300">Senha</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                 <span className="material-symbols-outlined text-[20px]">lock</span>

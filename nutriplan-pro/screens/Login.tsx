@@ -35,7 +35,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-white">
+    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-gray-200">
       <div className="flex items-center px-4 py-4 justify-between sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
         <button onClick={() => navigate(-1)} className="flex items-center justify-center rounded-full h-10 w-10 text-slate-900 dark:text-white hover:bg-black/5">
           <span className="material-symbols-outlined">arrow_back</span>
@@ -48,8 +48,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-primary mb-6 shadow-lg shadow-primary/20">
             <span className="material-symbols-outlined text-4xl text-black filled">nutrition</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Bem-vindo de volta!</h1>
-          <p className="text-slate-500 text-sm">Acesse sua conta para ver suas receitas e listas.</p>
+          <h1 className="text-3xl font-bold tracking-tight mb-2 text-slate-900 dark:text-white">Bem-vindo de volta!</h1>
+          <p className="text-slate-500 dark:text-gray-400 text-sm">Acesse sua conta para ver suas receitas e listas.</p>
         </div>
 
         {error && (
@@ -60,7 +60,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
         <form className="space-y-5" onSubmit={handleLogin}>
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold ml-1">E-mail</label>
+            <label className="block text-sm font-semibold ml-1 text-slate-700 dark:text-gray-300">E-mail</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                 <span className="material-symbols-outlined text-[20px]">mail</span>
@@ -78,7 +78,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between ml-1">
-              <label className="block text-sm font-semibold">Senha</label>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-gray-300">Senha</label>
               <button type="button" className="text-xs font-medium text-primary">Esqueceu a senha?</button>
             </div>
             <div className="relative">

@@ -85,9 +85,9 @@ const Checkout: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-dark-bg text-gray-200">
+        <div className="min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-gray-200">
             {/* Header */}
-            <div className="bg-dark-bg/80 backdrop-blur-md border-b border-white/5">
+            <div className="bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-black/5 dark:border-white/5">
                 <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
                     <button
                         onClick={() => navigate('/')}
@@ -95,9 +95,9 @@ const Checkout: React.FC = () => {
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <div>
-                        <h1 className="text-xl font-bold text-white">Finalizar Assinatura</h1>
-                        <p className="text-sm text-gray-400">Plano {selectedPlan.name}</p>
+                    <div className="w-full">
+                        <h1 className="text-xl font-bold text-slate-900 dark:text-white">Finalizar Assinatura</h1>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">Plano {selectedPlan.name}</p>
                     </div>
                 </div>
             </div>
@@ -107,8 +107,8 @@ const Checkout: React.FC = () => {
                     {/* Payment Form */}
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-2xl font-bold text-white mb-2">Confirmar Assinatura</h2>
-                            <p className="text-gray-400 text-sm">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Confirmar Assinatura</h2>
+                            <p className="text-slate-500 dark:text-gray-400 text-sm">
                                 {selectedPlan.price === 0
                                     ? 'Ative seu plano gratuito agora mesmo'
                                     : 'Você será redirecionado para o Mercado Pago para completar o pagamento'
@@ -128,27 +128,27 @@ const Checkout: React.FC = () => {
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* Plan Summary */}
-                            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                                <h3 className="font-semibold text-white mb-4">Detalhes da Assinatura</h3>
+                            <div className="bg-white dark:bg-surface-dark border border-black/5 dark:border-white/10 rounded-xl p-6 shadow-sm">
+                                <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Detalhes da Assinatura</h3>
                                 <div className="space-y-3">
                                     <div className="flex justify-between">
                                         <span className="text-gray-400">Plano</span>
                                         <span className="text-white font-semibold">{selectedPlan.name}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-gray-400">Valor Mensal</span>
-                                        <span className="text-neon-green font-bold">
+                                        <span className="text-slate-500 dark:text-gray-400">Valor Mensal</span>
+                                        <span className="text-neon-green font-bold text-lg">
                                             R$ {selectedPlan.price.toFixed(2)}
                                         </span>
                                     </div>
                                     {selectedPlan.price > 0 && (
                                         <>
-                                            <div className="border-t border-white/10 pt-3 mt-3">
-                                                <p className="text-sm text-gray-400">
+                                            <div className="border-t border-black/5 dark:border-white/10 pt-3 mt-3">
+                                                <p className="text-sm text-slate-500 dark:text-gray-400">
                                                     <Check className="w-4 h-4 inline text-neon-green mr-2" />
                                                     Cobrança automática mensal
                                                 </p>
-                                                <p className="text-sm text-gray-400 mt-2">
+                                                <p className="text-sm text-slate-500 dark:text-gray-400 mt-2">
                                                     <Check className="w-4 h-4 inline text-neon-green mr-2" />
                                                     Cancele quando quiser
                                                 </p>
@@ -160,14 +160,14 @@ const Checkout: React.FC = () => {
 
                             {/* Payment Methods Info */}
                             {selectedPlan.price > 0 && (
-                                <div className="bg-neon-green/10 border border-neon-green/30 rounded-xl p-6">
-                                    <h4 className="font-semibold text-white mb-3">Métodos de Pagamento Aceitos</h4>
+                                <div className="bg-neon-green/5 border border-neon-green/30 rounded-xl p-6">
+                                    <h4 className="font-semibold text-slate-900 dark:text-white mb-3">Métodos de Pagamento Aceitos</h4>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="flex items-center gap-2 text-sm text-gray-300">
+                                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-gray-300">
                                             <CreditCard className="w-5 h-5 text-neon-green" />
                                             <span>Cartão de Crédito</span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-sm text-gray-300">
+                                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-gray-300">
                                             <QrCode className="w-5 h-5 text-neon-green" />
                                             <span>PIX</span>
                                         </div>
@@ -199,22 +199,22 @@ const Checkout: React.FC = () => {
 
                     {/* Order Summary */}
                     <div>
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sticky top-6">
-                            <h3 className="text-xl font-bold text-white mb-6">Resumo do Pedido</h3>
+                        <div className="bg-white dark:bg-surface-dark border border-black/5 dark:border-white/10 rounded-2xl p-6 sticky top-6 shadow-sm">
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Resumo do Pedido</h3>
 
                             <div className="space-y-4 mb-6">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <p className="font-semibold text-white">Plano {selectedPlan.name}</p>
-                                        <p className="text-sm text-gray-400">{selectedPlan.description}</p>
+                                        <p className="font-semibold text-slate-900 dark:text-white">Plano {selectedPlan.name}</p>
+                                        <p className="text-sm text-slate-500 dark:text-gray-400">{selectedPlan.description}</p>
                                     </div>
-                                    <p className="font-bold text-white">R$ {selectedPlan.price.toFixed(2)}</p>
+                                    <p className="font-bold text-slate-900 dark:text-white">R$ {selectedPlan.price.toFixed(2)}</p>
                                 </div>
                             </div>
 
-                            <div className="border-t border-white/10 pt-4 mb-6">
+                            <div className="border-t border-black/5 dark:border-white/10 pt-4 mb-6">
                                 <div className="flex justify-between items-center text-lg">
-                                    <span className="font-semibold text-white">Total Mensal</span>
+                                    <span className="font-semibold text-slate-900 dark:text-white">Total Mensal</span>
                                     <span className="font-bold text-neon-green">R$ {selectedPlan.price.toFixed(2)}</span>
                                 </div>
                             </div>

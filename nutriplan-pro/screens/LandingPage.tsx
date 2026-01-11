@@ -2,20 +2,22 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, ChevronDown, ChevronUp, ChefHat, UtensilsCrossed, ShoppingCart, Sparkles } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const LandingPage: React.FC = () => {
     const navigate = useNavigate();
+    const { theme, setTheme } = useTheme();
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
 
 
 
     return (
-        <div className="min-h-screen bg-dark-bg text-gray-200 selection:bg-neon-green selection:text-black font-sans">
+        <div className="min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-gray-200 selection:bg-neon-green selection:text-black font-sans">
             {/* Navbar */}
-            <nav className="fixed top-0 w-full z-50 bg-dark-bg/80 backdrop-blur-md border-b border-white/5">
+            <nav className="fixed top-0 w-full z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-black/5 dark:border-white/5">
                 <div className="max-w-[1000px] mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-white font-bold text-xl tracking-tight">
+                    <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xl tracking-tight">
                         <span>MENU</span>
                         <span className="text-neon-green">LIST</span>
                     </div>
@@ -41,10 +43,10 @@ const LandingPage: React.FC = () => {
                 <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-neon-green/20 rounded-full blur-[100px] -z-10" />
 
                 <div className="max-w-[1000px] mx-auto text-center space-y-8">
-                    <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-tight">
+                    <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
                         Economize <span className="text-neon-green">tempo</span> e <span className="text-neon-green">dinheiro</span> nas suas compras!
                     </h1>
-                    <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                    <p className="text-lg text-slate-500 dark:text-gray-400 max-w-2xl mx-auto">
                         A maneira mais inteligente de organizar suas refeições. Planeje, economize e tenha controle total do seu carrinho.
                     </p>
 
@@ -58,10 +60,10 @@ const LandingPage: React.FC = () => {
                     </div>
 
                     <div className="pt-20 animate-fade-in">
-                        <h2 className="text-2xl md:text-4xl font-bold text-white mb-2">
+                        <h2 className="text-2xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
                             Por que usar a <span className="text-neon-green">MENU LIST</span>?
                         </h2>
-                        <p className="text-gray-400 text-base max-w-xl mx-auto">
+                        <p className="text-slate-500 dark:text-gray-400 text-base max-w-xl mx-auto">
                             Ferramentas poderosas para transformar sua relação com o supermercado e a cozinha.
                         </p>
                     </div>
@@ -102,8 +104,8 @@ const LandingPage: React.FC = () => {
             <section className="py-20 px-6">
                 <div className="max-w-[1000px] mx-auto">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Escolha o plano ideal</h2>
-                        <p className="text-gray-400 text-lg">
+                        <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">Escolha o plano ideal</h2>
+                        <p className="text-slate-500 dark:text-gray-400 text-lg">
                             Comece grátis e evolua conforme suas necessidades.
                         </p>
                     </div>
@@ -160,7 +162,7 @@ const LandingPage: React.FC = () => {
             {/* FAQ Section */}
             < section className="py-20 px-6" >
                 <div className="max-w-3xl mx-auto space-y-8">
-                    <h2 className="text-3xl font-bold text-center text-white">Perguntas Frequentes</h2>
+                    <h2 className="text-3xl font-bold text-center text-slate-900 dark:text-white">Perguntas Frequentes</h2>
                     <div className="space-y-4">
                         <FAQItem question="O que é a MENU LIST?" answer="A MENU LIST é um aplicativo que ajuda você a planejar suas refeições e gerar listas de compras inteligentes para economizar tempo e dinheiro." />
                         <FAQItem question="Como faço para cancelar?" answer="Você pode cancelar sua assinatura a qualquer momento através das configurações do aplicativo, sem multas ou taxas." />
@@ -171,8 +173,36 @@ const LandingPage: React.FC = () => {
             </section >
 
             {/* Footer */}
-            < footer className="py-8 bg-black border-t border-white/10 text-center text-gray-500 text-sm" >
-                <p>&copy; {new Date().getFullYear()} MENU LIST. Todos os direitos reservados.</p>
+            < footer className="py-12 bg-background-light dark:bg-background-dark border-t border-black/5 dark:border-white/10 text-center" >
+                <div className="max-w-[400px] mx-auto mb-8">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Aparência do Sistema</p>
+                    <div className="p-1 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 flex items-center relative h-12">
+                        {[
+                            { id: 'light', label: 'Claro' },
+                            { id: 'dark', label: 'Escuro' },
+                            { id: 'auto', label: 'Auto' }
+                        ].map((opt) => (
+                            <button
+                                key={opt.id}
+                                onClick={() => setTheme(opt.id as any)}
+                                className={`flex-1 flex items-center justify-center h-10 rounded-xl text-sm font-bold transition-all relative z-10 ${theme === opt.id
+                                    ? 'text-white'
+                                    : 'text-slate-500 dark:text-slate-400'
+                                    }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                        <div
+                            className="absolute h-10 bg-primary rounded-xl transition-all duration-300 shadow-sm"
+                            style={{
+                                width: 'calc((100% - 8px) / 3)',
+                                left: theme === 'light' ? '4px' : theme === 'dark' ? 'calc(4px + (100% - 8px) / 3)' : 'calc(4px + 2 * (100% - 8px) / 3)'
+                            }}
+                        />
+                    </div>
+                </div>
+                <p className="text-gray-500 text-sm">&copy; {new Date().getFullYear()} MENU LIST. Todos os direitos reservados.</p>
             </footer >
         </div >
     );
@@ -180,12 +210,12 @@ const LandingPage: React.FC = () => {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
     return (
-        <div className="bg-card-bg p-6 rounded-2xl border border-white/5 hover:border-neon-green/50 transition-all duration-300 group">
+        <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-black/5 dark:border-white/5 hover:border-neon-green/50 transition-all duration-300 group">
             <div className="w-12 h-12 bg-transparent border-2 border-neon-green rounded-lg flex items-center justify-center text-neon-green mb-4 group-hover:bg-neon-green group-hover:text-black transition-all duration-300">
                 {icon}
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{title}</h3>
+            <p className="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">{description}</p>
         </div>
     );
 }
@@ -211,20 +241,22 @@ function PricingCard({
 }) {
     const navigate = useNavigate();
     return (
-        <div className={`rounded-2xl p-8 relative flex flex-col ${highlighted ? 'bg-card-bg border-2 border-neon-green shadow-glow transform md:-translate-y-4' : 'bg-card-bg/50 border border-white/10'}`}>
+        <div className={`rounded-2xl p-8 relative flex flex-col ${highlighted
+            ? 'bg-white dark:bg-surface-dark border-2 border-neon-green shadow-glow transform md:-translate-y-4'
+            : 'bg-white/50 dark:bg-card-bg/50 border border-black/5 dark:border-white/10'}`}>
             {highlighted && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-neon-green text-black text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
                     MAIS POPULAR
                 </div>
             )}
-            <h3 className="text-2xl font-bold text-white mb-2">{title}</h3>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{title}</h3>
             <div className="flex items-end gap-1 mb-3">
-                <span className="text-5xl font-bold text-white">{price}</span>
-                {period && <span className="text-gray-400 text-base mb-2">{period}</span>}
+                <span className="text-5xl font-bold text-slate-900 dark:text-white">{price}</span>
+                {period && <span className="text-slate-500 dark:text-gray-400 text-base mb-2">{period}</span>}
             </div>
-            <p className="text-gray-400 text-sm mb-6">{description}</p>
+            <p className="text-slate-500 dark:text-gray-400 text-sm mb-6">{description}</p>
 
-            <ul className="space-y-3 text-sm text-gray-300 mb-8 flex-grow">
+            <ul className="space-y-3 text-sm text-slate-600 dark:text-gray-300 mb-8 flex-grow">
                 {features.map((feat, i) => (
                     <li key={i} className="flex items-start gap-3">
                         <Check className="w-5 h-5 text-neon-green flex-shrink-0 mt-0.5" />
@@ -251,11 +283,11 @@ function FAQItem({ question, answer }: { question: string, answer: string }) {
                 className="w-full py-4 flex items-center justify-between text-left focus:outline-none"
                 onClick={() => setIsOpen(!isOpen)}
             >
-                <span className="font-medium text-white">{question}</span>
-                {isOpen ? <ChevronUp className="text-neon-green" /> : <ChevronDown className="text-gray-500" />}
+                <span className="font-medium text-slate-900 dark:text-white">{question}</span>
+                {isOpen ? <ChevronUp className="text-neon-green" /> : <ChevronDown className="text-slate-400 dark:text-gray-500" />}
             </button>
             {isOpen && (
-                <div className="pb-4 text-gray-400 text-sm leading-relaxed">
+                <div className="pb-4 text-slate-500 dark:text-gray-400 text-sm leading-relaxed">
                     {answer}
                 </div>
             )}
