@@ -1,4 +1,6 @@
-import OpenAI from "https://esm.sh/openai@4";
+// @ts-nocheck
+declare const Deno: any;
+import OpenAI from "openai";
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',

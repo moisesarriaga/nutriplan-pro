@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "inlineSourceMap": true,
+        "isolatedModules": true,
+        "lib": [
+            "deno.window",
+            "deno.ns"
+        ],
+        "module": "esnext",
+        "moduleResolution": "node",
+        "noEmit": true,
+        "strict": false,
+        "target": "esnext",
+        "types": [
+            "https://raw.githubusercontent.com/denoland/deno/main/cli/tsc/dts/lib.deno.ns.d.ts",
+            "https://raw.githubusercontent.com/denoland/deno/main/cli/tsc/dts/lib.deno.window.d.ts"
+        ]
+    },
+    "include": [
+        "./**/*.ts"
+    ]
+}
