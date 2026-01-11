@@ -23,8 +23,8 @@ import { SubscriptionProvider } from './contexts/SubscriptionContext';
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-[#0a110a] flex justify-center">
-      <div className="w-full max-w-[1000px] bg-background-light dark:bg-background-dark text-slate-900 dark:text-gray-200 min-h-screen relative shadow-2xl overflow-x-hidden">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark flex justify-center transition-colors duration-300">
+      <div className="w-full max-w-[1000px] bg-background-light dark:bg-background-dark text-slate-900 dark:text-gray-200 min-h-screen relative shadow-2xl overflow-x-hidden transition-colors duration-300">
         {children}
       </div>
     </div>

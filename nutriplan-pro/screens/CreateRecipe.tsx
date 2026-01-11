@@ -126,8 +126,8 @@ const CreateRecipe: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark max-w-md mx-auto shadow-2xl">
-      <header className="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
+    <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark transition-colors duration-300">
+      <header className="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between transition-colors duration-300">
         <button onClick={() => navigate(-1)} className="flex items-center justify-center p-2 -ml-2 rounded-full hover:bg-slate-200/50">
           <ArrowLeft size={24} />
         </button>
@@ -290,7 +290,7 @@ const CreateRecipe: React.FC = () => {
       </main>
 
       {showPreview && (
-        <footer className="fixed bottom-0 z-40 w-full max-w-md border-t border-slate-200 dark:border-gray-800 bg-white/90 dark:bg-background-dark/90 backdrop-blur-lg px-4 pt-4 pb-8 shadow-lg">
+        <footer className="fixed bottom-0 z-40 w-full max-w-[1000px] left-1/2 -translate-x-1/2 border-t border-slate-200 dark:border-gray-800 bg-white/90 dark:bg-background-dark/90 backdrop-blur-lg px-4 pt-4 pb-8 shadow-lg transition-colors duration-300">
           <button
             onClick={saveRecipe}
             className="w-full rounded-xl bg-primary px-6 py-4 text-base font-bold text-black shadow-lg hover:shadow-primary/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2"

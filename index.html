@@ -49,6 +49,11 @@
 
         body {
             background-color: #fffff6;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        html.dark body {
+            background-color: #131e11;
         }
 
         /* Personalização da barra de rolagem para remover a lateral cinza */
@@ -58,6 +63,10 @@
 
         ::-webkit-scrollbar-track {
             background: #fffff6;
+        }
+
+        html.dark ::-webkit-scrollbar-track {
+            background: #131e11;
         }
 
         ::-webkit-scrollbar-thumb {
