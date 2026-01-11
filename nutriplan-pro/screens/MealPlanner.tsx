@@ -6,6 +6,7 @@ import { MOCK_RECIPES } from '../../constants';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { aggregateIngredients, AggregatedIngredient } from '../../utils/ingredientAggregator';
+import { History, Zap, Trash2, Plus, ShoppingCart, Check } from 'lucide-react';
 
 interface MealPlanEntry {
   id: string;
@@ -184,7 +185,7 @@ const MealPlanner: React.FC = () => {
         <div className="w-12"></div>
         <h2 className="text-lg font-bold flex-1 text-center">Cardápio Semanal</h2>
         <button className="flex items-center justify-center rounded-full p-2 hover:bg-black/5 dark:hover:bg-white/10">
-          <span className="material-symbols-outlined">history</span>
+          <History size={24} />
         </button>
       </header>
 
@@ -233,7 +234,7 @@ const MealPlanner: React.FC = () => {
                           <p className="text-base font-bold leading-tight truncate">{entry.receita?.name || 'Receita Desconhecida'}</p>
                           <div className="flex items-center gap-2 mt-2">
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                              <span className="material-symbols-outlined text-[14px]">bolt</span> {entry.receita?.calories || 0} kcal
+                              <Zap size={14} className="fill-current" /> {entry.receita?.calories || 0} kcal
                             </span>
                           </div>
                         </div>
@@ -241,7 +242,7 @@ const MealPlanner: React.FC = () => {
                           onClick={(e) => { e.stopPropagation(); deleteMeal(entry.id); }}
                           className="absolute top-2 right-2 p-1 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          <span className="material-symbols-outlined text-[20px]">delete</span>
+                          <Trash2 size={20} />
                         </button>
                       </div>
                     ))
@@ -251,7 +252,7 @@ const MealPlanner: React.FC = () => {
                       className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-surface-dark/50 py-6 hover:border-primary transition-all group"
                     >
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-primary group-hover:scale-110 transition-transform">
-                        <span className="material-symbols-outlined text-[20px]">add</span>
+                        <Plus size={20} />
                       </div>
                       <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Adicionar {mealType}</span>
                     </button>
@@ -273,7 +274,7 @@ const MealPlanner: React.FC = () => {
             onClick={openShoppingListModal}
             className="flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl h-14 bg-primary text-black text-base font-bold shadow-lg active:scale-[0.98] transition-all"
           >
-            <span className="material-symbols-outlined filled">shopping_cart</span>
+            <ShoppingCart size={24} className="fill-current" />
             Gerar Lista de Compras
           </button>
         </div>
@@ -312,7 +313,7 @@ const MealPlanner: React.FC = () => {
                       onChange={() => toggleIngredientCheck(ing.id)}
                       className="peer appearance-none size-5 border-2 border-slate-300 dark:border-slate-600 rounded checked:bg-primary checked:border-primary transition-colors"
                     />
-                    <span className="material-symbols-outlined absolute text-black text-[16px] opacity-0 peer-checked:opacity-100 pointer-events-none">check</span>
+                    <Check className="absolute text-black opacity-0 peer-checked:opacity-100 pointer-events-none" size={16} />
                   </div>
                   <div className="flex-1">
                     <p className={`text-sm font-semibold ${!ing.checked && 'line-through text-slate-400'}`}>{ing.name}</p>

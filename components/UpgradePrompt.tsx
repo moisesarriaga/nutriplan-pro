@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Sparkles, ArrowRight } from 'lucide-react';
+import { Lock, Sparkles, ArrowRight, X } from 'lucide-react';
 
 interface UpgradePromptProps {
     feature: string;
@@ -35,7 +35,7 @@ const UpgradePrompt: React.FC<UpgradePromptProps> = ({ feature, requiredPlan, on
                         onClick={onClose}
                         className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
                     >
-                        <span className="material-symbols-outlined">close</span>
+                        <X size={20} />
                     </button>
                 )}
 

@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 import UpgradePrompt from '../../components/UpgradePrompt';
+import { ArrowLeft, Heart, Pencil, Clock, Flame, Activity, Users, Lock, Check, ShoppingCart, Calendar } from 'lucide-react';
 
 const RecipeDetails: React.FC = () => {
   const { id } = useParams();
@@ -139,17 +140,17 @@ const RecipeDetails: React.FC = () => {
             onClick={() => navigate(-1)}
             className="flex items-center justify-center size-10 rounded-full bg-background-dark/20 backdrop-blur-md border border-white/10 text-white"
           >
-            <span className="material-symbols-outlined">arrow_back</span>
+            <ArrowLeft size={20} />
           </button>
           <div className="flex items-center gap-3">
             <button
               onClick={toggleFavorite}
               className={`flex items-center justify-center size-10 rounded-full backdrop-blur-md border border-white/10 ${isFavorited ? 'bg-primary text-background-dark' : 'bg-background-dark/20 text-white'}`}
             >
-              <span className={`material-symbols-outlined ${isFavorited ? 'filled' : ''}`}>favorite</span>
+              <Heart size={20} className={`${isFavorited ? 'fill-current' : ''}`} />
             </button>
             <button className="flex items-center justify-center size-10 rounded-full bg-background-dark/20 backdrop-blur-md border border-white/10 text-white">
-              <span className="material-symbols-outlined">edit</span>
+              <Pencil size={20} />
             </button>
           </div>
         </div>
@@ -160,17 +161,17 @@ const RecipeDetails: React.FC = () => {
           </h1>
           <div className="flex flex-wrap gap-3">
             {[
-              { icon: 'schedule', label: recipe.time },
-              { icon: 'local_fire_department', label: canTrackCalories ? `${recipe.calories} kcal` : 'Premium' },
-              { icon: 'equalizer', label: recipe.difficulty },
-              { icon: 'person', label: `${recipe.servings} porções` }
+              { icon: Clock, label: recipe.time },
+              { icon: Flame, label: canTrackCalories ? `${recipe.calories} kcal` : 'Premium' },
+              { icon: Activity, label: recipe.difficulty },
+              { icon: Users, label: `${recipe.servings} porções` }
             ].map((stat, idx) => (
               <div
                 key={idx}
-                className={`flex items-center gap-1.5 bg-surface-dark/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 ${stat.icon === 'local_fire_department' && !canTrackCalories ? 'cursor-pointer hover:bg-surface-dark transition-colors' : ''}`}
-                onClick={stat.icon === 'local_fire_department' && !canTrackCalories ? () => setShowUpgradeModal(true) : undefined}
+                className={`flex items-center gap-1.5 bg-surface-dark/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 ${stat.icon === Flame && !canTrackCalories ? 'cursor-pointer hover:bg-surface-dark transition-colors' : ''}`}
+                onClick={stat.icon === Flame && !canTrackCalories ? () => setShowUpgradeModal(true) : undefined}
               >
-                <span className="material-symbols-outlined text-primary text-[18px]">{stat.icon}</span>
+                <stat.icon className="text-primary" size={18} />
                 <span className="text-xs font-medium text-white">{stat.label}</span>
               </div>
             ))}
@@ -195,7 +196,7 @@ const RecipeDetails: React.FC = () => {
                   }`}
               >
                 <div className="flex items-center justify-center gap-1">
-                  {tab === 'nutrition' && !canTrackCalories && <span className="material-symbols-outlined text-[14px]">lock</span>}
+                  {tab === 'nutrition' && !canTrackCalories && <Lock size={14} />}
                   {tab === 'ingredients' ? 'Ingredientes' : tab === 'prep' ? 'Preparo' : 'Nutrição'}
                 </div>
               </button>
@@ -220,7 +221,7 @@ const RecipeDetails: React.FC = () => {
                         className="peer appearance-none size-6 border-2 border-gray-300 dark:border-gray-600 rounded-md checked:bg-primary checked:border-primary transition-colors"
                         type="checkbox"
                       />
-                      <span className="material-symbols-outlined absolute text-background-dark text-[18px] opacity-0 peer-checked:opacity-100 pointer-events-none">check</span>
+                      <Check className="absolute text-background-dark opacity-0 peer-checked:opacity-100 pointer-events-none" size={18} />
                     </div>
                     <div className="flex-1">
                       <p className={`text-sm font-medium transition-all ${selectedIngredients.includes(ing.id) ? 'line-through opacity-50' : ''}`}>
@@ -234,7 +235,7 @@ const RecipeDetails: React.FC = () => {
                   disabled={selectedIngredients.length === 0}
                   className={`mt-2 w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl transition-all ${selectedIngredients.length > 0 ? 'text-primary bg-primary/10' : 'text-gray-400 bg-gray-100 dark:bg-white/5 cursor-not-allowed'}`}
                 >
-                  <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
+                  <ShoppingCart size={20} />
                   Adicionar {selectedIngredients.length > 0 ? selectedIngredients.length : ''} Ingredientes à Lista de Compras
                 </button>
               </div>
@@ -285,7 +286,7 @@ const RecipeDetails: React.FC = () => {
           onClick={() => setIsAddingToPlanner(true)}
           className="w-full h-14 bg-primary text-background-dark rounded-xl text-base font-bold tracking-wide shadow-lg active:scale-[0.99] transition-all flex items-center justify-center gap-2"
         >
-          <span className="material-symbols-outlined">calendar_today</span>
+          <Calendar size={20} />
           Adicionar ao Cardápio Semanal
         </button>
       </div>

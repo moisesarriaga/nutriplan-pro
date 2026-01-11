@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWaterNotifications } from '../../hooks/useWaterNotifications';
+import { ArrowLeft, Droplets, GlassWater, Bell } from 'lucide-react';
 
 const WaterLog: React.FC = () => {
     const navigate = useNavigate();
@@ -93,7 +94,7 @@ const WaterLog: React.FC = () => {
         <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-white pb-10">
             <header className="p-4 flex items-center gap-4 sticky top-0 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md z-10">
                 <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5">
-                    <span className="material-symbols-outlined">arrow_back</span>
+                    <ArrowLeft size={24} />
                 </button>
                 <h1 className="text-xl font-bold">Registro de Água</h1>
             </header>
@@ -124,7 +125,7 @@ const WaterLog: React.FC = () => {
                         />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="material-symbols-outlined text-primary size-12 flex items-center justify-center filled">water_drop</span>
+                        <Droplets className="text-primary fill-current" size={48} />
                         <span className="text-4xl font-black mt-2">{(currentWater / 1000).toFixed(1)}L</span>
                         <span className="text-slate-500 text-sm">da meta de {(goal / 1000).toFixed(1)}L</span>
                     </div>
@@ -137,7 +138,7 @@ const WaterLog: React.FC = () => {
                             onClick={() => addWater(amount)}
                             className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800 active:scale-95 transition"
                         >
-                            <span className="material-symbols-outlined text-primary">local_drink</span>
+                            <GlassWater className="text-primary" size={24} />
                             <span className="font-bold">{amount}ml</span>
                         </button>
                     ))}
@@ -152,7 +153,7 @@ const WaterLog: React.FC = () => {
                     </button>
 
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700">
-                        <span className="material-symbols-outlined text-primary">notifications</span>
+                        <Bell className="text-primary" size={24} />
                         <div className="flex-1">
                             <p className="text-sm font-semibold">Lembretes de Água</p>
                             <p className="text-xs text-slate-500">Receba notificações a cada 2 horas</p>

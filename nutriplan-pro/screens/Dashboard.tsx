@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
+import { User, Bell, Flame, Droplets, PlusCircle, ArrowRight, Plus, BookOpen, Clock, Zap } from 'lucide-react';
 import { MOCK_RECIPES, MOCK_USER } from '../../constants';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
@@ -84,7 +85,7 @@ const Dashboard: React.FC = () => {
                   style={{ backgroundImage: `url(${profile.avatar_url})` }}
                 ></div>
               ) : (
-                <span className="material-symbols-outlined text-slate-300 text-[24px]">person</span>
+                <User className="text-slate-300 w-6 h-6" />
               )}
             </div>
             <div className="absolute bottom-0 right-0 size-3 rounded-full bg-primary border-2 border-background-light dark:border-background-dark"></div>
@@ -100,7 +101,7 @@ const Dashboard: React.FC = () => {
           onClick={() => navigate('/notifications')}
           className="flex size-10 items-center justify-center rounded-full bg-slate-200 dark:bg-surface-dark text-slate-700 dark:text-white transition hover:bg-slate-300 active:scale-90"
         >
-          <span className="material-symbols-outlined">notifications</span>
+          <Bell size={20} />
         </button>
       </header>
 
@@ -108,7 +109,7 @@ const Dashboard: React.FC = () => {
         <div className="rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm flex flex-col gap-2">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-500">
-              <span className="material-symbols-outlined filled">local_fire_department</span>
+              <Flame size={20} className="fill-current" />
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-[#92c9a4]">Calories</p>
@@ -126,7 +127,7 @@ const Dashboard: React.FC = () => {
         <div className="rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm flex flex-col gap-2">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
-              <span className="material-symbols-outlined filled">water_drop</span>
+              <Droplets size={20} className="fill-current" />
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-[#92c9a4]">Water</p>
@@ -175,7 +176,7 @@ const Dashboard: React.FC = () => {
               onClick={() => navigate('/planner')}
               className="flex flex-col items-center justify-center gap-2 rounded-xl bg-dashed border-2 border-dashed border-slate-200 dark:border-slate-800 p-8 w-full cursor-pointer hover:border-primary transition-colors"
             >
-              <span className="material-symbols-outlined text-slate-400">add_circle</span>
+              <PlusCircle className="text-slate-400" size={24} />
               <p className="text-sm text-slate-500 text-center font-medium">Nenhuma refeição planejada para hoje.<br /><span className="text-primary">Toque para planejar</span></p>
             </div>
           )}
@@ -201,7 +202,7 @@ const Dashboard: React.FC = () => {
               </div>
               <button className="flex items-center justify-center gap-2 rounded-lg bg-primary h-10 px-5 text-sm font-bold text-background-dark shadow-lg shadow-primary/20">
                 <span>Ver Lista</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                <ArrowRight size={18} />
               </button>
             </div>
             <div
@@ -217,19 +218,19 @@ const Dashboard: React.FC = () => {
       <div className="px-4 py-4 grid grid-cols-3 gap-2">
         <button onClick={() => navigate('/planner')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5 active:scale-95 transition text-center">
           <div className="size-10 shrink-0 rounded-full bg-green-100 dark:bg-[#23482f] text-green-600 dark:text-primary flex items-center justify-center">
-            <span className="material-symbols-outlined">add</span>
+            <Plus size={20} />
           </div>
           <span className="text-[11px] font-bold leading-tight">Add Refeição</span>
         </button>
         <button onClick={() => navigate('/create-recipe')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5 active:scale-95 transition text-center">
           <div className="size-10 shrink-0 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 flex items-center justify-center">
-            <span className="material-symbols-outlined">menu_book</span>
+            <BookOpen size={20} />
           </div>
           <span className="text-[11px] font-bold leading-tight">Nova Receita</span>
         </button>
         <button onClick={() => navigate('/water-log')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5 active:scale-95 transition text-center">
           <div className="size-10 shrink-0 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-            <span className="material-symbols-outlined">water_drop</span>
+            <Droplets size={20} />
           </div>
           <span className="text-[11px] font-bold leading-tight">Água</span>
         </button>
@@ -257,8 +258,8 @@ const Dashboard: React.FC = () => {
                 </div>
                 <p className="text-xs text-slate-500 dark:text-[#92c9a4] line-clamp-2 mt-1">{recipe.description}</p>
                 <div className="flex items-center gap-3 mt-2 text-xs text-slate-400 dark:text-slate-500">
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">schedule</span> {recipe.time}</span>
-                  <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">bolt</span> {recipe.calories} kcal</span>
+                  <span className="flex items-center gap-1"><Clock size={14} /> {recipe.time}</span>
+                  <span className="flex items-center gap-1"><Zap size={14} /> {recipe.calories} kcal</span>
                 </div>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { X, Zap, Image, History } from 'lucide-react';
 
 const Scan: React.FC = () => {
     const navigate = useNavigate();
@@ -8,11 +9,11 @@ const Scan: React.FC = () => {
         <div className="flex flex-col min-h-screen bg-black text-white overflow-hidden">
             <header className="p-4 flex items-center justify-between absolute top-0 left-0 right-0 z-20">
                 <button onClick={() => navigate(-1)} className="p-2 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20">
-                    <span className="material-symbols-outlined">close</span>
+                    <X size={24} />
                 </button>
                 <span className="text-sm font-bold uppercase tracking-widest text-white/60">Scanner de Alimentos</span>
                 <button className="p-2 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20">
-                    <span className="material-symbols-outlined">flash_on</span>
+                    <Zap size={24} />
                 </button>
             </header>
 
@@ -40,14 +41,14 @@ const Scan: React.FC = () => {
 
             <div className="p-8 flex items-center justify-center gap-10 bg-black/40 backdrop-blur-xl border-t border-white/5 z-20">
                 <button className="flex flex-col items-center gap-2 opacity-60">
-                    <span className="material-symbols-outlined text-3xl">image</span>
+                    <Image size={32} />
                     <span className="text-[10px] font-bold uppercase">Galeria</span>
                 </button>
                 <button className="size-16 rounded-full border-4 border-white/20 flex items-center justify-center p-1">
                     <div className="size-full rounded-full bg-white active:scale-90 transition"></div>
                 </button>
                 <button className="flex flex-col items-center gap-2 opacity-60">
-                    <span className="material-symbols-outlined text-3xl">history</span>
+                    <History size={32} />
                     <span className="text-[10px] font-bold uppercase">Recentes</span>
                 </button>
             </div>

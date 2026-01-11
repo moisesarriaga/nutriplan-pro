@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import Navigation from '../../components/Navigation';
+import { ArrowLeft, HeartOff, Utensils, Flame } from 'lucide-react';
 
 interface FavoriteRecipe {
     id: string;
@@ -53,7 +54,7 @@ const Favorites: React.FC = () => {
         <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark pb-24">
             <div className="flex items-center px-4 py-4 justify-between sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
                 <button onClick={() => navigate(-1)} className="flex items-center justify-center rounded-full h-10 w-10 text-slate-900 dark:text-white hover:bg-black/5">
-                    <span className="material-symbols-outlined">arrow_back</span>
+                    <ArrowLeft size={24} />
                 </button>
                 <h2 className="text-lg font-bold flex-1 text-center">Minhas Favoritas</h2>
                 <div className="w-10"></div>
@@ -66,7 +67,7 @@ const Favorites: React.FC = () => {
                     </div>
                 ) : favorites.length === 0 ? (
                     <div className="text-center py-12 flex flex-col items-center gap-4">
-                        <span className="material-symbols-outlined text-6xl text-slate-300">favorite_off</span>
+                        <HeartOff className="text-slate-300" size={64} />
                         <p className="text-slate-500">Você ainda não favoritou nenhuma receita.</p>
                         <button
                             onClick={() => navigate('/search')}
@@ -84,14 +85,14 @@ const Favorites: React.FC = () => {
                                 className="group flex gap-4 p-4 rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-white/5 active:scale-[0.98] transition cursor-pointer"
                             >
                                 <div className="size-20 shrink-0 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-3xl text-primary">restaurant</span>
+                                    <Utensils className="text-primary" size={32} />
                                 </div>
                                 <div className="flex flex-col justify-center flex-1">
                                     <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{recipe.nome}</h3>
                                     <div className="flex items-center gap-3 mt-1">
                                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary uppercase">{recipe.categoria || 'Geral'}</span>
                                         <span className="flex items-center gap-1 text-slate-500 text-xs">
-                                            <span className="material-symbols-outlined text-[14px]">local_fire_department</span>
+                                            <Flame className="fill-current" size={14} />
                                             {recipe.calorias_por_porcao || 0} kcal
                                         </span>
                                     </div>

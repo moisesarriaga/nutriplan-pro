@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Home, Search, ShoppingCart, Calendar, User } from 'lucide-react';
 
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
@@ -9,11 +10,11 @@ const Navigation: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const navItems = [
-    { label: 'Início', path: '/dashboard', icon: 'home' },
-    { label: 'Buscar', path: '/search', icon: 'search' },
-    { label: 'Cart', path: '/cart', icon: 'shopping_cart', isCenter: true },
-    { label: 'Plano', path: '/planner', icon: 'calendar_month' },
-    { label: 'Perfil', path: '/profile', icon: 'person' },
+    { label: 'Início', path: '/dashboard', icon: Home },
+    { label: 'Buscar', path: '/search', icon: Search },
+    { label: 'Cart', path: '/cart', icon: ShoppingCart, isCenter: true },
+    { label: 'Plano', path: '/planner', icon: Calendar },
+    { label: 'Perfil', path: '/profile', icon: User },
   ];
 
   return (
@@ -26,7 +27,7 @@ const Navigation: React.FC = () => {
                 onClick={() => navigate(item.path)}
                 className={`flex items-center justify-center w-14 h-14 rounded-full bg-primary text-black -mt-8 shadow-lg shadow-primary/30 active:scale-95 transition-transform border-4 border-white dark:border-background-dark`}
               >
-                <span className="material-symbols-outlined filled">{item.icon}</span>
+                <item.icon size={24} className="fill-current" />
               </button>
             </div>
           ) : (
@@ -36,9 +37,10 @@ const Navigation: React.FC = () => {
               className={`flex flex-col items-center gap-1 w-12 transition-colors ${isActive(item.path) ? 'text-primary' : 'text-slate-400 dark:text-slate-500'
                 }`}
             >
-              <span className={`material-symbols-outlined ${isActive(item.path) ? 'filled' : ''}`}>
-                {item.icon}
-              </span>
+              <item.icon
+                size={24}
+                className={`${isActive(item.path) ? 'fill-current' : ''}`}
+              />
               <span className="text-[10px] font-medium">{item.label}</span>
             </button>
           )

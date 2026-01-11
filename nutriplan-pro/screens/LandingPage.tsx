@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, ChevronDown, ChevronUp, ChefHat, UtensilsCrossed, ShoppingCart, Sparkles } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, ChefHat, UtensilsCrossed, ShoppingCart, Sparkles, User, Sun, Moon, Monitor } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -60,7 +60,7 @@ const LandingPage: React.FC = () => {
                                                 style={{ backgroundImage: `url(${profile.avatar_url})` }}
                                             ></div>
                                         ) : (
-                                            <span className="material-symbols-outlined text-slate-300 text-[20px]">person</span>
+                                            <User className="text-slate-300 w-5 h-5" />
                                         )}
                                     </div>
                                 </div>
@@ -230,9 +230,9 @@ const LandingPage: React.FC = () => {
                     {/* Static Theme Toggle (Footer) */}
                     <div className="flex items-center bg-[#1b1b1b] rounded-[18px] p-1.5 shadow-xl border border-white/5">
                         {[
-                            { id: 'light', icon: 'light_mode' },
-                            { id: 'dark', icon: 'dark_mode' },
-                            { id: 'auto', icon: 'desktop_windows' }
+                            { id: 'light', icon: Sun },
+                            { id: 'dark', icon: Moon },
+                            { id: 'auto', icon: Monitor }
                         ].map((opt) => (
                             <button
                                 key={opt.id}
@@ -242,9 +242,10 @@ const LandingPage: React.FC = () => {
                                     : 'text-slate-400 hover:text-white'
                                     }`}
                             >
-                                <span className={`material-symbols-outlined text-[20px] ${theme === opt.id ? 'filled' : ''}`}>
-                                    {opt.icon}
-                                </span>
+                                <opt.icon
+                                    size={20}
+                                    className={`${theme === opt.id ? 'fill-current' : ''}`}
+                                />
                                 {theme === opt.id && (
                                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-neon-green rounded-full border-2 border-[#1b1b1b]"></span>
                                 )}

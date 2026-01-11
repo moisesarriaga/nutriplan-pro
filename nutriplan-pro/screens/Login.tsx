@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
+import { ArrowLeft, Activity, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 interface LoginProps {
   onLogin: () => void;
@@ -38,7 +39,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-gray-200">
       <div className="flex items-center px-4 py-4 justify-between sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
         <button onClick={() => navigate(-1)} className="flex items-center justify-center rounded-full h-10 w-10 text-slate-900 dark:text-white hover:bg-black/5">
-          <span className="material-symbols-outlined">arrow_back</span>
+          <ArrowLeft size={24} />
         </button>
         <div className="w-10"></div>
       </div>
@@ -46,7 +47,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="flex-1 flex flex-col px-6 pt-4 pb-12 w-full max-w-md mx-auto">
         <div className="mb-10 text-center">
           <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-primary mb-6 shadow-lg shadow-primary/20">
-            <span className="material-symbols-outlined text-4xl text-black filled">nutrition</span>
+            <Activity className="text-black fill-current" size={36} />
           </div>
           <h1 className="text-3xl font-bold tracking-tight mb-2 text-slate-900 dark:text-white">Bem-vindo de volta!</h1>
           <p className="text-slate-500 dark:text-gray-400 text-sm">Acesse sua conta para ver suas receitas e listas.</p>
@@ -63,7 +64,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <label className="block text-sm font-semibold ml-1 text-slate-700 dark:text-gray-300">E-mail</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <span className="material-symbols-outlined text-[20px]">mail</span>
+                <Mail className="text-slate-400" size={20} />
               </div>
               <input
                 className="block w-full pl-10 pr-4 py-3.5 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all"
@@ -84,7 +85,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <span className="material-symbols-outlined text-[20px]">lock</span>
+                <Lock className="text-slate-400" size={20} />
               </div>
               <input
                 className="block w-full pl-10 pr-12 py-3.5 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all"
@@ -100,9 +101,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                <span className="material-symbols-outlined text-[20px]">
-                  {showPassword ? 'visibility' : 'visibility_off'}
-                </span>
+                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
               </button>
             </div>
           </div>
@@ -117,7 +116,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             ) : (
               <>
                 <span>Entrar</span>
-                <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+                <ArrowRight size={20} />
               </>
             )}
           </button>

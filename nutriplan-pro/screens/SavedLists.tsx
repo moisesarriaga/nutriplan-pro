@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import Navigation from '../../components/Navigation';
+import { ArrowLeft, Receipt, ShoppingCart } from 'lucide-react';
 
 const SavedLists: React.FC = () => {
     const navigate = useNavigate();
@@ -37,7 +38,7 @@ const SavedLists: React.FC = () => {
         <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark pb-24">
             <div className="flex items-center px-4 py-4 justify-between sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
                 <button onClick={() => navigate(-1)} className="flex items-center justify-center rounded-full h-10 w-10 text-slate-900 dark:text-white hover:bg-black/5">
-                    <span className="material-symbols-outlined">arrow_back</span>
+                    <ArrowLeft size={24} />
                 </button>
                 <h2 className="text-lg font-bold flex-1 text-center">Minhas Listas</h2>
                 <div className="w-10"></div>
@@ -50,7 +51,7 @@ const SavedLists: React.FC = () => {
                     </div>
                 ) : items.length === 0 ? (
                     <div className="text-center py-12 flex flex-col items-center gap-4">
-                        <span className="material-symbols-outlined text-6xl text-slate-300">receipt_long</span>
+                        <Receipt className="text-slate-300" size={64} />
                         <p className="text-slate-500">Sua lista de compras está vazia.</p>
                         <p className="text-xs text-slate-400">Adicione receitas ao seu cardápio semanal para gear uma lista.</p>
                         <button
@@ -71,7 +72,7 @@ const SavedLists: React.FC = () => {
                                 onClick={() => navigate('/cart')}
                                 className="size-12 rounded-2xl bg-primary text-background-dark flex items-center justify-center shadow-lg shadow-primary/20"
                             >
-                                <span className="material-symbols-outlined">shopping_cart</span>
+                                <ShoppingCart size={24} />
                             </button>
                         </div>
 

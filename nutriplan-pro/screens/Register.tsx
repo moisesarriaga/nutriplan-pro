@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
+import { ArrowLeft, User, Mail, Lock, EyeOff } from 'lucide-react';
 
 interface RegisterProps {
   onRegister: () => void;
@@ -43,7 +44,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-gray-200">
       <div className="flex items-center px-4 py-4 justify-between sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
         <button onClick={() => navigate(-1)} className="flex items-center justify-center rounded-full h-10 w-10 text-slate-900 dark:text-white hover:bg-black/5">
-          <span className="material-symbols-outlined">arrow_back</span>
+          <ArrowLeft size={24} />
         </button>
         <div className="w-10"></div>
       </div>
@@ -65,7 +66,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
             <label className="block text-sm font-medium mb-1.5 text-slate-700 dark:text-gray-300">Nome Completo</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <span className="material-symbols-outlined text-[20px]">person</span>
+                <User className="text-slate-400" size={20} />
               </div>
               <input
                 className="block w-full pl-10 pr-3 py-3 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark focus:ring-primary focus:border-primary shadow-sm"
@@ -83,7 +84,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
             <label className="block text-sm font-medium mb-1.5 text-slate-700 dark:text-gray-300">E-mail</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <span className="material-symbols-outlined text-[20px]">mail</span>
+                <Mail className="text-slate-400" size={20} />
               </div>
               <input
                 className="block w-full pl-10 pr-3 py-3 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark focus:ring-primary focus:border-primary shadow-sm"
@@ -101,7 +102,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
             <label className="block text-sm font-medium mb-1.5 text-slate-700 dark:text-gray-300">Senha</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <span className="material-symbols-outlined text-[20px]">lock</span>
+                <Lock className="text-slate-400" size={20} />
               </div>
               <input
                 className="block w-full pl-10 pr-10 py-3 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark focus:ring-primary focus:border-primary shadow-sm"
@@ -113,7 +114,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                 onKeyDown={(e) => e.key === 'Enter' && handleRegister(e as any)}
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-slate-400">
-                <span className="material-symbols-outlined text-[20px]">visibility_off</span>
+                <EyeOff className="text-slate-400" size={20} />
               </div>
             </div>
           </div>

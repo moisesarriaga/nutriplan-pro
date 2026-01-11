@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { extractRecipeFromText, ExtractedRecipe, ExtractedIngredient } from '../../services/openaiService';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { ArrowLeft, Sparkles, Check } from 'lucide-react';
 
 const CreateRecipe: React.FC = () => {
   const navigate = useNavigate();
@@ -106,7 +107,7 @@ const CreateRecipe: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark max-w-md mx-auto shadow-2xl">
       <header className="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
         <button onClick={() => navigate(-1)} className="flex items-center justify-center p-2 -ml-2 rounded-full hover:bg-slate-200/50">
-          <span className="material-symbols-outlined">arrow_back</span>
+          <ArrowLeft size={24} />
         </button>
         <h1 className="text-lg font-bold flex-1 text-center">Nova Receita com IA</h1>
         <button onClick={() => navigate(-1)} className="text-sm font-semibold text-primary">Cancelar</button>
@@ -139,7 +140,7 @@ const CreateRecipe: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <span className="material-symbols-outlined">auto_awesome</span>
+                    <Sparkles size={20} />
                     Processar com IA
                   </>
                 )}
@@ -248,7 +249,7 @@ const CreateRecipe: React.FC = () => {
             onClick={saveRecipe}
             className="w-full rounded-xl bg-primary px-6 py-4 text-base font-bold text-black shadow-lg hover:shadow-primary/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
           >
-            <span className="material-symbols-outlined">check</span>
+            <Check size={20} />
             Salvar Receita
           </button>
         </footer>

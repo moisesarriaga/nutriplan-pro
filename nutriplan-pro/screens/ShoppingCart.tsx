@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { MOCK_RECIPES } from '../../constants';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 import UpgradePrompt from '../../components/UpgradePrompt';
+import { ArrowLeft, MoreHorizontal, Plus, Lock, ShoppingBasket, Package, Check, Trash2, ArrowRight } from 'lucide-react';
 
 interface ShoppingItem {
   usuario_id: string;
@@ -147,11 +148,11 @@ const ShoppingCart: React.FC = () => {
     <div className="flex flex-col min-h-screen pb-52">
       <header className="sticky top-0 z-20 flex items-center justify-between bg-background-light/90 dark:bg-background-dark/90 px-4 py-4 backdrop-blur-md">
         <button onClick={() => navigate(-1)} className="flex size-10 items-center justify-center rounded-full text-slate-900 dark:text-white hover:bg-black/5">
-          <span className="material-symbols-outlined">arrow_back</span>
+          <ArrowLeft size={20} />
         </button>
         <h1 className="text-lg font-bold">Meu Carrinho</h1>
         <button className="flex size-10 items-center justify-center rounded-full text-slate-900 dark:text-white hover:bg-black/5">
-          <span className="material-symbols-outlined">more_horiz</span>
+          <MoreHorizontal size={20} />
         </button>
       </header>
 
@@ -166,7 +167,7 @@ const ShoppingCart: React.FC = () => {
               placeholder="Adicionar item manualmente..."
               className="w-full h-12 pl-10 pr-4 bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">add</span>
+            <Plus className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           </div>
           <button
             onClick={addItem}
@@ -182,7 +183,7 @@ const ShoppingCart: React.FC = () => {
             <div className="flex flex-col gap-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1">
                 Total Estimado
-                {!canSumPrices && <span className="material-symbols-outlined text-[12px]">lock</span>}
+                {!canSumPrices && <Lock size={12} />}
               </span>
               <div
                 className={`flex items-baseline gap-1 ${!canSumPrices ? 'cursor-pointer' : ''}`}
@@ -194,7 +195,7 @@ const ShoppingCart: React.FC = () => {
                 {!canSumPrices && <span className="text-xs text-primary font-bold ml-2">Upgrade p/ ver</span>}
               </div>
               <p className="text-sm font-medium text-primary-dark dark:text-primary flex items-center gap-1 mt-1">
-                <span className="material-symbols-outlined text-[16px] filled">shopping_basket</span>
+                <ShoppingBasket size={16} className="fill-current" />
                 {items.filter(i => !i.comprado).length} itens restantes
               </p>
             </div>
@@ -218,7 +219,7 @@ const ShoppingCart: React.FC = () => {
           <div className="px-4 py-10 text-center text-gray-500">Carregando itens...</div>
         ) : items.length === 0 ? (
           <div className="px-4 py-10 text-center text-gray-500">
-            <span className="material-symbols-outlined text-4xl mb-2">inventory_2</span>
+            <Package className="text-4xl mb-2" size={40} />
             <p>Seu carrinho está vazio.</p>
           </div>
         ) : (
@@ -235,7 +236,7 @@ const ShoppingCart: React.FC = () => {
                           onClick={() => togglePurchased(item.nome_item)}
                           className="size-6 rounded-md border-2 border-slate-200 dark:border-gray-600 flex items-center justify-center transition-colors"
                         >
-                          {item.comprado && <span className="material-symbols-outlined text-primary text-[18px]">check</span>}
+                          {item.comprado && <Check className="text-primary" size={18} />}
                         </button>
                         <div className="flex flex-col min-w-0">
                           <h4 className="text-sm font-bold leading-tight truncate">{item.nome_item}</h4>
@@ -249,7 +250,7 @@ const ShoppingCart: React.FC = () => {
                         onClick={() => deleteItem(item.nome_item)}
                         className="flex size-8 items-center justify-center rounded-full text-slate-300 hover:text-red-500 transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[20px]">delete</span>
+                        <Trash2 size={20} />
                       </button>
                     </div>
                   </div>
@@ -270,7 +271,7 @@ const ShoppingCart: React.FC = () => {
                             onClick={() => togglePurchased(item.nome_item)}
                             className="size-6 rounded-md bg-primary border-2 border-primary flex items-center justify-center transition-colors"
                           >
-                            <span className="material-symbols-outlined text-background-dark text-[18px]">check</span>
+                            <Check className="text-background-dark" size={18} />
                           </button>
                           <div className="flex flex-col min-w-0">
                             <h4 className="text-sm font-bold leading-tight truncate line-through text-slate-400">{item.nome_item}</h4>
@@ -280,7 +281,7 @@ const ShoppingCart: React.FC = () => {
                           onClick={() => deleteItem(item.nome_item)}
                           className="flex size-8 items-center justify-center rounded-full text-slate-300 hover:text-red-500 transition-colors"
                         >
-                          <span className="material-symbols-outlined text-[20px]">delete</span>
+                          <Trash2 size={20} />
                         </button>
                       </div>
                     </div>
@@ -305,7 +306,7 @@ const ShoppingCart: React.FC = () => {
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 font-bold text-black shadow-lg shadow-primary/25 active:scale-[0.98]"
           >
             <span>Confirmar Pedido</span>
-            <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+            <ArrowRight size={20} />
           </button>
         </div>
       </div>

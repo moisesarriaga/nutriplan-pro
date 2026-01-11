@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
 import { MOCK_RECIPES } from '../../constants';
+import { ArrowLeft, Search as SearchIcon, Sliders, Plus, Zap, Clock } from 'lucide-react';
 
 const Search: React.FC = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const Search: React.FC = () => {
     <div className="flex flex-col min-h-screen pb-24">
       <header className="sticky top-0 z-30 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 pb-2 flex items-center justify-between">
         <button onClick={() => navigate(-1)} className="flex items-center justify-center p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10">
-          <span className="material-symbols-outlined">arrow_back</span>
+          <ArrowLeft size={20} />
         </button>
         <h2 className="text-lg font-bold flex-1 text-center">Buscar Receitas</h2>
         <div className="w-10"></div>
@@ -30,7 +31,7 @@ const Search: React.FC = () => {
         <div className="px-4 mb-4">
           <div className="relative group">
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-              <span className="material-symbols-outlined">search</span>
+              <SearchIcon size={20} />
             </span>
             <input
               value={searchTerm}
@@ -41,7 +42,7 @@ const Search: React.FC = () => {
             />
             <button className="absolute inset-y-0 right-0 flex items-center pr-2">
               <span className="p-1.5 rounded-lg text-gray-400">
-                <span className="material-symbols-outlined">tune</span>
+                <Sliders size={20} />
               </span>
             </button>
           </div>
@@ -82,7 +83,7 @@ const Search: React.FC = () => {
                 ></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100"></div>
                 <button className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 dark:bg-black/80 text-primary shadow-md">
-                  <span className="material-symbols-outlined text-[20px] font-bold">add</span>
+                  <Plus size={20} />
                 </button>
                 <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/40 backdrop-blur-md border border-white/10">
                   <span className="text-[10px] font-bold text-white uppercase tracking-wider">{recipe.category.split(' ')[0]}</span>
@@ -92,10 +93,10 @@ const Search: React.FC = () => {
                 <h4 className="text-sm font-bold leading-tight line-clamp-2">{recipe.name}</h4>
                 <div className="mt-auto pt-2 flex items-center justify-between text-xs text-gray-500">
                   <span className="flex items-center gap-1 text-primary font-medium">
-                    <span className="material-symbols-outlined text-[14px]">bolt</span> {recipe.calories}
+                    <Zap size={14} className="text-primary" /> {recipe.calories}
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">schedule</span> {recipe.time}
+                    <Clock size={14} /> {recipe.time}
                   </span>
                 </div>
               </div>

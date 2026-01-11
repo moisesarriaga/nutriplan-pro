@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 import UpgradePrompt from '../../components/UpgradePrompt';
 import Navigation from '../../components/Navigation';
+import { ArrowLeft, History, Flame, Lock } from 'lucide-react';
 
 interface HistoryItem {
     id: string;
@@ -69,7 +70,7 @@ const MealHistory: React.FC = () => {
         <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark pb-24">
             <div className="flex items-center px-4 py-4 justify-between sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
                 <button onClick={() => navigate(-1)} className="flex items-center justify-center rounded-full h-10 w-10 text-slate-900 dark:text-white hover:bg-black/5">
-                    <span className="material-symbols-outlined">arrow_back</span>
+                    <ArrowLeft size={24} />
                 </button>
                 <h2 className="text-lg font-bold flex-1 text-center">Meu Histórico</h2>
                 <div className="w-10"></div>
@@ -82,7 +83,7 @@ const MealHistory: React.FC = () => {
                     </div>
                 ) : history.length === 0 ? (
                     <div className="text-center py-12 flex flex-col items-center gap-4">
-                        <span className="material-symbols-outlined text-6xl text-slate-300">history</span>
+                        <History className="text-slate-300" size={64} />
                         <p className="text-slate-500">Nenhuma refeição registrada ainda.</p>
                     </div>
                 ) : (
@@ -105,11 +106,11 @@ const MealHistory: React.FC = () => {
                                     className={`flex items-center gap-1 mt-1 text-sm text-slate-500 ${!canTrackCalories ? 'cursor-pointer' : ''}`}
                                     onClick={!canTrackCalories ? () => setShowUpgradeModal(true) : undefined}
                                 >
-                                    <span className="material-symbols-outlined text-[16px] text-orange-400">local_fire_department</span>
+                                    <Flame className="text-orange-400 fill-current" size={16} />
                                     <span className={!canTrackCalories ? 'blur-[3px] select-none' : ''}>
                                         {item.calorias} kcal
                                     </span>
-                                    {!canTrackCalories && <span className="material-symbols-outlined text-[12px] ml-1">lock</span>}
+                                    {!canTrackCalories && <Lock className="ml-1" size={12} />}
                                 </div>
                             </div>
                         ))}
