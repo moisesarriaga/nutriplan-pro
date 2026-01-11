@@ -6,8 +6,7 @@
         "inlineSourceMap": true,
         "isolatedModules": true,
         "lib": [
-            "deno.window",
-            "deno.ns"
+            "ESNext"
         ],
         "module": "esnext",
         "moduleResolution": "node",
