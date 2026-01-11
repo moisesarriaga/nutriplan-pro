@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export const useWaterNotifications = () => {
+export const useWaterNotifications = (iconPath = '/favicon.ico') => {
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [permission, setPermission] = useState<NotificationPermission>('default');
 
@@ -30,8 +30,8 @@ export const useWaterNotifications = () => {
         if (permission === 'granted') {
             new Notification(title, {
                 body,
-                icon: '/favicon.ico',
-                badge: '/favicon.ico',
+                icon: iconPath,
+                badge: iconPath,
                 tag: 'water-reminder',
             });
         }
