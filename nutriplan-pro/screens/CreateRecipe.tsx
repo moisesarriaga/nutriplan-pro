@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { extractRecipeFromText, ExtractedRecipe, ExtractedIngredient } from '@/services/openaiService';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
-import { ArrowLeft, Sparkles, Check } from 'lucide-react';
+import { ArrowLeft, Sparkles, Check, Plus, X } from 'lucide-react';
 
 const CreateRecipe: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +16,8 @@ const CreateRecipe: React.FC = () => {
   const [recipeName, setRecipeName] = useState('');
   const [recipeInstructions, setRecipeInstructions] = useState('');
   const [ingredients, setIngredients] = useState<ExtractedIngredient[]>([]);
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [manualIngredient, setManualIngredient] = useState({ name: '', quantity: 0, unit: 'g', caloriesPerUnit: 0 });
 
   const processWithAI = async () => {
     if (!recipeText.trim()) {
@@ -50,6 +52,26 @@ const CreateRecipe: React.FC = () => {
     }
 
     setIngredients(updated);
+  };
+
+  const addManualIngredient = () => {
+    if (!manualIngredient.name.trim()) {
+      alert('Por favor, preencha o nome do ingrediente.');
+      return;
+    }
+
+    const newIngredient: ExtractedIngredient = {
+      name: manualIngredient.name,
+      quantity: manualIngredient.quantity,
+      unit: manualIngredient.unit,
+      caloriesPerUnit: manualIngredient.caloriesPerUnit,
+      totalCalories: (manualIngredient.quantity * manualIngredient.caloriesPerUnit) / 100
+    };
+
+    setIngredients([...ingredients, newIngredient]);
+    setManualIngredient({ name: '', quantity: 0, unit: 'g', caloriesPerUnit: 0 });
+    setShowManualModal(false);
+    setShowPreview(true);
   };
 
   const saveRecipe = async () => {
@@ -128,23 +150,32 @@ const CreateRecipe: React.FC = () => {
                 />
               </div>
 
-              <button
-                onClick={processWithAI}
-                disabled={isProcessing}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-base font-bold text-black shadow-lg hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-50"
-              >
-                {isProcessing ? (
-                  <>
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
-                    Processando com IA...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={20} />
-                    Processar com IA
-                  </>
-                )}
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={processWithAI}
+                  disabled={isProcessing}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-base font-bold text-black shadow-lg hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-50"
+                >
+                  {isProcessing ? (
+                    <>
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
+                      Processando com IA...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={20} />
+                      Processar com IA
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowManualModal(true)}
+                  className="flex items-center justify-center rounded-xl bg-slate-200 dark:bg-slate-700 px-6 py-4 text-black dark:text-white shadow-lg hover:shadow-lg transition-all active:scale-[0.98]"
+                  title="Adicionar ingrediente manualmente"
+                >
+                  <Plus size={24} />
+                </button>
+              </div>
             </section>
 
             <div className="text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 p-3 rounded-lg">
@@ -253,6 +284,90 @@ const CreateRecipe: React.FC = () => {
             Salvar Receita
           </button>
         </footer>
+      )}
+
+      {/* Modal de Adição Manual */}
+      {showManualModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
+            <button
+              onClick={() => setShowManualModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <h2 className="text-xl font-bold mb-6">Adicionar Ingrediente</h2>
+
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome do Ingrediente</label>
+                <input
+                  className="w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-slate-800 px-4 py-3 focus:ring-primary focus:border-primary transition-all"
+                  placeholder="Ex: Arroz, Feijão, Frango..."
+                  type="text"
+                  value={manualIngredient.name}
+                  onChange={(e) => setManualIngredient({ ...manualIngredient, name: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Quantidade</label>
+                  <input
+                    className="w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-slate-800 px-4 py-3 focus:ring-primary focus:border-primary transition-all"
+                    type="number"
+                    step="0.001"
+                    value={manualIngredient.quantity}
+                    onChange={(e) => setManualIngredient({ ...manualIngredient, quantity: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Unidade</label>
+                  <select
+                    className="w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-slate-800 px-4 py-3 focus:ring-primary focus:border-primary transition-all"
+                    value={manualIngredient.unit}
+                    onChange={(e) => setManualIngredient({ ...manualIngredient, unit: e.target.value })}
+                  >
+                    <option value="g">g</option>
+                    <option value="kg">kg</option>
+                    <option value="ml">ml</option>
+                    <option value="L">L</option>
+                    <option value="un">un</option>
+                    <option value="xícara">xícara</option>
+                    <option value="colher">colher</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Calorias por 100g/ml</label>
+                <input
+                  className="w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-slate-800 px-4 py-3 focus:ring-primary focus:border-primary transition-all"
+                  type="number"
+                  placeholder="Ex: 130"
+                  value={manualIngredient.caloriesPerUnit}
+                  onChange={(e) => setManualIngredient({ ...manualIngredient, caloriesPerUnit: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => setShowManualModal(false)}
+                  className="flex-1 rounded-xl bg-slate-200 dark:bg-slate-700 px-6 py-3 text-base font-semibold text-slate-700 dark:text-slate-200 transition-all active:scale-[0.98]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={addManualIngredient}
+                  className="flex-1 rounded-xl bg-primary px-6 py-3 text-base font-bold text-black shadow-lg hover:shadow-primary/30 transition-all active:scale-[0.98]"
+                >
+                  Adicionar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
