@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR">
 
 <head>
     <meta charset="utf-8" />
@@ -48,8 +48,21 @@
 
 
         body {
-            background-color: #131e11;
-            /* Dark mode default */
+            background-color: #fffff6;
+        }
+
+        /* Personalização da barra de rolagem para remover a lateral cinza */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #fffff6;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #13ec5b;
+            border-radius: 5px;
         }
     </style>
     <script type="importmap">
