@@ -13,12 +13,12 @@ Deno.serve(async (req) => {
 
     try {
         console.log('--- TESTE: MODO OPENAI ATIVADO ---');
-        // Support both OpenAI and generic AI key names
-        const apiKey = Deno.env.get('OPENAI_API_KEY') || Deno.env.get('GEMINI_API_KEY') || Deno.env.get('VITE_GEMINI_API_KEY');
+        // Support OpenAI key names
+        const apiKey = Deno.env.get('OPENAI_API_KEY');
 
         if (!apiKey) {
-            console.error('AI API Key not found in environment');
-            return new Response(JSON.stringify({ error: 'Configuração da IA incompleta no servidor. Verifique as chaves (OPENAI_API_KEY) no Supabase.' }), {
+            console.error('OPENAI_API_KEY not found in environment');
+            return new Response(JSON.stringify({ error: 'Configuração da IA incompleta no servidor. Verifique a chave OPENAI_API_KEY no Supabase.' }), {
                 status: 500,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
@@ -53,7 +53,7 @@ ${text}
 `;
 
         // Use OpenAI GPT-5-nano as requested
-        const openAiKey = Deno.env.get('OPENAI_API_KEY') || apiKey; // Fallback to provided key if environment not set
+        const openAiKey = apiKey;
         const apiUrl = 'https://api.openai.com/v1/responses';
 
         const openAiRes = await fetch(apiUrl, {
