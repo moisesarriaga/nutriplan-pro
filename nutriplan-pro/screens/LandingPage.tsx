@@ -53,10 +53,16 @@ const LandingPage: React.FC = () => {
                                 className="flex items-center gap-3 cursor-pointer group"
                             >
                                 <div className="relative">
-                                    <div
-                                        className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-9 ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all"
-                                        style={{ backgroundImage: `url(${profile?.avatar_url || MOCK_USER.avatar})` }}
-                                    ></div>
+                                    <div className="flex items-center justify-center rounded-full size-9 ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all bg-white dark:bg-surface-dark overflow-hidden">
+                                        {profile?.avatar_url ? (
+                                            <div
+                                                className="w-full h-full bg-center bg-no-repeat bg-cover"
+                                                style={{ backgroundImage: `url(${profile.avatar_url})` }}
+                                            ></div>
+                                        ) : (
+                                            <span className="material-symbols-outlined text-slate-300 text-[20px]">person</span>
+                                        )}
+                                    </div>
                                 </div>
                                 <span className="text-sm font-bold text-slate-700 dark:text-gray-200 group-hover:text-neon-green transition-colors">
                                     {profile?.nome ? profile.nome.split(' ')[0] : 'Usuário'}

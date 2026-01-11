@@ -175,12 +175,16 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
 
       <div className="flex flex-col items-center px-4 pb-6 pt-2">
         <div className="relative mb-4 group cursor-pointer">
-          <div className="h-32 w-32 rounded-full border-4 border-background-light dark:border-background-dark shadow-xl overflow-hidden relative">
-            <img
-              src={profile?.avatar_url || MOCK_USER.avatar}
-              alt="Profile"
-              className="h-full w-full object-cover"
-            />
+          <div className="h-32 w-32 rounded-full border-4 border-background-light dark:border-background-dark shadow-xl overflow-hidden relative flex items-center justify-center bg-white dark:bg-surface-dark">
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt="Profile"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="material-symbols-outlined text-slate-300 text-[80px]">person</span>
+            )}
           </div>
           <div
             onClick={() => setIsEditing(true)}
@@ -192,8 +196,8 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
         <h1 className="text-2xl font-bold tracking-tight text-center">{profile?.nome || user?.user_metadata?.full_name || 'Usuário'}</h1>
         <p className="text-slate-500 dark:text-slate-400 text-base font-normal mt-1 text-center">{user?.email}</p>
         <div className={`mt-3 px-3 py-1 rounded-full border flex items-center gap-2 ${subscription?.plan_type === 'simple' || subscription?.plan_type === 'premium'
-            ? 'bg-primary/20 border-primary/30'
-            : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+          ? 'bg-primary/20 border-primary/30'
+          : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
           }`}>
           {subscription?.plan_type === 'simple' || subscription?.plan_type === 'premium' ? (
             <>

@@ -77,10 +77,16 @@ const Dashboard: React.FC = () => {
       <header className="sticky top-0 z-20 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 pt-6 pb-2">
         <div className="flex items-center gap-3">
           <div className="relative cursor-pointer" onClick={() => navigate('/profile')}>
-            <div
-              className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 ring-primary/20"
-              style={{ backgroundImage: `url(${profile?.avatar_url || MOCK_USER.avatar})` }}
-            ></div>
+            <div className="flex items-center justify-center rounded-full size-10 ring-2 ring-primary/20 bg-white dark:bg-surface-dark overflow-hidden">
+              {profile?.avatar_url ? (
+                <div
+                  className="w-full h-full bg-center bg-no-repeat bg-cover"
+                  style={{ backgroundImage: `url(${profile.avatar_url})` }}
+                ></div>
+              ) : (
+                <span className="material-symbols-outlined text-slate-300 text-[24px]">person</span>
+              )}
+            </div>
             <div className="absolute bottom-0 right-0 size-3 rounded-full bg-primary border-2 border-background-light dark:border-background-dark"></div>
           </div>
           <div className="flex flex-col">
