@@ -348,12 +348,16 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
             <div className="space-y-4">
               <div className="flex flex-col items-center mb-4">
                 <div className="relative">
-                  <div className="h-24 w-24 rounded-full border-4 border-slate-100 dark:border-slate-800 overflow-hidden relative">
-                    <img
-                      src={editForm.avatar_url || profile?.avatar_url || MOCK_USER.avatar}
-                      alt="Preview"
-                      className="h-full w-full object-cover"
-                    />
+                  <div className="h-24 w-24 rounded-full border-4 border-slate-100 dark:border-slate-800 overflow-hidden relative flex items-center justify-center bg-white dark:bg-surface-dark">
+                    {editForm.avatar_url || profile?.avatar_url ? (
+                      <img
+                        src={editForm.avatar_url || profile?.avatar_url || ''}
+                        alt="Preview"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="material-symbols-outlined text-slate-300 text-[60px]">person</span>
+                    )}
                     {uploading && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
