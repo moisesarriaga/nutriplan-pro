@@ -5,6 +5,7 @@ import Navigation from '../../components/Navigation';
 import { MOCK_USER } from '../../constants';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface ProfileProps {
   onLogout: () => void;
@@ -22,6 +23,7 @@ interface UserProfile {
 const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -266,6 +268,38 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
             </div>
             <span className="material-symbols-outlined text-slate-400">chevron_right</span>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <h3 className="px-4 text-lg font-bold mb-3 flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary">dark_mode</span>
+          Aparência
+        </h3>
+        <div className="mx-4 p-1 rounded-2xl bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-slate-800 flex items-center relative h-12">
+          {[
+            { id: 'light', label: 'Light' },
+            { id: 'dark', label: 'Dark' },
+            { id: 'auto', label: 'Auto' }
+          ].map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => setTheme(opt.id as any)}
+              className={`flex-1 flex items-center justify-center h-10 rounded-xl text-sm font-bold transition-all relative z-10 ${theme === opt.id
+                ? 'text-white'
+                : 'text-slate-500 dark:text-slate-400'
+                }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+          <div
+            className="absolute h-10 bg-primary rounded-xl transition-all duration-300 shadow-sm"
+            style={{
+              width: 'calc((100% - 8px) / 3)',
+              left: theme === 'light' ? '4px' : theme === 'dark' ? 'calc(4px + (100% - 8px) / 3)' : 'calc(4px + 2 * (100% - 8px) / 3)'
+            }}
+          />
         </div>
       </div>
 

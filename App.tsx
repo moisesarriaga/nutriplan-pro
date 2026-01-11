@@ -23,7 +23,7 @@ import { SubscriptionProvider } from './contexts/SubscriptionContext';
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-black flex justify-center">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0a140a] flex justify-center">
       <div className="w-full max-w-[1000px] bg-background-light dark:bg-background-dark min-h-screen relative shadow-2xl overflow-x-hidden">
         {children}
       </div>
@@ -80,14 +80,18 @@ const AppContent: React.FC = () => {
   );
 };
 
+import { ThemeProvider } from './contexts/ThemeContext';
+
 const App: React.FC = () => {
   return (
     <HashRouter>
-      <AuthProvider>
-        <SubscriptionProvider>
-          <AppContent />
-        </SubscriptionProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <SubscriptionProvider>
+            <AppContent />
+          </SubscriptionProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </HashRouter>
   );
 };
