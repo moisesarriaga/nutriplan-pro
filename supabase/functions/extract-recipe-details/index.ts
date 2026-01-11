@@ -12,6 +12,7 @@ Deno.serve(async (req) => {
     }
 
     try {
+        console.log('--- TESTE: MODO OPENAI ATIVADO ---');
         // Support both OpenAI and generic AI key names
         const apiKey = Deno.env.get('OPENAI_API_KEY') || Deno.env.get('GEMINI_API_KEY') || Deno.env.get('VITE_GEMINI_API_KEY');
 
