@@ -3,12 +3,37 @@ import { useNavigate } from "react-router-dom";
 import { Check, ChevronDown, ChevronUp, ChefHat, UtensilsCrossed, ShoppingCart, Sparkles } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { useEffect } from "react";
+import { MOCK_USER } from "../../constants";
 
 const LandingPage: React.FC = () => {
     const navigate = useNavigate();
     const { theme, setTheme } = useTheme();
+    const { user } = useAuth();
+    const [profile, setProfile] = useState<{ nome: string; avatar_url: string } | null>(null);
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (user) {
+            fetchProfile();
+        }
+    }, [user]);
+
+    const fetchProfile = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('perfis_usuario')
+                .select('nome, avatar_url')
+                .eq('id', user?.id)
+                .single();
+
+            if (data) setProfile(data);
+        } catch (err) {
+            console.error('Error fetching landing profile:', err);
+        }
+    };
 
 
 
@@ -22,17 +47,36 @@ const LandingPage: React.FC = () => {
                         <span className="text-neon-green">LIST</span>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => navigate('/register')}
-                            className="text-sm font-medium hover:text-neon-green transition-colors"
-                        >
-                            Cadastrar
-                        </button>
-                        <button
-                            onClick={() => navigate('/login')}
-                            className="text-sm font-medium hover:text-neon-green transition-colors">
-                            Login
-                        </button>
+                        {user ? (
+                            <div
+                                onClick={() => navigate('/profile')}
+                                className="flex items-center gap-3 cursor-pointer group"
+                            >
+                                <div className="relative">
+                                    <div
+                                        className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-9 ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all"
+                                        style={{ backgroundImage: `url(${profile?.avatar_url || MOCK_USER.avatar})` }}
+                                    ></div>
+                                </div>
+                                <span className="text-sm font-bold text-slate-700 dark:text-gray-200 group-hover:text-neon-green transition-colors">
+                                    {profile?.nome ? profile.nome.split(' ')[0] : 'Usuário'}
+                                </span>
+                            </div>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={() => navigate('/register')}
+                                    className="text-sm font-medium hover:text-neon-green transition-colors"
+                                >
+                                    Cadastrar
+                                </button>
+                                <button
+                                    onClick={() => navigate('/login')}
+                                    className="text-sm font-medium hover:text-neon-green transition-colors">
+                                    Login
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             </nav>
