@@ -28,10 +28,13 @@ export const useWaterNotifications = (iconPath = '/favicon.ico') => {
 
     const sendNotification = (title: string, body: string) => {
         if (permission === 'granted') {
+            // Garante que o caminho seja uma URL absoluta (ex: http://localhost:3000/favicon.ico)
+            const fullIconPath = new URL(iconPath, window.location.origin).href;
+
             new Notification(title, {
                 body,
-                icon: iconPath,
-                badge: iconPath,
+                icon: fullIconPath,
+                badge: fullIconPath,
                 tag: 'water-reminder',
             });
         }
