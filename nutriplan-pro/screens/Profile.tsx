@@ -7,11 +7,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
-import {
-  Pencil, User, Camera, BadgeCheck, Star, Heart, History,
-  Receipt, Activity, ChevronRight, Settings, Bell, Lock,
-  Moon, Sun, Monitor, LogOut, X, Upload, ChevronDown
-} from 'lucide-react';
 
 interface ProfileProps {
   onLogout: () => void;
@@ -185,7 +180,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
             onClick={() => setIsEditing(true)}
             className="flex items-center justify-center rounded-full h-10 w-10 text-slate-900 dark:text-white hover:bg-black/5"
           >
-            <Pencil size={20} />
+            <span className="material-symbols-rounded text-[20px]">edit</span>
           </button>
         </div>
       </div>
@@ -200,14 +195,14 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                 className="h-full w-full object-cover"
               />
             ) : (
-              <User className="text-slate-300" size={80} />
+              <span className="material-symbols-rounded text-slate-300 text-[80px]">person</span>
             )}
           </div>
           <div
             onClick={() => setIsEditing(true)}
             className="absolute bottom-1 right-1 bg-primary text-black rounded-full p-1.5 border-2 border-background-dark flex items-center justify-center"
           >
-            <Camera size={18} />
+            <span className="material-symbols-rounded text-[18px]">photo_camera</span>
           </div>
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-center">{profile?.nome || user?.user_metadata?.full_name || 'Usuário'}</h1>
@@ -218,12 +213,12 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
           }`}>
           {subscription?.plan_type === 'simple' || subscription?.plan_type === 'premium' ? (
             <>
-              <BadgeCheck size={16} className="text-primary fill-current" />
+              <span className="material-symbols-rounded text-primary text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
               <span className="text-xs font-semibold text-primary uppercase tracking-wide">Membro Pro</span>
             </>
           ) : (
             <>
-              <Star size={16} className="text-slate-500" />
+              <span className="material-symbols-rounded text-slate-500 text-[16px]">star</span>
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Plano Grátis</span>
             </>
           )}
@@ -233,9 +228,9 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
       <div className="px-4">
         <div className="grid grid-cols-3 gap-3">
           {[
-            { icon: Heart, label: 'Receitas', color: 'red', path: '/favorites' },
-            { icon: History, label: 'Histórico', color: 'blue', path: '/history' },
-            { icon: Receipt, label: 'Listas', color: 'orange', path: '/saved-lists' }
+            { icon: 'favorite', label: 'Receitas', color: 'red', path: '/favorites' },
+            { icon: 'history', label: 'Histórico', color: 'blue', path: '/history' },
+            { icon: 'receipt', label: 'Listas', color: 'orange', path: '/saved-lists' }
           ].map((item) => (
             <button
               key={item.label}
@@ -245,7 +240,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
               <div className={`h-10 w-10 rounded-full flex items-center justify-center ${item.color === 'red' ? 'bg-red-100 text-red-600' :
                 item.color === 'blue' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'
                 }`}>
-                <item.icon size={20} className="fill-current" />
+                <span className="material-symbols-rounded text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>{item.icon}</span>
               </div>
               <span className="text-sm font-semibold">{item.label}</span>
             </button>
@@ -255,7 +250,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
 
       <div className="mt-8">
         <h3 className="px-4 text-lg font-bold mb-3 flex items-center gap-2">
-          <Activity className="text-primary" size={20} />
+          <span className="material-symbols-rounded text-primary text-[20px]">monitor_heart</span>
           Informações Físicas
         </h3>
         <div className="mx-4 overflow-hidden rounded-xl bg-white dark:bg-surface-dark shadow-sm border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -270,7 +265,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                 <span className="text-base font-medium">{pref.label}</span>
                 <span className="text-xs text-slate-500">{pref.value}</span>
               </div>
-              <ChevronRight className="text-slate-400" size={20} />
+              <span className="material-symbols-rounded text-slate-400 text-[20px]">chevron_right</span>
             </div>
           ))}
         </div>
@@ -278,14 +273,14 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
 
       <div className="mt-6">
         <h3 className="px-4 text-lg font-bold mb-3 flex items-center gap-2">
-          <Settings className="text-primary" size={20} />
+          <span className="material-symbols-rounded text-primary text-[20px]">settings</span>
           Configurações
         </h3>
         <div className="mx-4 overflow-hidden rounded-xl bg-white dark:bg-surface-dark shadow-sm border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-700/50">
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600">
-                <Bell size={20} className="text-slate-600" />
+                <span className="material-symbols-rounded text-slate-600 text-[20px]">notifications</span>
               </div>
               <span className="text-base font-medium">Notificações</span>
             </div>
@@ -297,25 +292,25 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
           <div className="flex items-center justify-between p-4 active:bg-slate-50 cursor-pointer">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600">
-                <Lock size={20} className="text-slate-600" />
+                <span className="material-symbols-rounded text-slate-600 text-[20px]">lock</span>
               </div>
               <span className="text-base font-medium">Privacidade e Dados</span>
             </div>
-            <ChevronRight className="text-slate-400" size={20} />
+            <span className="material-symbols-rounded text-slate-400 text-[20px]">chevron_right</span>
           </div>
         </div>
       </div>
 
       <div className="mt-6">
         <h3 className="px-4 text-lg font-bold mb-3 flex items-center gap-2">
-          <Moon className="text-primary" size={20} />
+          <span className="material-symbols-rounded text-primary text-[20px]">dark_mode</span>
           Aparência
         </h3>
         <div className="mx-4 p-1 rounded-2xl bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-slate-800 flex items-center relative h-12">
           {[
-            { id: 'light', icon: Sun },
-            { id: 'dark', icon: Moon },
-            { id: 'auto', icon: Monitor }
+            { id: 'light', icon: 'light_mode' },
+            { id: 'dark', icon: 'dark_mode' },
+            { id: 'auto', icon: 'monitor' }
           ].map((opt) => (
             <button
               key={opt.id}
@@ -325,10 +320,9 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                 : 'text-slate-500 dark:text-slate-400'
                 }`}
             >
-              <opt.icon
-                size={20}
-                className={`${theme === opt.id ? 'fill-current' : ''}`}
-              />
+              <span className={`material-symbols-rounded text-[20px] ${theme === opt.id ? '' : ''}`} style={theme === opt.id ? { fontVariationSettings: "'FILL' 1" } : {}}>
+                {opt.icon}
+              </span>
             </button>
           ))}
           <div
@@ -346,7 +340,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
           onClick={handleLogout}
           className="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold bg-white dark:bg-surface-dark text-red-500 border border-slate-200 dark:border-slate-800 shadow-sm active:scale-[0.98] transition-all"
         >
-          <LogOut size={20} />
+          <span className="material-symbols-rounded text-[20px]">logout</span>
           Sair da Conta
         </button>
         <p className="text-center text-xs text-slate-400 mt-4">Versão 2.4.0</p>
@@ -361,7 +355,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                 onClick={() => setIsEditing(false)}
                 className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-white/10"
               >
-                <X size={20} />
+                <span className="material-symbols-rounded text-[20px]">close</span>
               </button>
             </div>
 
@@ -376,7 +370,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <User className="text-slate-300" size={60} />
+                      <span className="material-symbols-rounded text-slate-300 text-[60px]">person</span>
                     )}
                     {uploading && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -385,7 +379,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                     )}
                   </div>
                   <label className="absolute bottom-0 right-0 bg-primary text-black rounded-full p-1.5 border-2 border-white dark:border-surface-dark cursor-pointer shadow-lg active:scale-90 transition-transform">
-                    <Upload size={18} />
+                    <span className="material-symbols-rounded text-[18px]">upload</span>
                     <input
                       type="file"
                       className="hidden"
@@ -450,7 +444,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                     {editForm.objetivo === 'emagrecer' ? 'Emagrecer' :
                       editForm.objetivo === 'ganhar_massa' ? 'Ganhar Massa' : 'Manter Peso'}
                   </span>
-                  <ChevronDown size={20} className={`transition-transform ${isObjectiveOpen ? 'rotate-180' : ''}`} />
+                  <span className={`material-symbols-rounded text-[20px] transition-transform ${isObjectiveOpen ? 'rotate-180' : ''}`}>keyboard_arrow_down</span>
                 </button>
 
                 {isObjectiveOpen && (
