@@ -93,9 +93,21 @@
 
         /* Estilo para ícones ativos na navegação */
         a[aria-current="page"] .material-symbols-rounded,
-        .nav-active .material-symbols-rounded {
+        .nav-active .material-symbols-rounded,
+        .fixed.bottom-0 .text-primary .material-symbols-rounded,
+        .fixed.bottom-0 .text-primary.material-symbols-rounded {
             font-variation-settings: 'FILL' 1;
             color: #13ec5b;
+            -webkit-text-stroke: 1px #6b7280;
+            /* Contorno cinza no modo claro */
+        }
+
+        html.dark a[aria-current="page"] .material-symbols-rounded,
+        html.dark .nav-active .material-symbols-rounded,
+        html.dark .fixed.bottom-0 .text-primary .material-symbols-rounded,
+        html.dark .fixed.bottom-0 .text-primary.material-symbols-rounded {
+            -webkit-text-stroke: 1px #9ca3af;
+            /* Contorno cinza mais claro no modo escuro */
         }
     </style>
     <script type="importmap">
