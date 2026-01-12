@@ -73,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(401).json({ error: 'Authorization header required' });
         }
 
-        const { plan, userId } = req.body;
+        const { plan, userId, card_token_id, preapproval_plan_id, payer_email } = req.body;
 
         if (!plan || !userId) {
             return res.status(400).json({ error: 'Plan and userId are required' });
@@ -126,7 +126,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         // For paid plans, create Mercado Pago subscription
-        const preapprovalBody = {
+        let preapprovalBody: any = {
             reason: `Assinatura ${selectedPlan.name} - MENU LIST`,
             auto_recurring: {
                 frequency: 1,
@@ -135,9 +135,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 currency_id: 'BRL',
             },
             back_url: `${APP_URL}/#/thank-you`,
-            payer_email: '', // Will be filled by Mercado Pago checkout
+            payer_email: payer_email || '', // Will be filled by Mercado Pago checkout if empty, or provided by frontend
             status: 'pending',
+            external_reference: userId,
         };
+
+        // If using an associated plan (requires card_token_id and authorized status)
+        if (preapproval_plan_id && card_token_id) {
+            preapprovalBody = {
+                ...preapprovalBody,
+                preapproval_plan_id,
+                card_token_id,
+                status: 'authorized',
+            };
+        }
 
         const mpData = await preApproval.create({ body: preapprovalBody });
 
@@ -165,6 +176,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             success: true,
             init_point: mpData.init_point,
             preapproval_id: mpData.id,
+            status: mpData.status,
         });
     } catch (error: any) {
         console.error('Error creating subscription:', error);
