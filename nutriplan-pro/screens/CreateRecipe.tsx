@@ -42,7 +42,13 @@ const CreateRecipe: React.FC = () => {
       const result = await extractRecipeFromText(recipeText);
       setExtractedRecipe(result);
       setRecipeName(result.name);
-      setRecipeInstructions(result.instructions || '');
+
+      let formattedInstructions = result.instructions || '';
+      formattedInstructions = formattedInstructions
+        .replace(/([^\n])\s+(\d+\.\s)/g, '$1\n$2') // Adiciona quebra de linha antes de passos numerados (ex: 2. )
+        .replace(/\. +(?=[A-Z])/g, '.\n'); // Adiciona quebra de linha após frases
+
+      setRecipeInstructions(formattedInstructions);
       setIngredients(result.ingredients);
       setShowPreview(true);
     } catch (error) {
@@ -213,7 +219,7 @@ const CreateRecipe: React.FC = () => {
                 <textarea
                   className="w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-surface-dark px-4 py-3 focus:ring-primary focus:border-primary shadow-sm resize-none"
                   placeholder="Descreva o passo a passo..."
-                  rows={4}
+                  rows={12}
                   value={recipeInstructions}
                   onChange={(e) => setRecipeInstructions(e.target.value)}
                 />
