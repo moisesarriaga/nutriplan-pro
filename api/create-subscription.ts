@@ -140,14 +140,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             external_reference: userId,
         };
 
-        // If using an associated plan (requires card_token_id and authorized status)
-        if (preapproval_plan_id && card_token_id) {
+        // Se recebermos um token de cartão, tentamos autorizar imediatamente (Checkout Transparente)
+        if (card_token_id) {
             preapprovalBody = {
                 ...preapprovalBody,
-                preapproval_plan_id,
                 card_token_id,
                 status: 'authorized',
             };
+            // Se houver um plano associado, adicionamos também (opcional)
+            if (preapproval_plan_id) {
+                preapprovalBody.preapproval_plan_id = preapproval_plan_id;
+            }
         }
 
         const mpData = await preApproval.create({ body: preapprovalBody });
