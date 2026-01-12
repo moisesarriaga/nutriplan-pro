@@ -46,7 +46,7 @@ const CreateRecipe: React.FC = () => {
       let formattedInstructions = result.instructions || '';
       formattedInstructions = formattedInstructions
         .replace(/([^\n])\s+(\d+\.\s)/g, '$1\n$2') // Adiciona quebra de linha antes de passos numerados (ex: 2. )
-        .replace(/\. +(?=[A-Z])/g, '.\n'); // Adiciona quebra de linha após frases
+        .replace(/([^\d])\. +(?=[A-Z])/g, '$1.\n'); // Adiciona quebra de linha após frases, mas ignora números (ex: 1. Texto)
 
       setRecipeInstructions(formattedInstructions);
       setIngredients(result.ingredients);
