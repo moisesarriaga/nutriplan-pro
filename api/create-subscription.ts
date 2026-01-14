@@ -142,6 +142,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // Se recebermos um token de cartão, tentamos autorizar imediatamente (Checkout Transparente)
         if (card_token_id) {
+            if (!payer_email) {
+                return res.status(400).json({ error: 'Email is required for transparent checkout' });
+            }
+
             preapprovalBody = {
                 ...preapprovalBody,
                 card_token_id,
@@ -180,6 +184,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             init_point: mpData.init_point,
             preapproval_id: mpData.id,
             status: mpData.status,
+            redirect: mpData.status === 'authorized' ? `${APP_URL}/#/thank-you` : undefined,
         });
     } catch (error: any) {
         console.error('Error creating subscription:', error);
