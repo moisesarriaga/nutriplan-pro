@@ -46,7 +46,7 @@ export const PaymentForm = () => {
                 cardholderEmail: cardFormData.cardholderEmail,
             });
 
-            await fetch('http://localhost:3000/pay', {
+            const response = await fetch('http://localhost:3000/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -55,7 +55,13 @@ export const PaymentForm = () => {
                 }),
             });
 
-            alert('Pagamento enviado!');
+            const data = await response.json();
+
+            if (response.ok && data.status === 'approved') {
+                alert('Assinatura realizada com sucesso! Seu perfil foi atualizado.');
+            } else {
+                alert('Erro na assinatura: ' + (data.message || 'Verifique os dados e tente novamente.'));
+            }
         } catch (error) {
             console.error(error);
             alert('Erro ao processar pagamento');

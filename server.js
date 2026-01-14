@@ -1,5 +1,5 @@
 import express from "express";
-import { MercadoPagoConfig, Payment } from "mercadopago";
+import { MercadoPagoConfig, PreApproval } from "mercadopago";
 import cors from "cors";
 
 const app = express();
@@ -10,29 +10,35 @@ const client = new MercadoPagoConfig({
     accessToken: process.env.MP_ACCESS_TOKEN,
 });
 
-const payment = new Payment(client);
+const preApproval = new PreApproval(client);
 
-app.post("/pay", async (req, res) => {
+app.post("/subscribe", async (req, res) => {
     try {
-        const result = await payment.create({
+        const result = await preApproval.create({
             body: {
-                transaction_amount: 100,
-                token: req.body.token,
-                description: "Pedido #123",
-                installments: 1,
-                payment_method_id: "visa",
-                payer: {
-                    email: req.body.email,
+                reason: "Assinatura Nutriplan Pro",
+                auto_recurring: {
+                    frequency: 1,
+                    frequency_type: "months",
+                    transaction_amount: 100,
+                    currency_id: "BRL"
                 },
-                capture: true,
-                binary_mode: false,
-                three_d_secure_mode: "optional",
+                payer_email: req.body.email,
+                card_token_id: req.body.token,
+                status: "authorized", // Solicita criação já autorizada
             },
         });
 
-        res.json(result);
+        // Validação: Só considera pago se o status for 'authorized'
+        if (result.status === 'authorized') {
+            // TODO: AQUI você deve chamar sua função de banco de dados para atualizar o usuário para PRO
+            res.json({ status: 'approved', id: result.id });
+        } else {
+            res.status(400).json({ status: result.status, message: 'Assinatura não autorizada' });
+        }
     } catch (error) {
-        res.status(500).json(error);
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao processar assinatura' });
     }
 });
 
