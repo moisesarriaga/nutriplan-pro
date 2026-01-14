@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { MercadoPagoConfig, PreApproval } from 'mercadopago';
+import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -13,7 +13,7 @@ dotenv.config();
 const client = new MercadoPagoConfig({
     accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || ''
 });
-const preApproval = new PreApproval(client);
+const payment = new Payment(client);
 
 const PLANS = {
     free: {
@@ -73,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(401).json({ error: 'Authorization header required' });
         }
 
-        const { plan, userId, card_token_id, payer_email } = req.body;
+        const { plan, userId, card_token_id, payer_email, payment_method_id, issuer_id } = req.body;
 
         if (!plan || !userId) {
             return res.status(400).json({ error: 'Plan and userId are required' });
@@ -125,35 +125,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             });
         }
 
-        // For paid plans, create Mercado Pago subscription (Transparent Checkout)
-        if (!card_token_id || !payer_email) {
-            return res.status(400).json({ error: 'Missing required payment data (token, email)' });
+        // For paid plans, create Mercado Pago payment (Transparent Checkout)
+        if (!card_token_id || !payer_email || !payment_method_id || !issuer_id) {
+            return res.status(400).json({ error: 'Missing required payment data (token, email, payment_method_id, issuer_id)' });
         }
 
-        const preapprovalBody: any = {
-            reason: `Assinatura ${selectedPlan.name}`,
-            auto_recurring: {
-                frequency: 1,
-                frequency_type: 'months',
-                transaction_amount: selectedPlan.price,
-                currency_id: 'BRL',
+        const paymentBody: any = {
+            transaction_amount: selectedPlan.price,
+            token: card_token_id,
+            description: `Assinatura ${selectedPlan.name}`,
+            installments: 1,
+            payment_method_id,
+            issuer_id,
+            payer: {
+                email: payer_email,
             },
-            back_url: `${APP_URL}/#/thank-you`,
-            payer_email: payer_email,
-            status: 'authorized',
-            card_token_id: card_token_id,
+            three_d_secure_mode: 'optional',
+            capture: true,
+            binary_mode: false,
             external_reference: userId,
+            metadata: {
+                user_id: userId,
+                plan_type: plan
+            }
         };
 
-        const mpData = await preApproval.create({ body: preapprovalBody });
+        const mpData = await payment.create({ body: paymentBody });
 
         // Store subscription in database
         const subscriptionData = {
             user_id: userId,
             plan_type: plan,
-            status: mpData.status === 'authorized' ? 'active' : 'pending',
+            status: mpData.status === 'approved' ? 'active' : 'pending',
             // We store payment ID as preapproval_id for reference
-            mercadopago_preapproval_id: mpData.id,
+            mercadopago_preapproval_id: mpData.id?.toString(),
             next_payment_date: null, // Will be set after first payment
         };
 
@@ -172,7 +177,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             success: true,
             id: mpData.id,
             status: mpData.status,
-            redirect: mpData.status === 'authorized' ? `${APP_URL}/#/thank-you` : undefined,
+            status_detail: mpData.status_detail,
+            // @ts-ignore
+            three_ds_info: mpData.three_ds_info,
+            redirect: mpData.status === 'approved' ? `${APP_URL}/#/thank-you` : undefined,
         });
     } catch (error: any) {
         console.error('Error creating subscription:', error);
