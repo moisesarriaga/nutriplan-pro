@@ -94,13 +94,24 @@ async function handlePaymentEvent(supabase: any, webhookData: any) {
     if (paymentData.status === 'approved') {
         const preapprovalId = paymentData.metadata?.preapproval_id || paymentData.preapproval_id;
 
-        if (!preapprovalId) return;
+        let subscription;
 
-        const { data: subscription } = await supabase
-            .from('subscriptions')
-            .select('*')
-            .eq('mercadopago_preapproval_id', preapprovalId)
-            .single();
+        if (preapprovalId) {
+            const { data } = await supabase
+                .from('subscriptions')
+                .select('*')
+                .eq('mercadopago_preapproval_id', preapprovalId)
+                .single();
+            subscription = data;
+        } else {
+            // Fallback: Tenta encontrar a assinatura pelo ID do pagamento inicial (armazenado na criação)
+            const { data } = await supabase
+                .from('subscriptions')
+                .select('*')
+                .eq('mercadopago_preapproval_id', paymentId.toString())
+                .single();
+            subscription = data;
+        }
 
         if (subscription) {
             const nextPaymentDate = new Date();

@@ -73,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(401).json({ error: 'Authorization header required' });
         }
 
-        const { plan, userId, card_token_id, payer_email, payment_method_id, issuer_id } = req.body;
+        const { plan, userId, card_token_id, payer_email, payment_method_id, issuer_id, identification } = req.body;
 
         if (!plan || !userId) {
             return res.status(400).json({ error: 'Plan and userId are required' });
@@ -139,6 +139,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             issuer_id,
             payer: {
                 email: payer_email,
+                identification,
             },
             three_d_secure_mode: 'optional',
             capture: true,
