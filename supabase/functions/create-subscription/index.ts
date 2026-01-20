@@ -184,24 +184,19 @@ Deno.serve(async (req) => {
             throw new Error("Mercado Pago response missing ID");
         }
 
-        // Store subscription in database
-        const subscriptionData = {
-            user_id: userId,
-            plan_type: plan,
-            status: 'pending',
-            mercadopago_preapproval_id: mpData.id,
-            next_payment_date: null,
-        };
+        // Insert into payment_validations table
+        const { error: validationError } = await supabaseClient
+            .from('payment_validations')
+            .insert({
+                user_id: userId,
+                plan_type: plan,
+                status: 'pending',
+                payment_id: mpData.id, // Storing preapproval_id as payment_id
+            });
 
-        if (existingSubscription) {
-            await supabaseClient
-                .from('subscriptions')
-                .update(subscriptionData)
-                .eq('user_id', userId);
-        } else {
-            await supabaseClient
-                .from('subscriptions')
-                .insert(subscriptionData);
+        if (validationError) {
+            console.error('Error inserting into payment_validations:', validationError);
+            throw new Error('Failed to save payment validation record.');
         }
 
         return new Response(JSON.stringify({
