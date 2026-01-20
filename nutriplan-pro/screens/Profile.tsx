@@ -207,11 +207,13 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-center">{profile?.nome || user?.user_metadata?.full_name || 'Usuário'}</h1>
         <p className="text-slate-500 dark:text-slate-400 text-base font-normal mt-1 text-center">{user?.email}</p>
-        <div className={`mt-3 px-3 py-1 rounded-full border flex items-center gap-2 ${subscription?.plan_type === 'simple' || subscription?.plan_type === 'premium'
-          ? 'bg-primary/20 border-primary/30'
-          : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+        <div className={`mt-3 px-3 py-1 rounded-full border flex items-center gap-2 ${(subscription?.plan_type === 'simple' || subscription?.plan_type === 'premium') &&
+            subscription?.status === 'active'
+            ? 'bg-primary/20 border-primary/30'
+            : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
           }`}>
-          {subscription?.plan_type === 'simple' || subscription?.plan_type === 'premium' ? (
+          {(subscription?.plan_type === 'simple' || subscription?.plan_type === 'premium') &&
+            subscription?.status === 'active' ? (
             <>
               <span className="material-symbols-rounded text-primary text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
               <span className="text-xs font-semibold text-primary uppercase tracking-wide">Membro Pro</span>

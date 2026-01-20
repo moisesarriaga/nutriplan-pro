@@ -184,14 +184,22 @@ Deno.serve(async (req) => {
             throw new Error("Mercado Pago response missing ID");
         }
 
-        // Insert into payment_validations table
+        // Insert into payment_validations table using schema from migration 003
         const { error: validationError } = await supabaseClient
             .from('payment_validations')
             .insert({
                 user_id: userId,
-                plan_type: plan,
-                status: 'pending',
-                payment_id: mpData.id, // Storing preapproval_id as payment_id
+                payment_id: mpData.id.toString(), // Storing preapproval_id as payment_id
+                status_pagamento: 'pending',
+                valor: selectedPlan.price,
+                metodo_pagamento: 'mercadopago_preapproval',
+                data_pagamento: null,
+                payload_retorno: {
+                    preapproval_id: mpData.id,
+                    plan_type: plan,
+                    init_point: mpData.init_point,
+                    created_at: new Date().toISOString()
+                }
             });
 
         if (validationError) {

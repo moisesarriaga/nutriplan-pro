@@ -61,15 +61,23 @@ app.post("/api/create-subscription", async (req, res) => {
         if (!mpData.id) {
             throw new Error("Payment creation failed in Mercado Pago");
         }
-        
-        // Insert into payment_validations table
+
+        // Insert into payment_validations table using schema from migration 003
         const { error: validationError } = await supabase
             .from('payment_validations')
             .insert({
                 user_id: userId,
                 payment_id: mpData.id.toString(),
-                plan_type: plan,
-                status: 'pending',
+                status_pagamento: 'pending',
+                valor: selectedPlan.price,
+                metodo_pagamento: payment_method_id || 'credit_card',
+                data_pagamento: null,
+                payload_retorno: {
+                    payment_id: mpData.id,
+                    plan_type: plan,
+                    transaction_amount: selectedPlan.price,
+                    created_at: new Date().toISOString()
+                }
             });
 
         if (validationError) {
@@ -97,10 +105,10 @@ app.post("/api/mercadopago-webhook", async (req, res) => {
 
     try {
         const paymentId = data.id;
-        
+
         // 1. Fetch payment details from Mercado Pago
         const paymentDetails = await payment.get({ id: paymentId });
-        
+
         // 2. Find the corresponding entry in payment_validations
         const { data: validation, error: validationError } = await supabase
             .from('payment_validations')
@@ -113,39 +121,63 @@ app.post("/api/mercadopago-webhook", async (req, res) => {
             return res.status(404).send('Validation record not found.');
         }
 
-        if (paymentDetails.status === 'approved') {
-            console.log(`Payment ${paymentId} approved. Updating subscription for user ${validation.user_id}.`);
+        // Extract plan_type from payload_retorno JSONB
+        const planType = validation.payload_retorno?.plan_type;
 
-            // Update validation status to 'confirmed'
+        if (!planType) {
+            console.error(`plan_type not found in payload_retorno for payment_id: ${paymentId}`);
+            return res.status(400).send('Invalid payment validation record.');
+        }
+
+        if (paymentDetails.status === 'approved') {
+            console.log(`Payment ${paymentId} approved. Creating subscription for user ${validation.user_id}.`);
+
+            // Update validation record with approved status (using migration 003 schema)
             await supabase
                 .from('payment_validations')
-                .update({ status: 'confirmed', updated_at: new Date().toISOString() })
+                .update({
+                    status_pagamento: 'approved',
+                    data_pagamento: new Date().toISOString(),
+                    payload_retorno: {
+                        ...validation.payload_retorno,
+                        payment_approved_at: new Date().toISOString(),
+                        mercadopago_status: paymentDetails.status
+                    }
+                })
                 .eq('id', validation.id);
 
             const nextPaymentDate = new Date();
             nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
 
-            // 3. Upsert into the main 'subscriptions' table
+            // 3. Create or update subscription ONLY after payment approval
             const { error: subError } = await supabase
                 .from('subscriptions')
                 .upsert({
                     user_id: validation.user_id,
-                    plan_type: validation.plan_type,
+                    plan_type: planType,
                     status: 'active',
                     mercadopago_subscription_id: paymentDetails.id?.toString(),
                     last_payment_date: new Date().toISOString(),
                     next_payment_date: nextPaymentDate.toISOString(),
                     updated_at: new Date().toISOString(),
                 }, { onConflict: 'user_id' });
-            
+
             if (subError) throw subError;
-            console.log(`Subscription for user ${validation.user_id} is now active with plan ${validation.plan_type}.`);
+            console.log(`Subscription for user ${validation.user_id} is now active with plan ${planType}.`);
 
         } else {
             console.log(`Payment ${paymentId} not approved (status: ${paymentDetails.status}). Updating validation record.`);
             await supabase
                 .from('payment_validations')
-                .update({ status: 'failed', updated_at: new Date().toISOString() })
+                .update({
+                    status_pagamento: 'failed',
+                    data_pagamento: new Date().toISOString(),
+                    payload_retorno: {
+                        ...validation.payload_retorno,
+                        payment_failed_at: new Date().toISOString(),
+                        mercadopago_status: paymentDetails.status
+                    }
+                })
                 .eq('id', validation.id);
         }
 

@@ -21,84 +21,113 @@ Deno.serve(async (req) => {
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
         );
 
-        console.log('Webhook received:', data);
+        console.log('Webhook received:', JSON.stringify(data, null, 2));
 
         if (data.type === 'payment') {
             const paymentId = data.data.id;
+
+            // Fetch payment details from Mercado Pago
             const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
                 headers: { 'Authorization': `Bearer ${MP_TOKEN}` }
             });
 
-            if (response.ok) {
-                const paymentData = await response.json();
-                if (paymentData.status === 'approved') {
-                    const preapprovalId = paymentData.metadata?.preapproval_id || paymentData.preapproval_id;
-                    if (preapprovalId) {
-                        const { data: subscription } = await supabaseAdmin
-                            .from('subscriptions')
-                            .select('*')
-                            .eq('mercadopago_preapproval_id', preapprovalId)
-                            .single();
+            if (!response.ok) {
+                console.error('Failed to fetch payment from Mercado Pago:', response.status);
+                return new Response(JSON.stringify({ error: 'Failed to fetch payment' }), {
+                    status: 200, // Return 200 to avoid retries
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                });
+            }
 
-                        if (subscription) {
-                            const nextPaymentDate = new Date();
-                            nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+            const paymentData = await response.json();
+            console.log('Payment data from MP:', JSON.stringify(paymentData, null, 2));
 
-                            await supabaseAdmin
-                                .from('subscriptions')
-                                .update({
-                                    status: 'active',
-                                    last_payment_date: new Date().toISOString(),
-                                    next_payment_date: nextPaymentDate.toISOString(),
-                                    updated_at: new Date().toISOString(),
-                                })
-                                .eq('id', subscription.id);
+            // Find payment_validations record
+            const { data: validation, error: validationError } = await supabaseAdmin
+                .from('payment_validations')
+                .select('*')
+                .eq('payment_id', paymentId.toString())
+                .single();
 
-                            await supabaseAdmin
-                                .from('perfis_usuario')
-                                .update({ plan_status: 'active' })
-                                .eq('id', subscription.user_id);
+            if (validationError || !validation) {
+                console.error('payment_validations record not found for payment_id:', paymentId);
+                return new Response(JSON.stringify({ error: 'Validation record not found' }), {
+                    status: 200,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                });
+            }
+
+            // Extract plan_type from payload_retorno
+            const planType = validation.payload_retorno?.plan_type;
+            if (!planType) {
+                console.error('plan_type not found in payload_retorno');
+                return new Response(JSON.stringify({ error: 'Invalid validation record' }), {
+                    status: 200,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                });
+            }
+
+            if (paymentData.status === 'approved') {
+                console.log(`Payment ${paymentId} approved. Creating subscription for user ${validation.user_id}`);
+
+                // Update payment_validations to approved
+                await supabaseAdmin
+                    .from('payment_validations')
+                    .update({
+                        status_pagamento: 'approved',
+                        data_pagamento: new Date().toISOString(),
+                        valor: paymentData.transaction_amount,
+                        metodo_pagamento: paymentData.payment_method_id || 'credit_card',
+                        payload_retorno: {
+                            ...validation.payload_retorno,
+                            payment_approved_at: new Date().toISOString(),
+                            mercadopago_response: paymentData
                         }
-                    }
+                    })
+                    .eq('id', validation.id);
+
+                const nextPaymentDate = new Date();
+                nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+
+                // Create or update subscription record (ONLY on approved payment)
+                const { error: subError } = await supabaseAdmin
+                    .from('subscriptions')
+                    .upsert({
+                        user_id: validation.user_id,
+                        plan_type: planType,
+                        status: 'active',
+                        mercadopago_subscription_id: paymentId.toString(),
+                        last_payment_date: new Date().toISOString(),
+                        next_payment_date: nextPaymentDate.toISOString(),
+                        updated_at: new Date().toISOString(),
+                    }, { onConflict: 'user_id' });
+
+                if (subError) {
+                    console.error('Error creating subscription:', subError);
+                    throw subError;
                 }
+
+                console.log(`Subscription created for user ${validation.user_id} with plan ${planType}`);
+            } else {
+                console.log(`Payment ${paymentId} not approved (status: ${paymentData.status})`);
+
+                // Update payment_validations to failed/rejected
+                await supabaseAdmin
+                    .from('payment_validations')
+                    .update({
+                        status_pagamento: paymentData.status, // 'rejected', 'cancelled', etc.
+                        data_pagamento: new Date().toISOString(),
+                        payload_retorno: {
+                            ...validation.payload_retorno,
+                            payment_failed_at: new Date().toISOString(),
+                            mercadopago_response: paymentData
+                        }
+                    })
+                    .eq('id', validation.id);
             }
         } else if (data.type === 'subscription_preapproval' || data.type === 'preapproval') {
-            const preapprovalId = data.data.id;
-            const response = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
-                headers: { 'Authorization': `Bearer ${MP_TOKEN}` }
-            });
-
-            if (response.ok) {
-                const subData = await response.json();
-                const { data: subscription } = await supabaseAdmin
-                    .from('subscriptions')
-                    .select('*')
-                    .eq('mercadopago_preapproval_id', preapprovalId)
-                    .single();
-
-                if (subscription) {
-                    let newStatus = subscription.status;
-                    if (subData.status === 'authorized') {
-                        newStatus = 'active';
-                    } else if (subData.status === 'cancelled' || subData.status === 'paused') {
-                        newStatus = 'cancelled';
-                    }
-
-                    await supabaseAdmin
-                        .from('subscriptions')
-                        .update({
-                            status: newStatus,
-                            updated_at: new Date().toISOString(),
-                            ...(newStatus === 'cancelled' && { cancelled_at: new Date().toISOString() }),
-                        })
-                        .eq('id', subscription.id);
-
-                    await supabaseAdmin
-                        .from('perfis_usuario')
-                        .update({ plan_status: newStatus === 'active' ? 'active' : 'inactive' })
-                        .eq('id', subscription.user_id);
-                }
-            }
+            // Handle subscription preapproval events
+            console.log('PreApproval webhook received, but not fully implemented yet');
         }
 
         return new Response(JSON.stringify({ success: true }), {
@@ -106,9 +135,9 @@ Deno.serve(async (req) => {
         });
 
     } catch (error: any) {
-        console.error('Error:', error);
+        console.error('Error processing webhook:', error);
         return new Response(JSON.stringify({ error: error.message }), {
-            status: 200,
+            status: 200, // Return 200 to avoid webhook retries
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
     }
