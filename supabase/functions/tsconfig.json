@@ -12,11 +12,7 @@
         "moduleResolution": "node",
         "noEmit": true,
         "strict": false,
-        "target": "esnext",
-        "types": [
-            "https://raw.githubusercontent.com/denoland/deno/main/cli/tsc/dts/lib.deno.ns.d.ts",
-            "https://raw.githubusercontent.com/denoland/deno/main/cli/tsc/dts/lib.deno.window.d.ts"
-        ]
+        "target": "esnext"
     },
     "include": [
         "./**/*.ts"

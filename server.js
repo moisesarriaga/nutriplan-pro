@@ -39,7 +39,7 @@ app.post("/api/create-subscription", async (req, res) => {
             return res.status(400).json({ error: 'Missing required fields (plan, userId, card_token_id)' });
         }
 
-        const selectedPlan = PLANS[plan as keyof typeof PLANS];
+        const selectedPlan = PLANS[plan];
         if (!selectedPlan) {
             return res.status(400).json({ error: 'Invalid plan' });
         }
@@ -88,7 +88,7 @@ app.post("/api/create-subscription", async (req, res) => {
         console.log(`Payment validation record created for payment ID: ${mpData.id}`);
         res.status(200).json({ success: true, id: mpData.id, status: mpData.status });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Error in /api/create-subscription:', error);
         res.status(500).json({ success: false, error: error.message || 'Internal server error' });
     }
@@ -183,7 +183,7 @@ app.post("/api/mercadopago-webhook", async (req, res) => {
 
         res.sendStatus(200);
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error processing webhook:", error);
         res.status(500).json({ error: 'Webhook processing failed', details: error.message });
     }
