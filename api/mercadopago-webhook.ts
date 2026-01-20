@@ -83,57 +83,84 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 async function handlePaymentEvent(supabase: any, webhookData: any) {
     const paymentId = webhookData.data.id;
 
-    // Fetch detailed payment data from Mercado Pago
+    // 1. Fetch detailed payment data from Mercado Pago
     const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
         headers: { 'Authorization': `Bearer ${MP_TOKEN}` }
     });
 
-    if (!response.ok) return;
+    if (!response.ok) {
+        console.error(`Error fetching payment ${paymentId} from Mercado Pago.`);
+        return;
+    }
     const paymentData = await response.json();
 
+    // 2. Find the corresponding entry in payment_validations
+    const { data: validation, error: validationError } = await supabase
+        .from('payment_validations')
+        .select('*')
+        .eq('payment_id', paymentId.toString())
+        .single();
+
+    if (validationError || !validation) {
+        console.error(`Payment validation record not found for payment_id: ${paymentId}`);
+        // If not found, it might be a recurring payment, so we let handleSubscriptionEvent deal with it.
+        return;
+    }
+
     if (paymentData.status === 'approved') {
-        const preapprovalId = paymentData.metadata?.preapproval_id || paymentData.preapproval_id;
+        // 3. Payment is approved, update subscription
+        console.log(`Payment ${paymentId} approved. Updating subscription for user ${validation.user_id}.`);
 
-        let subscription;
+        // Update validation status to 'confirmed'
+        await supabase
+            .from('payment_validations')
+            .update({ status: 'confirmed', updated_at: new Date().toISOString() })
+            .eq('id', validation.id);
 
-        if (preapprovalId) {
-            const { data } = await supabase
+        const nextPaymentDate = new Date();
+        nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+
+        const subscriptionData = {
+            plan_type: validation.plan_type,
+            status: 'active',
+            mercadopago_preapproval_id: paymentData.id?.toString(), // Store the initial payment ID
+            last_payment_date: new Date().toISOString(),
+            next_payment_date: nextPaymentDate.toISOString(),
+            updated_at: new Date().toISOString(),
+        };
+
+        // Check if user already has a subscription
+        const { data: existingSubscription } = await supabase
+            .from('subscriptions')
+            .select('id')
+            .eq('user_id', validation.user_id)
+            .single();
+
+        if (existingSubscription) {
+            // Update existing subscription
+            await supabase
                 .from('subscriptions')
-                .select('*')
-                .eq('mercadopago_preapproval_id', preapprovalId)
-                .single();
-            subscription = data;
+                .update(subscriptionData)
+                .eq('user_id', validation.user_id);
+            console.log(`Subscription for user ${validation.user_id} updated to ${validation.plan_type}.`);
         } else {
-            // Fallback: Tenta encontrar a assinatura pelo ID do pagamento inicial (armazenado na criação)
-            const { data } = await supabase
-                .from('subscriptions')
-                .select('*')
-                .eq('mercadopago_preapproval_id', paymentId.toString())
-                .single();
-            subscription = data;
-        }
-
-        if (subscription) {
-            const nextPaymentDate = new Date();
-            nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
-
+            // Create new subscription
             await supabase
                 .from('subscriptions')
-                .update({
-                    status: 'active',
-                    last_payment_date: new Date().toISOString(),
-                    next_payment_date: nextPaymentDate.toISOString(),
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', subscription.id);
-
-            await supabase
-                .from('perfis_usuario')
-                .update({ plan_status: 'active' })
-                .eq('id', subscription.user_id);
-
-            console.log(`User ${subscription.user_id} plan activated via payment`);
+                .insert({
+                    user_id: validation.user_id,
+                    ...subscriptionData
+                });
+            console.log(`Subscription for user ${validation.user_id} created with plan ${validation.plan_type}.`);
         }
+        
+    } else {
+        // 4. Payment was not approved, update validation status
+        console.log(`Payment ${paymentId} not approved (status: ${paymentData.status}). Updating validation record.`);
+        await supabase
+            .from('payment_validations')
+            .update({ status: 'failed', updated_at: new Date().toISOString() })
+            .eq('id', validation.id);
     }
 }
 

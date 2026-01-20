@@ -5,7 +5,7 @@ echo Salvando alteracoes e enviando para o GitHub...
 git add .
 
 :: Realiza o commit
-git commit -m "Integração do Planejador de Refeições com Carrinho"
+git commit -m "feat: Implement payment validation flow"
 
 :: Envia para o GitHub
 git push origin main

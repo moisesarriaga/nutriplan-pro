@@ -153,25 +153,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const mpData = await payment.create({ body: paymentBody });
 
-        // Store subscription in database
-        const subscriptionData = {
-            user_id: userId,
-            plan_type: plan,
-            status: mpData.status === 'approved' ? 'active' : 'pending',
-            // We store payment ID as preapproval_id for reference
-            mercadopago_preapproval_id: mpData.id?.toString(),
-            next_payment_date: null, // Will be set after first payment
-        };
+        // Insert into payment_validations table
+        const { error: validationError } = await supabase
+            .from('payment_validations')
+            .insert({
+                user_id: userId,
+                payment_id: mpData.id?.toString(),
+                plan_type: plan,
+                status: 'pending',
+            });
 
-        if (existingSubscription) {
-            await supabase
-                .from('subscriptions')
-                .update(subscriptionData)
-                .eq('user_id', userId);
-        } else {
-            await supabase
-                .from('subscriptions')
-                .insert(subscriptionData);
+        if (validationError) {
+            console.error('Error inserting into payment_validations:', validationError);
+            // Even if this fails, we should probably proceed and let the webhook handle it
+            // or have a reconciliation process. For now, we log it.
         }
 
         return res.status(200).json({
