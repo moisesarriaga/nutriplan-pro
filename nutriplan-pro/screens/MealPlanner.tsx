@@ -129,7 +129,16 @@ const MealPlanner: React.FC = () => {
     // Collect ALL ingredients from ALL meals across ALL days
     const allIngredients: Array<{ name: string; quantity: number; unit: string }> = [];
 
-    mealPlan.forEach(entry => {
+    // Filter meals for the SELECTED DAY only
+    const mealsForSelectedDay = mealPlan.filter(m => m.dia_semana === selectedDay);
+
+    if (mealsForSelectedDay.length === 0) {
+      alert(`Seu cardápio de ${selectedDay} está vazio. Adicione refeições para este dia antes de gerar a lista.`);
+      return;
+    }
+
+    // Collect ingredients ONLY from selected day's meals
+    mealsForSelectedDay.forEach(entry => {
       if (entry.receita?.ingredients) {
         entry.receita.ingredients.forEach((ing: any) => {
           allIngredients.push({
