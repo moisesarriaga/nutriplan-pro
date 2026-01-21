@@ -35,20 +35,71 @@ const Dashboard: React.FC = () => {
     const daysPt = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     const todayName = daysPt[new Date().getDay()];
 
-    const { data, error } = await supabase
-      .from('cardapio_semanal')
-      .select('receita_id, tipo_refeicao')
-      .eq('usuario_id', user.id)
-      .eq('dia_semana', todayName);
+    try {
+      // 1. Fetch planned meals for today
+      const { data: plannedMeals, error } = await supabase
+        .from('cardapio_semanal')
+        .select('receita_id, tipo_refeicao')
+        .eq('usuario_id', user.id)
+        .eq('dia_semana', todayName);
 
-    if (!error && data) {
-      const enrichedMeals = data.map(entry => {
-        const recipe = MOCK_RECIPES.find(r => r.id === entry.receita_id);
-        return {
-          ...entry,
-          recipe
-        };
-      }).filter(m => m.recipe);
+      if (error) throw error;
+      if (!plannedMeals) return;
+
+      const enrichedMeals = [];
+
+      // 2. Separate into Mock vs Real recipes
+      // Real recipes are UUIDs (36 chars), Mock IDs are usually shorter strings
+      const realRecipeIds = plannedMeals
+        .map(p => p.receita_id)
+        .filter(id => id && id.length > 20); // Simple UUID check
+
+      let dbRecipes: any[] = [];
+
+      // 3. Fetch real recipes from DB if needed
+      if (realRecipeIds.length > 0) {
+        const { data: recipes, error: recipesError } = await supabase
+          .from('receitas')
+          .select('id, nome, total_calories, imagem_url')
+          .in('id', realRecipeIds);
+
+        if (!recipesError && recipes) {
+          dbRecipes = recipes;
+        }
+      }
+
+      // 4. Merge data
+      for (const plan of plannedMeals) {
+        let recipe = MOCK_RECIPES.find(r => r.id === plan.receita_id);
+
+        if (!recipe) {
+          // Try finding in DB fetched recipes
+          const dbRecipe = dbRecipes.find(r => r.id === plan.receita_id);
+          if (dbRecipe) {
+            recipe = {
+              id: dbRecipe.id,
+              name: dbRecipe.nome,
+              image: dbRecipe.imagem_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800', // Fallback image
+              calories: dbRecipe.total_calories || 0,
+              description: 'Receita personalizada',
+              time: '30 min',
+              category: 'Personalizada',
+              difficulty: 'Médio',
+              servings: 1,
+              ingredients: [],
+              steps: [],
+              nutrition: { protein: 0, carbs: 0, fats: 0 }
+            };
+          }
+        }
+
+        if (recipe) {
+          enrichedMeals.push({
+            ...plan,
+            recipe
+          });
+        }
+      }
 
       setTodayMeals(enrichedMeals);
 
@@ -56,6 +107,9 @@ const Dashboard: React.FC = () => {
         return sum + (entry.recipe?.calories || 0);
       }, 0);
       setTodayCalories(dailyTotal);
+
+    } catch (err) {
+      console.error('Error fetching today menu:', err);
     }
   };
 

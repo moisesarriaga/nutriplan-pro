@@ -52,27 +52,56 @@ const MealPlanner: React.FC = () => {
 
       if (entriesError) throw entriesError;
 
-      // 2. Fetch all unique recipe IDs from the plan
+      // 2. Separate Mock vs Real IDs
       const recipeIds = Array.from(new Set(entries.map(e => e.receita_id)));
 
-      // 3. Fetch recipes from database
-      const { data: dbRecipes, error: recipesError } = await supabase
-        .from('receitas')
-        .select('*')
-        .in('id', recipeIds);
+      const realRecipeIds = recipeIds.filter(id => id && id.length > 20); // Assumption: UUIDs are long strings
+
+      let dbRecipes: any[] = [];
+
+      // 3. Fetch real recipes from database
+      if (realRecipeIds.length > 0) {
+        const { data: recipes, error: recipesError } = await supabase
+          .from('receitas')
+          .select('id, nome, total_calories, imagem_url, modo_preparo, nutritional_data')
+          .in('id', realRecipeIds);
+
+        if (!recipesError && recipes) {
+          dbRecipes = recipes;
+        }
+      }
 
       // 4. Enrich entries with recipe data (check DB first, then MOCKS)
       const enrichedData = entries.map(entry => {
-        let recipe = dbRecipes?.find(r => r.id === entry.receita_id);
+        // Check DB first (User recipes)
+        const dbRecipe = dbRecipes.find(r => r.id === entry.receita_id);
 
-        // If not in DB, check MOCKS (fallback for static content)
-        if (!recipe) {
-          recipe = MOCK_RECIPES.find(r => r.id === entry.receita_id);
+        if (dbRecipe) {
+          return {
+            ...entry,
+            receita: {
+              id: dbRecipe.id,
+              name: dbRecipe.nome,
+              image: dbRecipe.imagem_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+              calories: dbRecipe.total_calories || 0,
+              description: 'Receita personalizada',
+              time: '30 min',
+              category: 'Personalizada',
+              difficulty: 'Médio',
+              servings: 1,
+              ingredients: dbRecipe.nutritional_data?.ingredients || [],
+              steps: [],
+              nutrition: { protein: 0, carbs: 0, fats: 0 }
+            }
+          };
         }
+
+        // Fallback to MOCK_RECIPES
+        const mockRecipe = MOCK_RECIPES.find(r => r.id === entry.receita_id);
 
         return {
           ...entry,
-          receita: recipe
+          receita: mockRecipe || null
         };
       });
 
