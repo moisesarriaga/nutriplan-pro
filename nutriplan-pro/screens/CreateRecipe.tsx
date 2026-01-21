@@ -275,7 +275,7 @@ const CreateRecipe: React.FC = () => {
                   ) : (
                     <>
                       <Sparkles size={20} />
-                      Processar com IA
+                      Gerar com IA
                     </>
                   )}
                 </button>
