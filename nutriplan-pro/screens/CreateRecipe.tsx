@@ -248,7 +248,7 @@ const CreateRecipe: React.FC = () => {
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Cole o texto da receita aqui</label>
                 <textarea
                   ref={textareaRef}
-                  className="w-full rounded-3xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-surface-dark px-6 py-4 focus:ring-primary focus:border-primary shadow-sm resize-none overflow-y-auto max-h-[400px] discrete-scrollbar"
+                  className="w-full rounded-3xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-surface-dark px-6 py-4 pr-10 bg-clip-padding focus:ring-primary focus:border-primary shadow-sm resize-none overflow-y-auto max-h-[400px] discrete-scrollbar"
                   placeholder="Cole aqui o texto completo da receita (nome, ingredientes, modo de preparo)..."
                   rows={1}
                   value={recipeText}
