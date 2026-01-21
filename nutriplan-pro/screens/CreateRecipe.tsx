@@ -246,14 +246,19 @@ const CreateRecipe: React.FC = () => {
             <section className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Cole o texto da receita aqui</label>
-                <textarea
-                  ref={textareaRef}
-                  className="w-full rounded-3xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-surface-dark px-6 py-4 focus:ring-primary focus:border-primary shadow-sm resize-none overflow-y-auto max-h-[400px] discrete-scrollbar"
-                  placeholder="Cole aqui o texto completo da receita (nome, ingredientes, modo de preparo)..."
-                  rows={1}
-                  value={recipeText}
-                  onChange={(e) => setRecipeText(e.target.value)}
-                />
+                <div
+                  className="w-full rounded-3xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-surface-dark shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all overflow-hidden cursor-text"
+                  onClick={() => textareaRef.current?.focus()}
+                >
+                  <textarea
+                    ref={textareaRef}
+                    className="w-[calc(100%-80px)] ml-6 my-4 bg-transparent border-none focus:ring-0 resize-none overflow-y-auto max-h-[400px] discrete-scrollbar text-slate-900 dark:text-white"
+                    placeholder="Cole aqui o texto completo da receita (nome, ingredientes, modo de preparo)..."
+                    rows={1}
+                    value={recipeText}
+                    onChange={(e) => setRecipeText(e.target.value)}
+                  />
+                </div>
               </div>
 
               <div className="flex gap-3">

@@ -119,37 +119,29 @@
 
         /* Discrete Scrollbar for Textareas */
         /* WebKit (Chrome, Edge, Safari) */
-        .discrete-scrollbar::-webkit-scrollbar {
-            width: 80px;
-            /* Extra wide to allow for significant inward movement */
-            background-color: transparent;
+        textarea.discrete-scrollbar::-webkit-scrollbar {
+            width: 8px !important;
+            background-color: transparent !important;
         }
 
-        .discrete-scrollbar::-webkit-scrollbar-track {
+        textarea.discrete-scrollbar::-webkit-scrollbar-track {
             background-color: transparent !important;
             box-shadow: none !important;
-            margin-block: 10px;
+            margin-block: 5px !important;
         }
 
-        .discrete-scrollbar::-webkit-scrollbar-corner {
-            background-color: transparent;
+        textarea.discrete-scrollbar::-webkit-scrollbar-corner {
+            background-color: transparent !important;
         }
 
-        .discrete-scrollbar::-webkit-scrollbar-thumb {
-            background-color: #13ec5b;
-            /* Primary green for high visibility */
-            border-radius: 20px;
-            border-top: 10px solid transparent;
-            border-bottom: 10px solid transparent;
-            border-left: 20px solid transparent;
-            border-right: 50px solid transparent;
-            /* Pushes thumb 50px from the right edge */
-            background-clip: content-box;
+        textarea.discrete-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5) !important;
+            border-radius: 20px !important;
+            background-clip: content-box !important;
         }
 
-        .discrete-scrollbar::-webkit-scrollbar-thumb:hover {
-            background-color: #0eb545;
-            /* Darker green on hover */
+        textarea.discrete-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(156, 163, 175, 0.8) !important;
         }
     </style>
     <script type="importmap">
