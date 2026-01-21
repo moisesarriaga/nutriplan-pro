@@ -252,7 +252,7 @@ const CreateRecipe: React.FC = () => {
                 >
                   <textarea
                     ref={textareaRef}
-                    className="w-[calc(100%-10px)] ml-6 my-4 bg-transparent border-none focus:ring-0 resize-none overflow-y-auto max-h-[400px] discrete-scrollbar text-slate-900 dark:text-white"
+                    className="w-[calc(100%-60px)] ml-6 my-4 bg-transparent border-none focus:ring-0 resize-none overflow-y-auto max-h-[400px] discrete-scrollbar text-slate-900 dark:text-white"
                     placeholder="Cole aqui o texto completo da receita (nome, ingredientes, modo de preparo)..."
                     rows={1}
                     value={recipeText}
