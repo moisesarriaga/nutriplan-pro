@@ -39,7 +39,7 @@ const Navigation: React.FC = () => {
             >
               <item.icon
                 size={24}
-                className={`${isActive(item.path) ? 'fill-current' : ''}`}
+                className="text-slate-400 dark:text-slate-500"
               />
               <span className="text-[10px] font-medium">{item.label}</span>
             </button>

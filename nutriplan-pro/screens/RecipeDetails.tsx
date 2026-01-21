@@ -366,7 +366,7 @@ const RecipeDetails: React.FC = () => {
         </div>
       </main>
 
-      <div className="fixed bottom-20 left-0 right-0 z-30 p-4 bg-gradient-to-t from-background-dark via-background-dark to-transparent pt-8">
+      <div className="fixed bottom-20 left-0 right-0 z-30 p-4 bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark pt-8">
         <div className="max-w-md mx-auto">
           <button
             onClick={() => setIsAddingToPlanner(true)}
