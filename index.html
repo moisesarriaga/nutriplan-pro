@@ -109,6 +109,25 @@
             -webkit-text-stroke: 1px #9ca3af;
             /* Contorno cinza mais claro no modo escuro */
         }
+
+        /* Discrete Scrollbar for Textareas */
+        .discrete-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .discrete-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .discrete-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5);
+            /* slate-400 with 50% opacity */
+            border-radius: 20px;
+        }
+
+        .discrete-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(156, 163, 175, 0.8);
+        }
     </style>
     <script type="importmap">
 {
