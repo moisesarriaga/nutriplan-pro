@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 import UpgradePrompt from '../../components/UpgradePrompt';
 import { ArrowLeft, Heart, Pencil, Clock, Flame, Activity, Users, Lock, Check, ShoppingCart, Calendar } from 'lucide-react';
+import Navigation from '../../components/Navigation';
 
 const RecipeDetails: React.FC = () => {
   const { id } = useParams();
@@ -365,14 +366,16 @@ const RecipeDetails: React.FC = () => {
         </div>
       </main>
 
-      <div className="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-background-dark via-background-dark to-transparent pt-8">
-        <button
-          onClick={() => setIsAddingToPlanner(true)}
-          className="w-full h-14 bg-primary text-background-dark rounded-xl text-base font-bold tracking-wide shadow-lg active:scale-[0.99] transition-all flex items-center justify-center gap-2"
-        >
-          <Calendar size={20} />
-          Adicionar ao Cardápio Semanal
-        </button>
+      <div className="fixed bottom-20 left-0 right-0 z-30 p-4 bg-gradient-to-t from-background-dark via-background-dark to-transparent pt-8">
+        <div className="max-w-md mx-auto">
+          <button
+            onClick={() => setIsAddingToPlanner(true)}
+            className="flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl h-14 bg-primary text-black text-base font-bold shadow-lg active:scale-[0.98] transition-all"
+          >
+            <Calendar size={24} className="fill-current" />
+            Adicionar ao Cardápio Semanal
+          </button>
+        </div>
       </div>
 
       {isAddingToPlanner && (
@@ -444,6 +447,7 @@ const RecipeDetails: React.FC = () => {
           onClose={() => setShowUpgradeModal(false)}
         />
       )}
+      <Navigation />
     </div>
   );
 };

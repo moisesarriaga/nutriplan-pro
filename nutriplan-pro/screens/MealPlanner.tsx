@@ -23,6 +23,7 @@ const MealPlanner: React.FC = () => {
   const [mealPlan, setMealPlan] = useState<MealPlanEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGeneratingList, setIsGeneratingList] = useState(false);
+  const [showGenerateOptions, setShowGenerateOptions] = useState(false);
   const [aggregatedIngredients, setAggregatedIngredients] = useState<AggregatedIngredient[]>([]);
 
   const days = [
@@ -125,34 +126,48 @@ const MealPlanner: React.FC = () => {
       alert('Seu cardápio está vazio. Adicione refeições antes de gerar a lista.');
       return;
     }
+    setShowGenerateOptions(true);
+  };
 
-    // Collect ALL ingredients from ALL meals across ALL days
+  const handleGenerateList = (period: 'daily' | 'weekly' | 'monthly') => {
+    // Collect ingredients based on period
     const allIngredients: Array<{ name: string; quantity: number; unit: string }> = [];
+    let mealsToProcess: MealPlanEntry[] = [];
+    let multiplier = 1;
 
-    // Filter meals for the SELECTED DAY only
-    const mealsForSelectedDay = mealPlan.filter(m => m.dia_semana === selectedDay);
+    if (period === 'daily') {
+      mealsToProcess = mealPlan.filter(m => m.dia_semana === selectedDay);
+      if (mealsToProcess.length === 0) {
+        alert(`Seu cardápio de ${selectedDay} está vazio.`);
+        return;
+      }
+    } else if (period === 'weekly') {
+      mealsToProcess = mealPlan;
+    } else if (period === 'monthly') {
+      mealsToProcess = mealPlan;
+      multiplier = 4;
+    }
 
-    if (mealsForSelectedDay.length === 0) {
-      alert(`Seu cardápio de ${selectedDay} está vazio. Adicione refeições para este dia antes de gerar a lista.`);
+    if (mealsToProcess.length === 0) {
+      alert('Nenhuma refeição encontrada para o período selecionado.');
       return;
     }
 
-    // Collect ingredients ONLY from selected day's meals
-    mealsForSelectedDay.forEach(entry => {
+    mealsToProcess.forEach(entry => {
       if (entry.receita?.ingredients) {
         entry.receita.ingredients.forEach((ing: any) => {
           allIngredients.push({
             name: ing.name,
-            quantity: ing.quantity,
+            quantity: Number(ing.quantity) * multiplier,
             unit: ing.unit
           });
         });
       }
     });
 
-    // Use smart aggregation with unit conversion
     const aggregated = aggregateIngredients(allIngredients);
     setAggregatedIngredients(aggregated);
+    setShowGenerateOptions(false);
     setIsGeneratingList(true);
   };
 
@@ -319,6 +334,66 @@ const MealPlanner: React.FC = () => {
       </div>
 
       <Navigation />
+
+      <Navigation />
+
+      {/* Modal de Seleção de Período */}
+      {showGenerateOptions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold mb-2 text-center">Gerar Lista de Compras</h3>
+            <p className="text-sm text-center text-slate-500 mb-6">Selecione o período para gerar sua lista:</p>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => handleGenerateList('daily')}
+                className="flex items-center gap-4 w-full p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors group"
+              >
+                <div className="flex items-center justify-center size-10 rounded-full bg-primary/20 text-primary group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-rounded">calendar_today</span>
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="font-bold text-slate-800 dark:text-gray-200">Diária ({selectedDay})</span>
+                  <span className="text-xs text-slate-500">Apenas refeições de hoje</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleGenerateList('weekly')}
+                className="flex items-center gap-4 w-full p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors group"
+              >
+                <div className="flex items-center justify-center size-10 rounded-full bg-primary/20 text-primary group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-rounded">date_range</span>
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="font-bold text-slate-800 dark:text-gray-200">Semanal (7 dias)</span>
+                  <span className="text-xs text-slate-500">Todo o cardápio da semana</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleGenerateList('monthly')}
+                className="flex items-center gap-4 w-full p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors group"
+              >
+                <div className="flex items-center justify-center size-10 rounded-full bg-primary/20 text-primary group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-rounded">calendar_month</span>
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="font-bold text-slate-800 dark:text-gray-200">Mensal (4 semanas)</span>
+                  <span className="text-xs text-slate-500">Quantidade semanal x 4</span>
+                </div>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowGenerateOptions(false)}
+              className="mt-6 w-full py-3 text-sm font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {isGeneratingList && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
