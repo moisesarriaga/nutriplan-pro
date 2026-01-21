@@ -120,8 +120,8 @@
         /* Discrete Scrollbar for Textareas */
         /* WebKit (Chrome, Edge, Safari) */
         .discrete-scrollbar::-webkit-scrollbar {
-            width: 60px;
-            /* Wider to create "centering" space */
+            width: 80px;
+            /* Extra wide to allow for significant inward movement */
             background-color: transparent;
         }
 
@@ -136,15 +136,20 @@
         }
 
         .discrete-scrollbar::-webkit-scrollbar-thumb {
-            background-color: rgba(156, 163, 175, 0.5);
+            background-color: #13ec5b;
+            /* Primary green for high visibility */
             border-radius: 20px;
-            border: 26px solid transparent;
-            /* Thick transparent border pushes thumb to center */
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-left: 20px solid transparent;
+            border-right: 50px solid transparent;
+            /* Pushes thumb 50px from the right edge */
             background-clip: content-box;
         }
 
         .discrete-scrollbar::-webkit-scrollbar-thumb:hover {
-            background-color: rgba(156, 163, 175, 0.8);
+            background-color: #0eb545;
+            /* Darker green on hover */
         }
     </style>
     <script type="importmap">
