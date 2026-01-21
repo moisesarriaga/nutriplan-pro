@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { extractRecipeFromText, ExtractedRecipe, ExtractedIngredient } from '@/services/openaiService';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
@@ -8,6 +8,9 @@ import { ArrowLeft, Sparkles, Check, Plus, X } from 'lucide-react';
 
 const CreateRecipe: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const recipeId = searchParams.get('id');
+  const isEditing = !!recipeId;
   const { user } = useAuth();
   const [recipeText, setRecipeText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -30,6 +33,47 @@ const CreateRecipe: React.FC = () => {
       document.body.style.overflow = 'unset';
     };
   }, [showManualModal]);
+
+  useEffect(() => {
+    if (user && recipeId) {
+      fetchRecipeData();
+    }
+  }, [user, recipeId]);
+
+  const fetchRecipeData = async () => {
+    try {
+      setIsProcessing(true);
+      const { data: recipe, error } = await supabase
+        .from('receitas')
+        .select('*, ingredientes(*)')
+        .eq('id', recipeId)
+        .single();
+
+      if (error) throw error;
+
+      if (recipe) {
+        setRecipeName(recipe.nome);
+        setRecipeInstructions(recipe.modo_preparo || '');
+
+        const formattedIngredients: ExtractedIngredient[] = (recipe.ingredientes || []).map((ing: any) => ({
+          name: ing.nome,
+          quantity: Number(ing.quantidade),
+          unit: ing.unidade,
+          caloriesPerUnit: Number(ing.calories_per_unit) || 0,
+          totalCalories: Number(ing.total_calories) || 0
+        }));
+
+        setIngredients(formattedIngredients);
+        setShowPreview(true);
+      }
+    } catch (error) {
+      console.error('Error fetching recipe:', error);
+      alert('Erro ao carregar receita para edição.');
+      navigate('/search');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const processWithAI = async () => {
     if (!recipeText.trim()) {
@@ -102,26 +146,51 @@ const CreateRecipe: React.FC = () => {
 
     try {
       // Save recipe to Supabase
-      const { data: recipeData, error: recipeError } = await supabase
-        .from('receitas')
-        .insert([{
-          usuario_id: user.id,
-          nome: recipeName,
-          modo_preparo: recipeInstructions,
-          total_calories: Math.round(totalCalories),
-          nutritional_data: {
-            ingredients: ingredients,
-            totalCalories: Math.round(totalCalories)
-          }
-        }])
-        .select()
-        .single();
+      let recipeIdToUse = recipeId;
 
-      if (recipeError) throw recipeError;
+      if (isEditing && recipeId) {
+        // Update existing recipe
+        const { error: recipeError } = await supabase
+          .from('receitas')
+          .update({
+            nome: recipeName,
+            modo_preparo: recipeInstructions,
+            total_calories: Math.round(totalCalories),
+            nutritional_data: {
+              ingredients: ingredients,
+              totalCalories: Math.round(totalCalories)
+            }
+          })
+          .eq('id', recipeId);
+
+        if (recipeError) throw recipeError;
+
+        // Delete existing ingredients to replace with new ones
+        await supabase.from('ingredientes').delete().eq('receita_id', recipeId);
+      } else {
+        // Insert new recipe
+        const { data: recipeData, error: recipeError } = await supabase
+          .from('receitas')
+          .insert([{
+            usuario_id: user.id,
+            nome: recipeName,
+            modo_preparo: recipeInstructions,
+            total_calories: Math.round(totalCalories),
+            nutritional_data: {
+              ingredients: ingredients,
+              totalCalories: Math.round(totalCalories)
+            }
+          }])
+          .select()
+          .single();
+
+        if (recipeError) throw recipeError;
+        recipeIdToUse = recipeData.id;
+      }
 
       // Save ingredients
       const ingredientsToSave = ingredients.map(ing => ({
-        receita_id: recipeData.id,
+        receita_id: recipeIdToUse,
         nome: ing.name,
         quantidade: ing.quantity,
         unidade: ing.unit,
@@ -135,7 +204,7 @@ const CreateRecipe: React.FC = () => {
 
       if (ingredientsError) throw ingredientsError;
 
-      alert('Receita salva com sucesso!');
+      alert(isEditing ? 'Receita atualizada com sucesso!' : 'Receita salva com sucesso!');
       navigate('/search');
     } catch (error) {
       console.error('Error saving recipe:', error);
@@ -149,7 +218,7 @@ const CreateRecipe: React.FC = () => {
         <button onClick={() => navigate(-1)} className="flex items-center justify-center p-2 -ml-2 rounded-full hover:bg-slate-200/50">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-lg font-bold flex-1 text-center">Nova Receita com IA</h1>
+        <h1 className="text-lg font-bold flex-1 text-center">{isEditing ? 'Editar Receita' : 'Nova Receita com IA'}</h1>
         <button onClick={() => navigate(-1)} className="text-sm font-semibold text-primary">Cancelar</button>
       </header>
 
@@ -235,7 +304,18 @@ const CreateRecipe: React.FC = () => {
 
             <section className="flex flex-col gap-4">
               {ingredients.map((ing, idx) => (
-                <div key={idx} className="p-5 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-gray-800 shadow-sm">
+                <div key={idx} className="p-5 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-gray-800 shadow-sm relative group">
+                  <button
+                    onClick={() => {
+                      const newIngredients = [...ingredients];
+                      newIngredients.splice(idx, 1);
+                      setIngredients(newIngredients);
+                    }}
+                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
+                    title="Remover ingrediente"
+                  >
+                    <X size={18} />
+                  </button>
                   <div className="flex justify-between items-center mb-4">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Ingrediente {idx + 1}</label>
                     <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">{Math.round(ing.totalCalories)} kcal</span>

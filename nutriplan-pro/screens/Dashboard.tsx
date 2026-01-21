@@ -18,11 +18,13 @@ const Dashboard: React.FC = () => {
   } | null>(null);
   const [todayMeals, setTodayMeals] = useState<any[]>([]);
   const [todayCalories, setTodayCalories] = useState(0);
+  const [userRecipes, setUserRecipes] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchTodayCalories();
+      fetchUserRecipes();
     }
   }, [user]);
 
@@ -69,6 +71,25 @@ const Dashboard: React.FC = () => {
       if (data) setProfile(data);
     } catch (err) {
       console.error('Error fetching dashboard profile:', err);
+    }
+  };
+
+  const fetchUserRecipes = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('receitas')
+        .select('id, nome, modo_preparo, total_calories, created_at, imagem_url')
+        .eq('usuario_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setUserRecipes(data || []);
+    } catch (err) {
+      console.error('Error fetching user recipes:', err);
+      setUserRecipes([]);
     }
   };
 
@@ -236,33 +257,57 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="px-4 pb-6">
-        <h2 className="text-xl font-bold tracking-tight mb-3">Novas Receitas</h2>
+        <h2 className="text-xl font-bold tracking-tight mb-3">Minhas Receitas</h2>
         <div className="flex flex-col gap-4">
-          {MOCK_RECIPES.map((recipe) => (
-            <div
-              key={recipe.id}
-              onClick={() => navigate(`/recipe/${recipe.id}`)}
-              className="group flex gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-[#23482f]/50 transition cursor-pointer"
-            >
-              <div className="size-20 shrink-0 rounded-lg bg-gray-200 overflow-hidden">
-                <div
-                  className="w-full h-full bg-cover bg-center transition duration-500 group-hover:scale-110"
-                  style={{ backgroundImage: `url(${recipe.image})` }}
-                ></div>
-              </div>
-              <div className="flex flex-col justify-center flex-1">
-                <div className="flex justify-between items-start">
-                  <h4 className="font-bold text-sm">{recipe.name}</h4>
-                  <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold">Novo</span>
+          {userRecipes.length > 0 ? (
+            userRecipes.map((recipe) => (
+              <div
+                key={recipe.id}
+                onClick={() => navigate(`/recipe/${recipe.id}`)}
+                className="group flex gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-[#23482f]/50 transition cursor-pointer"
+              >
+                <div className="size-20 shrink-0 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/10 dark:to-primary/5 overflow-hidden flex items-center justify-center">
+                  {recipe.imagem_url ? (
+                    <div
+                      className="w-full h-full bg-cover bg-center transition duration-500 group-hover:scale-110"
+                      style={{ backgroundImage: `url(${recipe.imagem_url})` }}
+                    ></div>
+                  ) : (
+                    <span className="material-symbols-rounded text-primary text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>
+                  )}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-[#92c9a4] line-clamp-2 mt-1">{recipe.description}</p>
-                <div className="flex items-center gap-3 mt-2 text-xs text-slate-400 dark:text-slate-500">
-                  <span className="flex items-center gap-1"><span className="material-symbols-rounded text-[14px]">schedule</span> {recipe.time}</span>
-                  <span className="flex items-center gap-1"><span className="material-symbols-rounded text-[14px]">bolt</span> {recipe.calories} kcal</span>
+                <div className="flex flex-col justify-center flex-1">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-bold text-sm">{recipe.nome}</h4>
+                    <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold">Minha</span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-[#92c9a4] line-clamp-2 mt-1">
+                    {recipe.modo_preparo ? recipe.modo_preparo.substring(0, 80) + '...' : 'Sem descrição'}
+                  </p>
+                  <div className="flex items-center gap-3 mt-2 text-xs text-slate-400 dark:text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-rounded text-[14px]">bolt</span> {recipe.total_calories || 0} kcal
+                    </span>
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl bg-white dark:bg-surface-dark p-8 border-2 border-dashed border-slate-200 dark:border-slate-800">
+              <span className="material-symbols-rounded text-slate-400 text-[48px]">menu_book</span>
+              <div className="text-center">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Nenhuma receita criada ainda</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Crie sua primeira receita usando o botão acima</p>
+              </div>
+              <button
+                onClick={() => navigate('/create-recipe')}
+                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-black shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
+              >
+                <span className="material-symbols-rounded text-[18px]">add</span>
+                Nova Receita
+              </button>
             </div>
-          ))}
+          )}
         </div>
       </div>
 

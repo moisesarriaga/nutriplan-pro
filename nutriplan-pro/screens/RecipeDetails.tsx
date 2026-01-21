@@ -22,16 +22,73 @@ const RecipeDetails: React.FC = () => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { hasFeature } = useSubscription();
+  const [recipe, setRecipe] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const canTrackCalories = hasFeature('calorie_tracking');
 
-  const recipe = MOCK_RECIPES.find(r => r.id === id);
-
   useEffect(() => {
-    if (user && id) {
-      checkIfFavorited();
+    fetchRecipe();
+  }, [id]);
+
+  const fetchRecipe = async () => {
+    if (!id) return;
+
+    // First, try to find in MOCK_RECIPES
+    const mockRecipe = MOCK_RECIPES.find(r => r.id === id);
+    if (mockRecipe) {
+      setRecipe(mockRecipe);
+      setIsLoading(false);
+      if (user) checkIfFavorited();
+      return;
     }
-  }, [user, id]);
+
+    // If not found, try fetching from database
+    try {
+      const { data, error } = await supabase
+        .from('receitas')
+        .select('*, ingredientes(*)')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        // Transform database recipe to match expected format
+        const transformedRecipe = {
+          id: data.id,
+          name: data.nome,
+          image: data.imagem_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+          category: 'Personalizada',
+          description: data.modo_preparo?.substring(0, 100) || 'Receita personalizada',
+          calories: data.total_calories || 0,
+          time: '30 min', // Default value
+          difficulty: 'Médio', // Default value
+          servings: 2, // Default value
+          ingredients: (data.ingredientes || []).map((ing: any) => ({
+            id: ing.id,
+            name: ing.nome,
+            quantity: ing.quantidade,
+            unit: ing.unidade,
+            calories: ing.total_calories || 0
+          })),
+          steps: data.modo_preparo ? data.modo_preparo.split('\n').filter((s: string) => s.trim()) : [],
+          nutrition: {
+            protein: 0,
+            carbs: 0,
+            fats: 0
+          },
+          isUserRecipe: true
+        };
+        setRecipe(transformedRecipe);
+      }
+    } catch (err) {
+      console.error('Error fetching recipe:', err);
+    } finally {
+      setIsLoading(false);
+      if (user) checkIfFavorited();
+    }
+  };
 
   const checkIfFavorited = async () => {
     const { data } = await supabase
@@ -53,8 +110,30 @@ const RecipeDetails: React.FC = () => {
     setIsFavorited(!isFavorited);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background-light dark:bg-background-dark">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="text-sm text-gray-500">Carregando receita...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!recipe) {
-    return <div className="p-4">Receita não encontrada.</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background-light dark:bg-background-dark p-4">
+        <span className="material-symbols-rounded text-gray-400 text-[64px] mb-4">restaurant_menu</span>
+        <p className="text-lg font-medium text-gray-700 dark:text-gray-300">Receita não encontrada</p>
+        <button
+          onClick={() => navigate(-1)}
+          className="mt-4 px-6 py-2 bg-primary text-black rounded-lg font-bold"
+        >
+          Voltar
+        </button>
+      </div>
+    );
   }
 
   const toggleIngredient = (ingId: string) => {
@@ -149,9 +228,14 @@ const RecipeDetails: React.FC = () => {
             >
               <Heart size={20} className={`${isFavorited ? 'fill-current' : ''}`} />
             </button>
-            <button className="flex items-center justify-center size-10 rounded-full bg-background-dark/20 backdrop-blur-md border border-white/10 text-white">
-              <Pencil size={20} />
-            </button>
+            {recipe && recipe.isUserRecipe && (
+              <button
+                onClick={() => navigate(`/create-recipe?id=${recipe.id}`)}
+                className="flex items-center justify-center size-10 rounded-full bg-background-dark/20 backdrop-blur-md border border-white/10 text-white hover:bg-white/10 transition-colors"
+              >
+                <Pencil size={20} />
+              </button>
+            )}
           </div>
         </div>
 
