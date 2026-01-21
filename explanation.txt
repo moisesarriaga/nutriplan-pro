@@ -1,0 +1,7 @@
+I have successfully adjusted the scrollbar for the text area as you requested. I modified the styles in the `index.html` file to make the scrollbar appear more centered.
+
+I have verified that the changes are correctly applied.
+
+I intended to add a test to ensure the quality of the change, but I found no testing framework (like Jest or React Testing Library) set up in the project.
+
+I am now waiting for your feedback or further instructions.
