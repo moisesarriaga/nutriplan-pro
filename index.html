@@ -112,23 +112,22 @@
 
         /* Discrete Scrollbar for Textareas */
         .discrete-scrollbar::-webkit-scrollbar {
-            width: 8px;
-            /* Slightly wider to accommodate border */
+            width: 14px;
+            /* Ensure 14px width in the file */
         }
 
         .discrete-scrollbar::-webkit-scrollbar-track {
             background: transparent;
-            margin-block: 4px;
-            /* Margin top and bottom */
+            margin-block: 10px;
+            /* Ensure 10px vertical margin */
         }
 
         .discrete-scrollbar::-webkit-scrollbar-thumb {
             background-color: rgba(156, 163, 175, 0.5);
             border-radius: 20px;
-            border: 2px solid transparent;
-            /* Creates padding around thumb */
+            border: 4px solid transparent;
+            /* Ensure 4px transparent border */
             background-clip: content-box;
-            /* Makes the thumb inside the border */
         }
 
         .discrete-scrollbar::-webkit-scrollbar-thumb:hover {
