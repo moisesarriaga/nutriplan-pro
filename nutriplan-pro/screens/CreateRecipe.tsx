@@ -27,7 +27,16 @@ const CreateRecipe: React.FC = () => {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = 400;
+
+      if (scrollHeight > maxHeight) {
+        textareaRef.current.style.overflowY = 'auto';
+        textareaRef.current.style.height = `${maxHeight}px`;
+      } else {
+        textareaRef.current.style.overflowY = 'hidden';
+        textareaRef.current.style.height = `${scrollHeight}px`;
+      }
     }
   }, [recipeText]);
 
