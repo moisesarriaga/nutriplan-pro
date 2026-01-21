@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { extractRecipeFromText, ExtractedRecipe, ExtractedIngredient } from '@/services/openaiService';
 import { supabase } from '../../lib/supabaseClient';
@@ -21,6 +21,15 @@ const CreateRecipe: React.FC = () => {
   const [ingredients, setIngredients] = useState<ExtractedIngredient[]>([]);
   const [showManualModal, setShowManualModal] = useState(false);
   const [manualIngredient, setManualIngredient] = useState({ name: '', quantity: 0, unit: 'g', caloriesPerUnit: 0 });
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [recipeText]);
 
   // Efeito para travar o scroll da página de fundo quando o modal estiver aberto
   useEffect(() => {
@@ -229,9 +238,10 @@ const CreateRecipe: React.FC = () => {
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Cole o texto da receita aqui</label>
                 <textarea
-                  className="w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-surface-dark px-4 py-3 focus:ring-primary focus:border-primary shadow-sm resize-none"
+                  ref={textareaRef}
+                  className="w-full rounded-3xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-surface-dark px-6 py-4 focus:ring-primary focus:border-primary shadow-sm resize-none overflow-hidden max-h-[400px]"
                   placeholder="Cole aqui o texto completo da receita (nome, ingredientes, modo de preparo)..."
-                  rows={12}
+                  rows={1}
                   value={recipeText}
                   onChange={(e) => setRecipeText(e.target.value)}
                 />
