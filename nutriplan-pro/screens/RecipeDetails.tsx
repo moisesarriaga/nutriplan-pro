@@ -372,7 +372,7 @@ const RecipeDetails: React.FC = () => {
             onClick={() => setIsAddingToPlanner(true)}
             className="flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl h-14 bg-primary text-black text-base font-bold shadow-lg active:scale-[0.98] transition-all"
           >
-            <Calendar size={24} className="fill-current" />
+            <Calendar size={24} />
             Adicionar ao Cardápio Semanal
           </button>
         </div>

@@ -27,7 +27,7 @@ const Navigation: React.FC = () => {
                 onClick={() => navigate(item.path)}
                 className={`flex items-center justify-center w-14 h-14 rounded-full bg-primary text-black -mt-8 shadow-lg shadow-primary/30 active:scale-95 transition-transform border-4 border-white dark:border-background-dark`}
               >
-                <item.icon size={24} className="fill-current" />
+                <item.icon size={24} />
               </button>
             </div>
           ) : (

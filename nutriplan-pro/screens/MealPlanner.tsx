@@ -327,7 +327,7 @@ const MealPlanner: React.FC = () => {
             onClick={openShoppingListModal}
             className="flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl h-14 bg-primary text-black text-base font-bold shadow-lg active:scale-[0.98] transition-all"
           >
-            <ShoppingCart size={24} className="fill-current" />
+            <ShoppingCart size={24} />
             Gerar Lista de Compras
           </button>
         </div>
