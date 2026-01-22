@@ -5,6 +5,11 @@ interface NotificationOptions {
     title?: string;
 }
 
+interface ConfirmationOptions {
+    onConfirm?: () => void;
+    title?: string;
+}
+
 interface NotificationContextType {
     showNotification: (message: string, options?: NotificationOptions) => void;
     hideNotification: () => void;
@@ -12,6 +17,13 @@ interface NotificationContextType {
         visible: boolean;
         message: string;
         options?: NotificationOptions;
+    };
+    showConfirmation: (message: string, options?: ConfirmationOptions) => void;
+    hideConfirmation: () => void;
+    confirmation: {
+        visible: boolean;
+        message: string;
+        options?: ConfirmationOptions;
     };
 }
 
@@ -22,6 +34,15 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         visible: boolean;
         message: string;
         options?: NotificationOptions;
+    }>({
+        visible: false,
+        message: '',
+    });
+
+    const [confirmation, setConfirmation] = useState<{
+        visible: boolean;
+        message: string;
+        options?: ConfirmationOptions;
     }>({
         visible: false,
         message: '',
@@ -42,8 +63,27 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         setNotification((prev) => ({ ...prev, visible: false }));
     }, [notification]);
 
+    const showConfirmation = useCallback((message: string, options?: ConfirmationOptions) => {
+        setConfirmation({
+            visible: true,
+            message,
+            options,
+        });
+    }, []);
+
+    const hideConfirmation = useCallback(() => {
+        setConfirmation((prev) => ({ ...prev, visible: false }));
+    }, []);
+
     return (
-        <NotificationContext.Provider value={{ showNotification, hideNotification, notification }}>
+        <NotificationContext.Provider value={{
+            showNotification,
+            hideNotification,
+            notification,
+            showConfirmation,
+            hideConfirmation,
+            confirmation
+        }}>
             {children}
         </NotificationContext.Provider>
     );

@@ -81,11 +81,12 @@ const AppContent: React.FC = () => {
             )
           }
         />
+import ConfirmationModal from './components/ConfirmationModal';
+...
       </Routes>
       <AlertModal />
-    </>
-  );
-};
+      <ConfirmationModal />
+...
 
 const App: React.FC = () => {
   return (

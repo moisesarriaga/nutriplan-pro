@@ -5,7 +5,7 @@ import { extractRecipeFromText, generateRecipeImage, ExtractedRecipe, ExtractedI
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { ArrowLeft, Sparkles, Check, Plus, X } from 'lucide-react';
+import { ArrowLeft, Sparkles, Check, Plus, X, Trash2 } from 'lucide-react';
 
 const CreateRecipe: React.FC = () => {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ const CreateRecipe: React.FC = () => {
   const recipeId = searchParams.get('id');
   const isEditing = !!recipeId;
   const { user } = useAuth();
-  const { showNotification } = useNotification();
+  const { showNotification, showConfirmation } = useNotification();
   const [recipeText, setRecipeText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedRecipe, setExtractedRecipe] = useState<ExtractedRecipe | null>(null);
@@ -239,6 +239,35 @@ const CreateRecipe: React.FC = () => {
     }
   };
 
+  const handleDelete = () => {
+    showConfirmation('Tem certeza que deseja excluir esta receita? Esta ação não pode ser desfeita.', {
+      title: 'Excluir Receita',
+      onConfirm: async () => {
+        if (!user || !recipeId) return;
+
+        try {
+          // First, delete related ingredients
+          await supabase.from('ingredientes').delete().eq('receita_id', recipeId);
+
+          // Then, delete the recipe itself
+          const { error } = await supabase.from('receitas').delete().eq('id', recipeId);
+
+          if (error) throw error;
+
+          showNotification('Receita excluída com sucesso!', {
+            title: 'Excluído!',
+            onConfirm: () => navigate('/search')
+          });
+        } catch (error) {
+          console.error('Error deleting recipe:', error);
+          showNotification('Erro ao excluir receita: ' + (error as any).message, {
+            title: 'Erro'
+          });
+        }
+      }
+    });
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark transition-colors duration-300">
       <header className="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between transition-colors duration-300">
@@ -246,7 +275,15 @@ const CreateRecipe: React.FC = () => {
           <ArrowLeft size={24} />
         </button>
         <h1 className="text-lg font-bold flex-1 text-center">{isEditing ? 'Editar Receita' : 'Nova Receita com IA'}</h1>
-        <button onClick={() => navigate(-1)} className="text-sm font-semibold text-primary">Cancelar</button>
+        <div className="w-24 flex justify-end">
+          {isEditing ? (
+            <button onClick={handleDelete} className="flex items-center justify-center p-2 rounded-full text-slate-500 hover:bg-red-500/10 hover:text-red-500">
+              <Trash2 size={22} />
+            </button>
+          ) : (
+            <button onClick={() => navigate(-1)} className="text-sm font-semibold text-primary pr-2">Cancelar</button>
+          )}
+        </div>
       </header>
 
       <main className="flex-1 flex flex-col p-4 gap-6 pb-28">
@@ -532,3 +569,4 @@ const CreateRecipe: React.FC = () => {
 };
 
 export default CreateRecipe;
+
