@@ -1,6 +1,6 @@
 // @ts-nocheck
 declare const Deno: any;
-import OpenAI from "openai";
+import OpenAI from "https://esm.sh/openai@4";
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -15,6 +15,8 @@ Deno.serve(async (req) => {
 
     try {
         const apiKey = Deno.env.get('OpenAi-Gerador-Imagens');
+        console.log(`API Key encontrada: ${!!apiKey}`);
+
         if (!apiKey) {
             throw new Error('Chave de API "OpenAi-Gerador-Imagens" não encontrada no ambiente do Supabase.');
         }
@@ -24,6 +26,7 @@ Deno.serve(async (req) => {
         });
 
         const { recipeName, recipeDescription } = await req.json();
+        console.log(`Recebido request para: ${recipeName}`);
 
         if (!recipeName) {
             return new Response(JSON.stringify({ error: 'Nome da receita é obrigatório.' }), {
@@ -32,29 +35,36 @@ Deno.serve(async (req) => {
             });
         }
 
-        console.log(`Gerando imagem para: ${recipeName}`);
+        console.log(`Iniciando geração de imagem no gpt-image-1...`);
 
         const promptDescription = recipeDescription
             ? `. Description: ${recipeDescription.substring(0, 300)}...`
             : "";
 
+        const prompt = `Hand-drawn food illustration of ${recipeName}${promptDescription}. Flat 2D vector art style, thick bold outlines, vibrant colors, clean lines, minimalist, isolated on a clean white background. NO text, NO titles, NO labels, purely visual illustration.`;
+
+        // Using the new gpt-image-1 model as per documentation
         const response = await openai.images.generate({
-            model: "dall-e-3",
-            prompt: `Professional high-quality food photography of ${recipeName}${promptDescription}, appetizing, studio lighting, top-down view or 45-degree angle, high resolution, culinary magazine style, vibrant colors.`,
-            n: 1,
+            model: "gpt-image-1",
+            prompt: prompt,
             size: "1024x1024",
-            quality: "standard",
         });
 
-        const imageUrl = response.data[0].url;
+        console.log(`Resposta da OpenAI:`, JSON.stringify(response));
+        console.log(`Imagem gerada com sucesso!`);
+
+        const imageUrl = response.data[0].url || `data:image/png;base64,${response.data[0].b64_json}`;
 
         return new Response(JSON.stringify({ imageUrl }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
 
     } catch (error) {
-        console.error('Error generating image:', error);
-        return new Response(JSON.stringify({ error: error.message }), {
+        console.error('ERRO DETALHADO:', error);
+        return new Response(JSON.stringify({
+            error: error.message,
+            stack: error.stack
+        }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });

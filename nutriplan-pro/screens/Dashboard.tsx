@@ -147,6 +147,29 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleDeleteRecipe = async (recipeId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent navigating to recipe details
+
+    if (!window.confirm('Tem certeza que deseja excluir esta receita?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('receitas')
+        .delete()
+        .eq('id', recipeId);
+
+      if (error) throw error;
+
+      // Update local state to remove the deleted recipe
+      setUserRecipes(prev => prev.filter(recipe => recipe.id !== recipeId));
+    } catch (err) {
+      console.error('Error deleting recipe:', err);
+      alert('Erro ao excluir receita. Tente novamente.');
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen pb-24">
       <header className="sticky top-0 z-20 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 pt-6 pb-2">
@@ -333,7 +356,13 @@ const Dashboard: React.FC = () => {
                 <div className="flex flex-col justify-center flex-1">
                   <div className="flex justify-between items-start">
                     <h4 className="font-bold text-sm">{recipe.nome}</h4>
-                    <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold">Minha</span>
+                    <button
+                      onClick={(e) => handleDeleteRecipe(recipe.id, e)}
+                      className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+                      title="Excluir receita"
+                    >
+                      <span className="material-symbols-rounded text-[20px]">delete</span>
+                    </button>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-[#92c9a4] line-clamp-2 mt-1">
                     {recipe.modo_preparo ? recipe.modo_preparo.substring(0, 80) + '...' : 'Sem descrição'}
