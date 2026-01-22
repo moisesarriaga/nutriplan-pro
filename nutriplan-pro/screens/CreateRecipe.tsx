@@ -293,7 +293,7 @@ const CreateRecipe: React.FC = () => {
             </section>
 
             <div className="text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 p-3 rounded-lg">
-              <p className="font-semibold mb-1">💡 Dica: A IA irá extrair automaticamente o nome da receita, ingredientes (com quantidades e unidades) e calcular as calorias de cada item!</p>
+              <p className="font-semibold mb-1">💡 Dica: IA identifica automaticamente o nome da receita, os ingredientes (com quantidades e unidades) e calcula as calorias de cada item.</p>
             </div>
           </>
         ) : (
@@ -344,7 +344,7 @@ const CreateRecipe: React.FC = () => {
                   </button>
                   <div className="flex justify-between items-center mb-4">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Ingrediente {idx + 1}</label>
-                    <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">{Math.round(ing.totalCalories)} kcal</span>
+                    <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full mr-10">{Math.round(ing.totalCalories)} kcal</span>
                   </div>
 
                   <div className="flex flex-col gap-4">
