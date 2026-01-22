@@ -38,10 +38,26 @@ export const extractRecipeFromText = async (recipeText: string): Promise<Extract
     }
 };
 
-/**
- * Estimate calories for a single ingredient (fallback function)
- * @deprecated Use extractRecipeFromText for AI-powered extraction
- */
-export const estimateIngredientCalories = async (_ingredientName: string, _quantity: number, _unit: string): Promise<number> => {
-    return 0;
+export const generateRecipeImage = async (recipeName: string, recipeDescription: string): Promise<string> => {
+    try {
+        const { data, error } = await supabase.functions.invoke('generate-recipe-image', {
+            body: { recipeName, recipeDescription }
+        });
+
+        if (error) {
+            console.error('Supabase Function Error:', error);
+            throw new Error(error.message || 'Erro ao gerar imagem via servidor.');
+        }
+
+        if (!data || !data.imageUrl) {
+            throw new Error('Nenhuma URL de imagem retornada do servidor.');
+        }
+
+        return data.imageUrl;
+
+    } catch (error) {
+        console.error('Error generating recipe image:', error);
+        // Fallback to a food-related unsplash image if generation fails to not block saving
+        return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800';
+    }
 };

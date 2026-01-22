@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { extractRecipeFromText, ExtractedRecipe, ExtractedIngredient } from '@/services/openaiService';
+import { extractRecipeFromText, generateRecipeImage, ExtractedRecipe, ExtractedIngredient } from '@/services/openaiService';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -23,6 +23,7 @@ const CreateRecipe: React.FC = () => {
   const [ingredients, setIngredients] = useState<ExtractedIngredient[]>([]);
   const [showManualModal, setShowManualModal] = useState(false);
   const [manualIngredient, setManualIngredient] = useState({ name: '', quantity: 0, unit: 'g', caloriesPerUnit: 0 });
+  const [isSaving, setIsSaving] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -163,6 +164,7 @@ const CreateRecipe: React.FC = () => {
     }
 
     const totalCalories = ingredients.reduce((sum, ing) => sum + ing.totalCalories, 0);
+    setIsSaving(true);
 
     try {
       // Save recipe to Supabase
@@ -176,6 +178,7 @@ const CreateRecipe: React.FC = () => {
             nome: recipeName,
             modo_preparo: recipeInstructions,
             total_calories: Math.round(totalCalories),
+            imagem_url: await generateRecipeImage(recipeName, recipeInstructions),
             nutritional_data: {
               ingredients: ingredients,
               totalCalories: Math.round(totalCalories)
@@ -196,6 +199,7 @@ const CreateRecipe: React.FC = () => {
             nome: recipeName,
             modo_preparo: recipeInstructions,
             total_calories: Math.round(totalCalories),
+            imagem_url: await generateRecipeImage(recipeName, recipeInstructions),
             nutritional_data: {
               ingredients: ingredients,
               totalCalories: Math.round(totalCalories)
@@ -230,6 +234,8 @@ const CreateRecipe: React.FC = () => {
     } catch (error) {
       console.error('Error saving recipe:', error);
       showNotification('Erro ao salvar receita: ' + (error as any).message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -417,10 +423,23 @@ const CreateRecipe: React.FC = () => {
         <footer className="fixed bottom-0 z-40 w-full max-w-[1000px] left-1/2 -translate-x-1/2 border-t border-slate-200 dark:border-gray-800 bg-white/90 dark:bg-background-dark/90 backdrop-blur-lg px-4 pt-4 pb-8 shadow-lg transition-colors duration-300">
           <button
             onClick={saveRecipe}
-            className="w-full rounded-xl bg-primary px-6 py-4 text-base font-bold text-black shadow-lg hover:shadow-primary/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            disabled={isSaving}
+            className={`w-full rounded-xl px-6 py-4 text-base font-bold flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] ${isSaving
+                ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
+                : 'bg-primary hover:bg-primary-dark text-black shadow-primary/30'
+              }`}
           >
-            <Check size={20} />
-            Salvar Receita
+            {isSaving ? (
+              <>
+                <div className="w-5 h-5 border-2 border-slate-400 border-t-primary rounded-full animate-spin" />
+                <span>Gerando Imagem e Salvando...</span>
+              </>
+            ) : (
+              <>
+                <Check size={20} />
+                <span>Salvar Receita</span>
+              </>
+            )}
           </button>
         </footer>
       )}
