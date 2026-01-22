@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
 import { MOCK_RECIPES, MOCK_USER } from '../../constants';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotification } from '../../contexts/NotificationContext';
 import { supabase } from '../../lib/supabaseClient';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showConfirmation, showNotification } = useNotification();
   const [profile, setProfile] = useState<{
     nome: string;
     avatar_url: string;
@@ -150,24 +152,31 @@ const Dashboard: React.FC = () => {
   const handleDeleteRecipe = async (recipeId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent navigating to recipe details
 
-    if (!window.confirm('Tem certeza que deseja excluir esta receita?')) {
-      return;
-    }
+    showConfirmation('Tem certeza que deseja excluir esta receita?', {
+      title: 'Excluir Receita',
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase
+            .from('receitas')
+            .delete()
+            .eq('id', recipeId);
 
-    try {
-      const { error } = await supabase
-        .from('receitas')
-        .delete()
-        .eq('id', recipeId);
+          if (error) throw error;
 
-      if (error) throw error;
+          // Update local state to remove the deleted recipe
+          setUserRecipes(prev => prev.filter(recipe => recipe.id !== recipeId));
 
-      // Update local state to remove the deleted recipe
-      setUserRecipes(prev => prev.filter(recipe => recipe.id !== recipeId));
-    } catch (err) {
-      console.error('Error deleting recipe:', err);
-      alert('Erro ao excluir receita. Tente novamente.');
-    }
+          showNotification('Receita excluída com sucesso!', {
+            title: 'Excluído!'
+          });
+        } catch (err) {
+          console.error('Error deleting recipe:', err);
+          showNotification('Erro ao excluir receita. Tente novamente.', {
+            title: 'Erro'
+          });
+        }
+      }
+    });
   };
 
   return (

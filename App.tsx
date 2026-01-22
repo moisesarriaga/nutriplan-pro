@@ -22,6 +22,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import AlertModal from './components/AlertModal';
+import ConfirmationModal from './components/ConfirmationModal';
 import { ThemeProvider } from './contexts/ThemeContext';
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -81,12 +82,12 @@ const AppContent: React.FC = () => {
             )
           }
         />
-import ConfirmationModal from './components/ConfirmationModal';
-...
       </Routes>
       <AlertModal />
       <ConfirmationModal />
-...
+    </>
+  );
+};
 
 const App: React.FC = () => {
   return (
