@@ -245,7 +245,7 @@ const CreateRecipe: React.FC = () => {
           <>
             <section className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Cole o texto da receita aqui</label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Pesquise sua receita aqui</label>
                 <div
                   className="w-full rounded-3xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-surface-dark shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all overflow-hidden cursor-text"
                   onClick={() => textareaRef.current?.focus()}
@@ -253,7 +253,7 @@ const CreateRecipe: React.FC = () => {
                   <textarea
                     ref={textareaRef}
                     className="w-[calc(100%-40px)] ml-6 my-4 bg-transparent border-none focus:ring-0 resize-none overflow-y-auto max-h-[400px] discrete-scrollbar text-slate-900 dark:text-white"
-                    placeholder="Cole aqui o texto completo da receita (nome, ingredientes, modo de preparo)..."
+                    placeholder="Digite o nome da receita ou descreva como ela é feita (ingredientes e preparo)"
                     rows={1}
                     value={recipeText}
                     onChange={(e) => setRecipeText(e.target.value)}
@@ -290,8 +290,7 @@ const CreateRecipe: React.FC = () => {
             </section>
 
             <div className="text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 p-3 rounded-lg">
-              <p className="font-semibold mb-1">💡 Dica:</p>
-              <p>A IA irá extrair automaticamente o nome da receita, ingredientes (com quantidades e unidades) e calcular as calorias de cada item!</p>
+              <p className="font-semibold mb-1">💡 Dica: A IA irá extrair automaticamente o nome da receita, ingredientes (com quantidades e unidades) e calcular as calorias de cada item!</p>
             </div>
           </>
         ) : (
