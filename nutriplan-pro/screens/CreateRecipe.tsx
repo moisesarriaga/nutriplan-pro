@@ -5,7 +5,7 @@ import { extractRecipeFromText, generateRecipeImage, ExtractedRecipe, ExtractedI
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { ArrowLeft, Sparkles, Check, Plus, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, Sparkles, Check, Plus, X, Trash2, Image } from 'lucide-react';
 
 const CreateRecipe: React.FC = () => {
   const navigate = useNavigate();
@@ -24,6 +24,9 @@ const CreateRecipe: React.FC = () => {
   const [showManualModal, setShowManualModal] = useState(false);
   const [manualIngredient, setManualIngredient] = useState({ name: '', quantity: 0, unit: 'g', caloriesPerUnit: 0 });
   const [isSaving, setIsSaving] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [hasGeneratedImage, setHasGeneratedImage] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -86,11 +89,17 @@ const CreateRecipe: React.FC = () => {
 
         setIngredients(formattedIngredients);
         setShowPreview(true);
+
+        // Check if recipe already has an image
+        if (recipe.imagem_url) {
+          setGeneratedImageUrl(recipe.imagem_url);
+          setHasGeneratedImage(true);
+        }
       }
     } catch (error) {
       console.error('Error fetching recipe:', error);
       showNotification('Erro ao carregar receita para edição.');
-      navigate('/search');
+      navigate('/dashboard');
     } finally {
       setIsProcessing(false);
     }
@@ -157,6 +166,26 @@ const CreateRecipe: React.FC = () => {
     setShowPreview(true);
   };
 
+  const handleGenerateImage = async () => {
+    if (!recipeName.trim() || !recipeInstructions.trim()) {
+      showNotification('Preencha o nome e o modo de preparo antes de gerar a imagem.');
+      return;
+    }
+
+    setIsGeneratingImage(true);
+    try {
+      const imageUrl = await generateRecipeImage(recipeName, recipeInstructions);
+      setGeneratedImageUrl(imageUrl);
+      setHasGeneratedImage(true);
+      showNotification('Imagem gerada com sucesso!');
+    } catch (error) {
+      console.error('Error generating image:', error);
+      showNotification('Erro ao gerar imagem: ' + (error instanceof Error ? error.message : 'Tente novamente.'));
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   const saveRecipe = async () => {
     if (!user || !recipeName.trim() || ingredients.length === 0) {
       showNotification('Preencha o nome da receita e adicione pelo menos um ingrediente.');
@@ -178,7 +207,7 @@ const CreateRecipe: React.FC = () => {
             nome: recipeName,
             modo_preparo: recipeInstructions,
             total_calories: Math.round(totalCalories),
-            imagem_url: await generateRecipeImage(recipeName, recipeInstructions),
+            imagem_url: generatedImageUrl,
             nutritional_data: {
               ingredients: ingredients,
               totalCalories: Math.round(totalCalories)
@@ -199,7 +228,7 @@ const CreateRecipe: React.FC = () => {
             nome: recipeName,
             modo_preparo: recipeInstructions,
             total_calories: Math.round(totalCalories),
-            imagem_url: await generateRecipeImage(recipeName, recipeInstructions),
+            imagem_url: generatedImageUrl,
             nutritional_data: {
               ingredients: ingredients,
               totalCalories: Math.round(totalCalories)
@@ -229,7 +258,7 @@ const CreateRecipe: React.FC = () => {
       if (ingredientsError) throw ingredientsError;
 
       showNotification(isEditing ? 'Receita atualizada com sucesso!' : 'Receita salva com sucesso!', {
-        onConfirm: () => navigate('/search')
+        onConfirm: () => navigate('/dashboard')
       });
     } catch (error) {
       console.error('Error saving recipe:', error);
@@ -256,7 +285,7 @@ const CreateRecipe: React.FC = () => {
 
           showNotification('Receita excluída com sucesso!', {
             title: 'Excluído!',
-            onConfirm: () => navigate('/search')
+            onConfirm: () => navigate('/dashboard')
           });
         } catch (error) {
           console.error('Error deleting recipe:', error);
@@ -458,26 +487,55 @@ const CreateRecipe: React.FC = () => {
 
       {showPreview && (
         <footer className="fixed bottom-0 z-40 w-full max-w-[1000px] left-1/2 -translate-x-1/2 border-t border-slate-200 dark:border-gray-800 bg-white/90 dark:bg-background-dark/90 backdrop-blur-lg px-4 pt-4 pb-8 shadow-lg transition-colors duration-300">
-          <button
-            onClick={saveRecipe}
-            disabled={isSaving}
-            className={`w-full rounded-xl px-6 py-4 text-base font-bold flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] ${isSaving
+          <div className="flex gap-3">
+            <button
+              onClick={handleGenerateImage}
+              disabled={isGeneratingImage || hasGeneratedImage}
+              className={`flex-1 rounded-xl px-6 py-4 text-base font-bold flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] ${hasGeneratedImage
+                ? 'bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 cursor-not-allowed'
+                : isGeneratingImage
+                  ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
+                  : 'bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-black dark:text-white'
+                }`}
+            >
+              {isGeneratingImage ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-slate-400 border-t-primary rounded-full animate-spin" />
+                  <span>Gerando...</span>
+                </>
+              ) : hasGeneratedImage ? (
+                <>
+                  <Check size={20} />
+                  <span>Imagem Gerada</span>
+                </>
+              ) : (
+                <>
+                  <Image size={20} />
+                  <span>Gerar Imagem</span>
+                </>
+              )}
+            </button>
+            <button
+              onClick={saveRecipe}
+              disabled={isSaving}
+              className={`flex-1 rounded-xl px-6 py-4 text-base font-bold flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] ${isSaving
                 ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
                 : 'bg-primary hover:bg-primary-dark text-black shadow-primary/30'
-              }`}
-          >
-            {isSaving ? (
-              <>
-                <div className="w-5 h-5 border-2 border-slate-400 border-t-primary rounded-full animate-spin" />
-                <span>Gerando Imagem e Salvando...</span>
-              </>
-            ) : (
-              <>
-                <Check size={20} />
-                <span>Salvar Receita</span>
-              </>
-            )}
-          </button>
+                }`}
+            >
+              {isSaving ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-slate-400 border-t-primary rounded-full animate-spin" />
+                  <span>Salvando...</span>
+                </>
+              ) : (
+                <>
+                  <Check size={20} />
+                  <span>Salvar Receita</span>
+                </>
+              )}
+            </button>
+          </div>
         </footer>
       )}
 

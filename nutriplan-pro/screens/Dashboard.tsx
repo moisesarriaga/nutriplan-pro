@@ -169,11 +169,24 @@ const Dashboard: React.FC = () => {
           showNotification('Receita excluída com sucesso!', {
             title: 'Excluído!'
           });
-        } catch (err) {
+        } catch (err: any) {
           console.error('Error deleting recipe:', err);
-          showNotification('Erro ao excluir receita. Tente novamente.', {
-            title: 'Erro'
-          });
+
+          // Check if error is due to foreign key constraint (recipe is in meal plan)
+          if (err.message?.includes('foreign key constraint') ||
+            err.message?.includes('cardapio_semanal')) {
+            showNotification(
+              'Esta receita não pode ser excluída porque está cadastrada em um cardápio semanal. Remova-a do cardápio primeiro.',
+              {
+                title: 'Receita em Uso',
+                iconType: 'warning'
+              }
+            );
+          } else {
+            showNotification('Erro ao excluir receita. Tente novamente.', {
+              title: 'Erro'
+            });
+          }
         }
       }
     });
@@ -365,13 +378,25 @@ const Dashboard: React.FC = () => {
                 <div className="flex flex-col justify-center flex-1">
                   <div className="flex justify-between items-start">
                     <h4 className="font-bold text-sm">{recipe.nome}</h4>
-                    <button
-                      onClick={(e) => handleDeleteRecipe(recipe.id, e)}
-                      className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
-                      title="Excluir receita"
-                    >
-                      <span className="material-symbols-rounded text-[20px]">delete</span>
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/create-recipe?id=${recipe.id}`);
+                        }}
+                        className="text-slate-400 hover:text-primary transition-colors p-1 rounded-full hover:bg-primary/10"
+                        title="Editar receita"
+                      >
+                        <span className="material-symbols-rounded text-[20px]">edit</span>
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteRecipe(recipe.id, e)}
+                        className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+                        title="Excluir receita"
+                      >
+                        <span className="material-symbols-rounded text-[20px]">delete</span>
+                      </button>
+                    </div>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-[#92c9a4] line-clamp-2 mt-1">
                     {recipe.modo_preparo ? recipe.modo_preparo.substring(0, 80) + '...' : 'Sem descrição'}

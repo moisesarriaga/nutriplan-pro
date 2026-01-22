@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 interface NotificationOptions {
     onConfirm?: () => void;
     title?: string;
+    iconType?: 'success' | 'warning' | 'error';
 }
 
 interface ConfirmationOptions {

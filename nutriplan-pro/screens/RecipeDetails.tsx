@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 import UpgradePrompt from '../../components/UpgradePrompt';
-import { ArrowLeft, Heart, Pencil, Clock, Flame, Activity, Users, Lock, Check, ShoppingCart, Calendar } from 'lucide-react';
+import { ArrowLeft, Heart, Pencil, Clock, Flame, Activity, Users, Lock, Check, ShoppingCart, Calendar, Trash2 } from 'lucide-react';
 import Navigation from '../../components/Navigation';
 import { useNotification } from '../../contexts/NotificationContext';
 
@@ -14,7 +14,7 @@ const RecipeDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { showNotification } = useNotification();
+  const { showNotification, showConfirmation } = useNotification();
   const [activeTab, setActiveTab] = useState<'ingredients' | 'prep' | 'nutrition'>('ingredients');
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [isAddingToPlanner, setIsAddingToPlanner] = useState(false);
@@ -207,8 +207,50 @@ const RecipeDetails: React.FC = () => {
     setSelectedIngredients([]); // Reset selection
   };
 
+  const handleDeleteRecipe = () => {
+    if (!user || !id || !recipe?.isUserRecipe) return;
+
+    showConfirmation(
+      'Tem certeza que deseja excluir esta receita? Esta ação não pode ser desfeita.',
+      {
+        title: 'Excluir Receita',
+        onConfirm: async () => {
+          try {
+            // Delete the recipe from the database
+            const { error } = await supabase
+              .from('receitas')
+              .delete()
+              .eq('id', id)
+              .eq('usuario_id', user.id);
+
+            if (error) throw error;
+
+            showNotification('Receita excluída com sucesso!');
+            navigate('/dashboard');
+          } catch (error: any) {
+            console.error('Error deleting recipe:', error);
+
+            // Check if error is due to foreign key constraint (recipe is in meal plan)
+            if (error.message?.includes('foreign key constraint') ||
+              error.message?.includes('cardapio_semanal')) {
+              showNotification(
+                'Esta receita não pode ser excluída porque está cadastrada em um cardápio semanal. Remova-a do cardápio primeiro.',
+                {
+                  title: 'Receita em Uso',
+                  iconType: 'warning'
+                }
+              );
+            } else {
+              showNotification('Erro ao excluir receita: ' + error.message);
+            }
+          }
+        }
+      }
+    );
+  };
+
   return (
-    <div className="bg-background-light dark:bg-background-dark min-h-screen pb-24">
+    <div className="bg-background-light dark:bg-background-dark min-h-screen pb-40">{/* Increased from pb-24 to pb-40 to prevent content being hidden */}
       <header className="relative w-full h-[320px]">
         <div
           className="absolute inset-0 w-full h-full bg-cover bg-center"
@@ -232,12 +274,20 @@ const RecipeDetails: React.FC = () => {
               <Heart size={20} className={`${isFavorited ? 'fill-current' : ''}`} />
             </button>
             {recipe && recipe.isUserRecipe && (
-              <button
-                onClick={() => navigate(`/create-recipe?id=${recipe.id}`)}
-                className="flex items-center justify-center size-10 rounded-full bg-background-dark/20 backdrop-blur-md border border-white/10 text-white hover:bg-white/10 transition-colors"
-              >
-                <Pencil size={20} />
-              </button>
+              <>
+                <button
+                  onClick={() => navigate(`/create-recipe?id=${recipe.id}`)}
+                  className="flex items-center justify-center size-10 rounded-full bg-background-dark/20 backdrop-blur-md border border-white/10 text-white hover:bg-white/10 transition-colors"
+                >
+                  <Pencil size={20} />
+                </button>
+                <button
+                  onClick={handleDeleteRecipe}
+                  className="flex items-center justify-center size-10 rounded-full bg-background-dark/20 backdrop-blur-md border border-white/10 text-white hover:bg-red-500/80 hover:border-red-500/50 transition-colors"
+                >
+                  <Trash2 size={20} />
+                </button>
+              </>
             )}
           </div>
         </div>
