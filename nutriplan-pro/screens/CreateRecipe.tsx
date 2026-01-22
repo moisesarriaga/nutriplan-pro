@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { extractRecipeFromText, ExtractedRecipe, ExtractedIngredient } from '@/services/openaiService';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotification } from '../../contexts/NotificationContext';
 import { ArrowLeft, Sparkles, Check, Plus, X } from 'lucide-react';
 
 const CreateRecipe: React.FC = () => {
@@ -12,6 +13,7 @@ const CreateRecipe: React.FC = () => {
   const recipeId = searchParams.get('id');
   const isEditing = !!recipeId;
   const { user } = useAuth();
+  const { showNotification } = useNotification();
   const [recipeText, setRecipeText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedRecipe, setExtractedRecipe] = useState<ExtractedRecipe | null>(null);
@@ -86,7 +88,7 @@ const CreateRecipe: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching recipe:', error);
-      alert('Erro ao carregar receita para edição.');
+      showNotification('Erro ao carregar receita para edição.');
       navigate('/search');
     } finally {
       setIsProcessing(false);
@@ -95,7 +97,7 @@ const CreateRecipe: React.FC = () => {
 
   const processWithAI = async () => {
     if (!recipeText.trim()) {
-      alert('Por favor, cole o texto da receita primeiro.');
+      showNotification('Por favor, digite o nome da receita ou descreva os ingredientes primeiro.');
       return;
     }
 
@@ -115,7 +117,7 @@ const CreateRecipe: React.FC = () => {
       setShowPreview(true);
     } catch (error) {
       console.error('Error processing recipe:', error);
-      alert('Erro ao processar receita: ' + (error instanceof Error ? error.message : 'Verifique sua conexão e se o serviço de IA está ativo no servidor.'));
+      showNotification('Erro ao processar receita: ' + (error instanceof Error ? error.message : 'Verifique sua conexão e se o serviço de IA está ativo no servidor.'));
     } finally {
       setIsProcessing(false);
     }
@@ -136,7 +138,7 @@ const CreateRecipe: React.FC = () => {
 
   const addManualIngredient = () => {
     if (!manualIngredient.name.trim()) {
-      alert('Por favor, preencha o nome do ingrediente.');
+      showNotification('Por favor, preencha o nome do ingrediente.');
       return;
     }
 
@@ -156,7 +158,7 @@ const CreateRecipe: React.FC = () => {
 
   const saveRecipe = async () => {
     if (!user || !recipeName.trim() || ingredients.length === 0) {
-      alert('Preencha o nome da receita e adicione pelo menos um ingrediente.');
+      showNotification('Preencha o nome da receita e adicione pelo menos um ingrediente.');
       return;
     }
 
@@ -222,11 +224,12 @@ const CreateRecipe: React.FC = () => {
 
       if (ingredientsError) throw ingredientsError;
 
-      alert(isEditing ? 'Receita atualizada com sucesso!' : 'Receita salva com sucesso!');
-      navigate('/search');
+      showNotification(isEditing ? 'Receita atualizada com sucesso!' : 'Receita salva com sucesso!', {
+        onConfirm: () => navigate('/search')
+      });
     } catch (error) {
       console.error('Error saving recipe:', error);
-      alert('Erro ao salvar receita: ' + (error as any).message);
+      showNotification('Erro ao salvar receita: ' + (error as any).message);
     }
   };
 

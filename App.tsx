@@ -20,6 +20,9 @@ import Checkout from './nutriplan-pro/screens/Checkout';
 import ThankYou from './nutriplan-pro/screens/ThankYou';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import AlertModal from './components/AlertModal';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
@@ -43,54 +46,58 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login onLogin={() => { }} />} />
-      <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register onRegister={() => { }} />} />
+    <>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login onLogin={() => { }} />} />
+        <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register onRegister={() => { }} />} />
 
-      <Route
-        path="/*"
-        element={
-          user ? (
-            <AppLayout>
-              <Routes>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/recipe/:id" element={<RecipeDetails />} />
-                <Route path="/planner" element={<MealPlanner />} />
-                <Route path="/create-recipe" element={<CreateRecipe />} />
-                <Route path="/cart" element={<ShoppingCart />} />
-                <Route path="/profile" element={<Profile onLogout={() => { }} />} />
-                <Route path="/favorites" element={<Favorites />} />
-                <Route path="/history" element={<MealHistory />} />
-                <Route path="/saved-lists" element={<SavedLists />} />
-                <Route path="/water-log" element={<WaterLog />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/scan" element={<Scan />} />
-                <Route path="/checkout/:plan" element={<Checkout />} />
-                <Route path="/thank-you" element={<ThankYou />} />
-              </Routes>
-            </AppLayout>
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
-      />
-    </Routes>
+        <Route
+          path="/*"
+          element={
+            user ? (
+              <AppLayout>
+                <Routes>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/search" element={<Search />} />
+                  <Route path="/recipe/:id" element={<RecipeDetails />} />
+                  <Route path="/planner" element={<MealPlanner />} />
+                  <Route path="/create-recipe" element={<CreateRecipe />} />
+                  <Route path="/cart" element={<ShoppingCart />} />
+                  <Route path="/profile" element={<Profile onLogout={() => { }} />} />
+                  <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/history" element={<MealHistory />} />
+                  <Route path="/saved-lists" element={<SavedLists />} />
+                  <Route path="/water-log" element={<WaterLog />} />
+                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/scan" element={<Scan />} />
+                  <Route path="/checkout/:plan" element={<Checkout />} />
+                  <Route path="/thank-you" element={<ThankYou />} />
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+              </AppLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+      </Routes>
+      <AlertModal />
+    </>
   );
 };
-
-import { ThemeProvider } from './contexts/ThemeContext';
 
 const App: React.FC = () => {
   return (
     <HashRouter>
       <ThemeProvider>
-        <AuthProvider>
-          <SubscriptionProvider>
-            <AppContent />
-          </SubscriptionProvider>
-        </AuthProvider>
+        <NotificationProvider>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <AppContent />
+            </SubscriptionProvider>
+          </AuthProvider>
+        </NotificationProvider>
       </ThemeProvider>
     </HashRouter>
   );

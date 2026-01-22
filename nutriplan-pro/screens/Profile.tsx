@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
+import { useNotification } from '../../contexts/NotificationContext';
 
 interface ProfileProps {
   onLogout: () => void;
@@ -24,6 +25,7 @@ interface UserProfile {
 const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { showNotification } = useNotification();
   const { theme, setTheme } = useTheme();
   const { subscription } = useSubscription();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -124,7 +126,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
 
       setEditForm({ ...editForm, avatar_url: data.publicUrl });
     } catch (error: any) {
-      alert(error.message);
+      showNotification(error.message);
     } finally {
       setUploading(false);
     }
@@ -156,7 +158,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
       setIsEditing(false);
     } catch (err: any) {
       console.error('Error updating profile:', err);
-      alert('Erro ao salvar perfil: ' + (err.message || 'Erro desconhecido'));
+      showNotification('Erro ao salvar perfil: ' + (err.message || 'Erro desconhecido'));
     } finally {
       setLoading(false);
     }
@@ -208,9 +210,9 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
         <h1 className="text-2xl font-bold tracking-tight text-center">{profile?.nome || user?.user_metadata?.full_name || 'Usuário'}</h1>
         <p className="text-slate-500 dark:text-slate-400 text-base font-normal mt-1 text-center">{user?.email}</p>
         <div className={`mt-3 px-3 py-1 rounded-full border flex items-center gap-2 ${(subscription?.plan_type === 'simple' || subscription?.plan_type === 'premium') &&
-            subscription?.status === 'active'
-            ? 'bg-primary/20 border-primary/30'
-            : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+          subscription?.status === 'active'
+          ? 'bg-primary/20 border-primary/30'
+          : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
           }`}>
           {(subscription?.plan_type === 'simple' || subscription?.plan_type === 'premium') &&
             subscription?.status === 'active' ? (

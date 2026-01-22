@@ -8,11 +8,13 @@ import { useSubscription } from '../../contexts/SubscriptionContext';
 import UpgradePrompt from '../../components/UpgradePrompt';
 import { ArrowLeft, Heart, Pencil, Clock, Flame, Activity, Users, Lock, Check, ShoppingCart, Calendar } from 'lucide-react';
 import Navigation from '../../components/Navigation';
+import { useNotification } from '../../contexts/NotificationContext';
 
 const RecipeDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showNotification } = useNotification();
   const [activeTab, setActiveTab] = useState<'ingredients' | 'prep' | 'nutrition'>('ingredients');
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [isAddingToPlanner, setIsAddingToPlanner] = useState(false);
@@ -159,7 +161,7 @@ const RecipeDetails: React.FC = () => {
     const { error } = await supabase.from('lista_precos_mercado').upsert(items, { onConflict: 'usuario_id,nome_item' });
 
     if (!error) {
-      alert(`${selectedIngredients.length} ingredientes adicionados ao carrinho!`);
+      showNotification(`${selectedIngredients.length} ingredientes adicionados ao carrinho!`);
       setSelectedIngredients([]);
     }
   };
@@ -177,7 +179,7 @@ const RecipeDetails: React.FC = () => {
 
     if (plannerError) {
       console.error('Error adding to planner:', plannerError);
-      alert('Erro ao adicionar ao plano: ' + plannerError.message);
+      showNotification('Erro ao adicionar ao plano: ' + plannerError.message);
       return;
     }
 
@@ -200,7 +202,7 @@ const RecipeDetails: React.FC = () => {
       }
     }
 
-    alert(`Receita adicionada ao plano de ${plannerData.day} e ingredientes enviados ao carrinho!`);
+    showNotification(`Receita adicionada ao plano de ${plannerData.day} e ingredientes enviados ao carrinho!`);
     setIsAddingToPlanner(false);
     setSelectedIngredients([]); // Reset selection
   };

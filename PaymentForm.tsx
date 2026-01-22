@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useNotification } from './contexts/NotificationContext';
 
 declare global {
     interface Window {
@@ -8,6 +9,7 @@ declare global {
 
 export const PaymentForm = () => {
     const mpRef = useRef<any>(null);
+    const { showNotification } = useNotification();
 
     useEffect(() => {
         const script = document.createElement('script');
@@ -58,13 +60,13 @@ export const PaymentForm = () => {
             const data = await response.json();
 
             if (response.ok && data.status === 'approved') {
-                alert('Assinatura realizada com sucesso! Seu perfil foi atualizado.');
+                showNotification('Assinatura realizada com sucesso! Seu perfil foi atualizado.');
             } else {
-                alert('Erro na assinatura: ' + (data.message || 'Verifique os dados e tente novamente.'));
+                showNotification('Erro na assinatura: ' + (data.message || 'Verifique os dados e tente novamente.'));
             }
         } catch (error) {
             console.error(error);
-            alert('Erro ao processar pagamento');
+            showNotification('Erro ao processar pagamento');
         }
     };
 

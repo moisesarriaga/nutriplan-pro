@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { aggregateIngredients, AggregatedIngredient } from '../../utils/ingredientAggregator';
 import { History, Zap, Trash2, Plus, ShoppingCart, Check } from 'lucide-react';
+import { useNotification } from '../../contexts/NotificationContext';
 
 interface MealPlanEntry {
   id: string;
@@ -19,6 +20,7 @@ interface MealPlanEntry {
 const MealPlanner: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showNotification } = useNotification();
   const [selectedDay, setSelectedDay] = useState(['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][new Date().getDay()]);
   const [mealPlan, setMealPlan] = useState<MealPlanEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,7 +125,7 @@ const MealPlanner: React.FC = () => {
 
   const openShoppingListModal = () => {
     if (mealPlan.length === 0) {
-      alert('Seu cardápio está vazio. Adicione refeições antes de gerar a lista.');
+      showNotification('Seu cardápio está vazio. Adicione refeições antes de gerar a lista.');
       return;
     }
     setShowGenerateOptions(true);
@@ -138,7 +140,7 @@ const MealPlanner: React.FC = () => {
     if (period === 'daily') {
       mealsToProcess = mealPlan.filter(m => m.dia_semana === selectedDay);
       if (mealsToProcess.length === 0) {
-        alert(`Seu cardápio de ${selectedDay} está vazio.`);
+        showNotification(`Seu cardápio de ${selectedDay} está vazio.`);
         return;
       }
     } else if (period === 'weekly') {
@@ -149,7 +151,7 @@ const MealPlanner: React.FC = () => {
     }
 
     if (mealsToProcess.length === 0) {
-      alert('Nenhuma refeição encontrada para o período selecionado.');
+      showNotification('Nenhuma refeição encontrada para o período selecionado.');
       return;
     }
 
@@ -183,7 +185,7 @@ const MealPlanner: React.FC = () => {
     const itemsToAdd = aggregatedIngredients.filter(ing => ing.checked);
 
     if (itemsToAdd.length === 0) {
-      alert('Nenhum item selecionado para adicionar.');
+      showNotification('Nenhum item selecionado para adicionar.');
       return;
     }
 
@@ -220,12 +222,12 @@ const MealPlanner: React.FC = () => {
 
       if (error) throw error;
 
-      alert(`${itemsToAdd.length} itens foram processados e adicionados ao seu carrinho!`);
+      showNotification(`${itemsToAdd.length} itens foram processados e adicionados ao seu carrinho!`);
       setIsGeneratingList(false);
       navigate('/cart');
     } catch (error: any) {
       console.error('Error generating shopping list:', error);
-      alert('Erro ao gerar lista: ' + error.message);
+      showNotification('Erro ao gerar lista: ' + error.message);
     }
   };
 
