@@ -352,7 +352,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
 
       {isEditing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto overflow-x-hidden">
+          <div className="w-full max-w-md bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold">Editar Perfil</h3>
               <button
@@ -437,7 +437,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                 />
               </div>
 
-              <div className="relative overflow-x-hidden">
+              <div className="relative">
                 <label className="block text-sm font-medium mb-1.5 ml-1">Objetivo</label>
                 <button
                   type="button"
@@ -452,7 +452,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                 </button>
 
                 {isObjectiveOpen && (
-                  <div className="absolute z-10 w-full mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="absolute z-10 w-full mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark shadow-xl animate-in fade-in slide-in-from-top-2 duration-200 overflow-visible">
                     {[
                       { value: 'emagrecer', label: 'Emagrecer' },
                       { value: 'manter', label: 'Manter Peso' },
