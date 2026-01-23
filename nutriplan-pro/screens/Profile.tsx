@@ -437,7 +437,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                 />
               </div>
 
-              <div className="relative">
+              <div className="relative overflow-x-hidden">
                 <label className="block text-sm font-medium mb-1.5 ml-1">Objetivo</label>
                 <button
                   type="button"
@@ -452,7 +452,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                 </button>
 
                 {isObjectiveOpen && (
-                  <div className="absolute z-10 w-full mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 max-h-48 overflow-y-auto no-scrollbar">
+                  <div className="absolute z-10 w-full mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark shadow-xl animate-in fade-in slide-in-from-top-2 duration-200 max-h-40 overflow-y-auto no-scrollbar">
                     {[
                       { value: 'emagrecer', label: 'Emagrecer' },
                       { value: 'manter', label: 'Manter Peso' },
