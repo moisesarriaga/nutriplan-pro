@@ -9,6 +9,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useRef } from 'react';
+import ImageCropperModal from '../../components/ImageCropperModal';
 
 interface ProfileProps {
   onLogout: () => void;
@@ -43,6 +44,10 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
     idade: 25,
     avatar_url: ''
   });
+  const [cropper, setCropper] = useState<{
+    image: string;
+    onComplete: (blob: Blob) => void;
+  } | null>(null);
 
   // Efeito para travar o scroll da página de fundo quando o modal de edição estiver aberto
   useEffect(() => {
@@ -125,49 +130,72 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
   };
 
   const handleDirectAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      if (!user) return;
-      if (!event.target.files || event.target.files.length === 0) return;
+    if (!user || !event.target.files || event.target.files.length === 0) return;
 
-      setUploading(true);
-      const file = event.target.files[0];
-      const newAvatarUrl = await uploadAvatar(file);
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropper({
+        image: reader.result as string,
+        onComplete: async (blob: Blob) => {
+          try {
+            setUploading(true);
+            setCropper(null);
 
-      // Automatically update profile in DB for direct upload
-      const { error: updateError } = await supabase
-        .from('perfis_usuario')
-        .update({ avatar_url: newAvatarUrl })
-        .eq('id', user.id);
+            // Convert Blob to File
+            const croppedFile = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+            const newAvatarUrl = await uploadAvatar(croppedFile);
 
-      if (updateError) throw updateError;
+            const { error: updateError } = await supabase
+              .from('perfis_usuario')
+              .update({ avatar_url: newAvatarUrl })
+              .eq('id', user.id);
 
-      // Update local states
-      if (profile) setProfile({ ...profile, avatar_url: newAvatarUrl });
-      setEditForm({ ...editForm, avatar_url: newAvatarUrl });
+            if (updateError) throw updateError;
 
-      showNotification('Foto de perfil atualizada com sucesso!', {
-        title: 'Sucesso'
+            if (profile) setProfile({ ...profile, avatar_url: newAvatarUrl });
+            setEditForm({ ...editForm, avatar_url: newAvatarUrl });
+
+            showNotification('Foto de perfil atualizada com sucesso!', {
+              title: 'Sucesso'
+            });
+          } catch (error: any) {
+            console.error('Error uploading avatar:', error);
+            showNotification(error.message || 'Erro ao fazer upload da foto');
+          } finally {
+            setUploading(false);
+          }
+        }
       });
-    } catch (error: any) {
-      console.error('Error uploading avatar:', error);
-      showNotification(error.message || 'Erro ao fazer upload da foto');
-    } finally {
-      setUploading(false);
-    }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      if (!event.target.files || event.target.files.length === 0) return;
-      setUploading(true);
-      const file = event.target.files[0];
-      const newAvatarUrl = await uploadAvatar(file);
-      setEditForm({ ...editForm, avatar_url: newAvatarUrl });
-    } catch (error: any) {
-      showNotification(error.message || 'Erro ao fazer upload da foto');
-    } finally {
-      setUploading(false);
-    }
+    if (!event.target.files || event.target.files.length === 0) return;
+
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropper({
+        image: reader.result as string,
+        onComplete: async (blob: Blob) => {
+          try {
+            setUploading(true);
+            setCropper(null);
+
+            const croppedFile = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+            const newAvatarUrl = await uploadAvatar(croppedFile);
+            setEditForm({ ...editForm, avatar_url: newAvatarUrl });
+          } catch (error: any) {
+            showNotification(error.message || 'Erro ao fazer upload da foto');
+          } finally {
+            setUploading(false);
+          }
+        }
+      });
+    };
+    reader.readAsDataURL(file);
   };
 
 
@@ -541,6 +569,14 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
       )}
 
       <Navigation />
+
+      {cropper && (
+        <ImageCropperModal
+          image={cropper.image}
+          onCropComplete={cropper.onComplete}
+          onCancel={() => setCropper(null)}
+        />
+      )}
     </div>
   );
 };
