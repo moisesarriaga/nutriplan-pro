@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Droplets, Utensils, BadgeCheck, BellOff, Trash2 } from 'lucide-react';
+import { ArrowLeft, Droplets, Utensils, BadgeCheck, BellOff } from 'lucide-react';
 
 const Notifications: React.FC = () => {
     const navigate = useNavigate();
@@ -48,10 +48,10 @@ const Notifications: React.FC = () => {
                 {notifications.length > 0 && (
                     <button
                         onClick={handleClearAll}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all active:scale-95"
+                        className="flex size-10 items-center justify-center rounded-full text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all active:scale-90"
+                        title="Limpar tudo"
                     >
-                        <Trash2 size={16} />
-                        <span>Limpar tudo</span>
+                        <span className="material-symbols-outlined text-[24px]">delete_sweep</span>
                     </button>
                 )}
             </header>
