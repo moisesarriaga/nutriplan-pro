@@ -24,12 +24,14 @@ const Dashboard: React.FC = () => {
   const [userRecipes, setUserRecipes] = useState<any[]>([]);
   const [showWelcome, setShowWelcome] = useState(true);
   const [welcomeMessage, setWelcomeMessage] = useState('');
+  const [shoppingListGroups, setShoppingListGroups] = useState(0);
 
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchTodayCalories();
       fetchUserRecipes();
+      fetchShoppingListGroups();
 
       const storageKey = `welcome_shown_${user.id}`;
       const hasBeenWelcomed = localStorage.getItem(storageKey);
@@ -165,6 +167,23 @@ const Dashboard: React.FC = () => {
     } catch (err) {
       console.error('Error fetching user recipes:', err);
       setUserRecipes([]);
+    }
+  };
+  const fetchShoppingListGroups = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('lista_precos_mercado')
+        .select('grupo_nome')
+        .eq('usuario_id', user.id)
+        .eq('concluido', false);
+      if (error) throw error;
+      if (data) {
+        const uniqueGroups = new Set(data.map(item => item.grupo_nome));
+        setShoppingListGroups(uniqueGroups.size);
+      }
+    } catch (err) {
+      console.error('Error fetching shopping list groups:', err);
     }
   };
 
@@ -337,12 +356,12 @@ const Dashboard: React.FC = () => {
           <div className="flex flex-col sm:flex-row">
             <div className="p-5 flex-1 flex flex-col justify-center gap-4 z-10">
               <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold">Weekly Groceries</h3>
-                  <span className="flex size-2 rounded-full bg-primary animate-pulse"></span>
-                </div>
                 <p className="text-slate-500 dark:text-[#92c9a4] text-sm">
-                  Você tem <span className="text-primary font-bold">12 itens</span> pendentes para comprar.
+                  {shoppingListGroups === 0 ? (
+                    'Sua lista de compras está vazia.'
+                  ) : (
+                    <>Você tem <span className="text-primary font-bold">{shoppingListGroups} {shoppingListGroups === 1 ? 'grupo' : 'grupos'}</span> de compras pendentes.</>
+                  )}
                 </p>
               </div>
               <button className="flex items-center justify-center gap-2 rounded-lg bg-primary h-10 px-5 text-sm font-bold text-background-dark shadow-lg shadow-primary/20">

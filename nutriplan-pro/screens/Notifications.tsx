@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Droplets, Utensils, BadgeCheck, BellOff } from 'lucide-react';
+import { ArrowLeft, Droplets, Utensils, BadgeCheck, BellOff, Trash2 } from 'lucide-react';
 
 const Notifications: React.FC = () => {
     const navigate = useNavigate();
 
-    const notifications = [
+    const [notifications, setNotifications] = useState([
         {
             id: 1,
             title: 'Meta de água atingida!',
@@ -30,15 +30,30 @@ const Notifications: React.FC = () => {
             icon: BadgeCheck,
             color: 'text-primary'
         }
-    ];
+    ]);
+
+    const handleClearAll = () => {
+        setNotifications([]);
+    };
 
     return (
         <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-white">
-            <header className="p-4 flex items-center gap-4 sticky top-0 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md z-10">
-                <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5">
-                    <ArrowLeft size={24} />
-                </button>
-                <h1 className="text-xl font-bold">Notificações</h1>
+            <header className="p-4 flex items-center justify-between sticky top-0 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md z-10 w-full">
+                <div className="flex items-center gap-4">
+                    <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h1 className="text-xl font-bold">Notificações</h1>
+                </div>
+                {notifications.length > 0 && (
+                    <button
+                        onClick={handleClearAll}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all active:scale-95"
+                    >
+                        <Trash2 size={16} />
+                        <span>Limpar tudo</span>
+                    </button>
+                )}
             </header>
 
             <div className="flex-1 p-4 divide-y divide-slate-100 dark:divide-slate-800">
@@ -59,9 +74,11 @@ const Notifications: React.FC = () => {
             </div>
 
             {notifications.length === 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center p-10 opacity-50">
-                    <BellOff size={64} />
-                    <p className="mt-4 font-medium">Nenhuma notificação por enquanto</p>
+                <div className="flex-1 flex flex-col items-center justify-center p-10 mt-[-10vh] animate-in fade-in zoom-in duration-500">
+                    <div className="size-20 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-300 dark:text-slate-700 mb-4">
+                        <BellOff size={40} />
+                    </div>
+                    <p className="text-slate-500 font-medium">Nenhuma notificação por enquanto</p>
                 </div>
             )}
         </div>
