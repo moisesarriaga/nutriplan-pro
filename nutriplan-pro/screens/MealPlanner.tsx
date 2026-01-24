@@ -36,6 +36,7 @@ const MealPlanner: React.FC = () => {
   const [recipeSearchTerm, setRecipeSearchTerm] = useState('');
   const [allSelectableRecipes, setAllSelectableRecipes] = useState<any[]>([]);
   const [isAddingMeal, setIsAddingMeal] = useState(false);
+  const [previewRecipe, setPreviewRecipe] = useState<any | null>(null);
 
   const days = [
     { label: 'Seg', name: 'Segunda' },
@@ -131,7 +132,7 @@ const MealPlanner: React.FC = () => {
       // Combinar Mock + DB
       const { data: dbRecipes, error } = await supabase
         .from('receitas')
-        .select('id, nome, total_calories, imagem_url')
+        .select('id, nome, total_calories, imagem_url, nutritional_data')
         .eq('usuario_id', user.id);
 
       const formattedDb = (dbRecipes || []).map(r => ({
@@ -139,7 +140,8 @@ const MealPlanner: React.FC = () => {
         name: r.nome,
         image: r.imagem_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
         calories: r.total_calories || 0,
-        isCustom: true
+        isCustom: true,
+        ingredients: r.nutritional_data?.ingredients || []
       }));
 
       const formattedMock = MOCK_RECIPES.map(r => ({
@@ -147,7 +149,8 @@ const MealPlanner: React.FC = () => {
         name: r.name,
         image: r.image,
         calories: r.calories,
-        isCustom: false
+        isCustom: false,
+        ingredients: r.ingredients || []
       }));
 
       setAllSelectableRecipes([...formattedDb, ...formattedMock]);
@@ -696,7 +699,7 @@ const MealPlanner: React.FC = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={(e) => { e.stopPropagation(); navigate(`/recipe/${recipe.id}`); }}
+                              onClick={(e) => { e.stopPropagation(); setPreviewRecipe(recipe); }}
                               className="size-10 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-primary transition-colors flex items-center justify-center"
                               title="Ver Detalhes"
                             >
@@ -739,7 +742,7 @@ const MealPlanner: React.FC = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={(e) => { e.stopPropagation(); navigate(`/recipe/${recipe.id}`); }}
+                              onClick={(e) => { e.stopPropagation(); setPreviewRecipe(recipe); }}
                               className="size-10 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-primary transition-colors flex items-center justify-center"
                               title="Ver Detalhes"
                             >
@@ -761,6 +764,60 @@ const MealPlanner: React.FC = () => {
                     <p className="text-gray-500 text-sm">Nenhuma receita encontrada.</p>
                   </div>
                 )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de Detalhes da Receita (Preview) */}
+      {previewRecipe && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white dark:bg-surface-dark rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 border border-white/10">
+            <div
+              className="h-48 w-full bg-center bg-cover relative"
+              style={{ backgroundImage: `url(${previewRecipe.image})` }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+              <button
+                onClick={() => setPreviewRecipe(null)}
+                className="absolute top-4 right-4 size-10 rounded-full bg-black/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/40 transition-colors"
+              >
+                <Plus size={24} className="rotate-45" />
+              </button>
+              <div className="absolute bottom-4 left-6 pr-6">
+                <h3 className="text-xl font-bold text-white leading-tight mb-1">{previewRecipe.name}</h3>
+                <p className="text-primary font-bold text-sm flex items-center gap-1">
+                  <Zap size={14} className="fill-current" /> {previewRecipe.calories} kcal
+                </p>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Ingredientes Necessários</h4>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-2 no-scrollbar">
+                {previewRecipe.ingredients && previewRecipe.ingredients.length > 0 ? (
+                  previewRecipe.ingredients.map((ing: any, idx: number) => (
+                    <div key={idx} className="flex items-center justify-between py-2 border-b border-slate-50 dark:border-white/5 last:border-0">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{ing.name}</span>
+                      <span className="text-xs font-bold text-primary">{ing.quantity} {ing.unit}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-4 text-center">
+                    <p className="text-sm text-slate-500 italic">Ingredientes não informados.</p>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => {
+                  addMealToPlan(previewRecipe);
+                  setPreviewRecipe(null);
+                }}
+                className="w-full mt-8 h-14 rounded-2xl bg-primary text-black font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 active:scale-[0.95] transition-all"
+              >
+                <Plus size={20} />
+                Adicionar ao Cardápio
+              </button>
             </div>
           </div>
         </div>
