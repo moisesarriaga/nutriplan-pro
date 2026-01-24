@@ -15,6 +15,7 @@ import MyRecipes from './nutriplan-pro/screens/MyRecipes';
 import MealHistory from './nutriplan-pro/screens/MealHistory';
 import SavedLists from './nutriplan-pro/screens/SavedLists';
 import WaterLog from './nutriplan-pro/screens/WaterLog';
+import WaterHistory from './nutriplan-pro/screens/WaterHistory';
 import Notifications from './nutriplan-pro/screens/Notifications';
 import Scan from './nutriplan-pro/screens/Scan';
 import LandingPage from './nutriplan-pro/screens/LandingPage';
@@ -74,6 +75,7 @@ const AppContent: React.FC = () => {
                   <Route path="/history" element={<MealHistory />} />
                   <Route path="/saved-lists" element={<SavedLists />} />
                   <Route path="/water-log" element={<WaterLog />} />
+                  <Route path="/water-history" element={<WaterHistory />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/scan" element={<Scan />} />
                   <Route path="/checkout/:plan" element={<Checkout />} />

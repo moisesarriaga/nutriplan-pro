@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWaterNotifications } from '../../hooks/useWaterNotifications';
-import { ArrowLeft, GlassWater, Bell } from 'lucide-react';
+import { ArrowLeft, GlassWater, Bell, BarChart2 } from 'lucide-react';
 
 const WaterLog: React.FC = () => {
     const navigate = useNavigate();
@@ -96,10 +96,24 @@ const WaterLog: React.FC = () => {
     const addWater = async (amount: number) => {
         const newAmount = currentWater + amount;
         setCurrentWater(newAmount);
+
+        // Update today's consumption in profile
         await supabase
             .from('perfis_usuario')
             .update({ consumo_agua_hoje: newAmount })
             .eq('id', user?.id);
+
+        // Update history table (upsert)
+        const today = new Date().toLocaleDateString('en-CA');
+        await supabase
+            .from('historico_consumo_agua')
+            .upsert({
+                usuario_id: user?.id,
+                data: today,
+                quantidade_ml: newAmount
+            }, {
+                onConflict: 'usuario_id,data'
+            });
     };
 
     const resetWater = async () => {
@@ -108,6 +122,18 @@ const WaterLog: React.FC = () => {
             .from('perfis_usuario')
             .update({ consumo_agua_hoje: 0 })
             .eq('id', user?.id);
+
+        // Update history table for today
+        const today = new Date().toLocaleDateString('en-CA');
+        await supabase
+            .from('historico_consumo_agua')
+            .upsert({
+                usuario_id: user?.id,
+                data: today,
+                quantidade_ml: 0
+            }, {
+                onConflict: 'usuario_id,data'
+            });
     };
 
     const saveSettings = async () => {
@@ -129,11 +155,20 @@ const WaterLog: React.FC = () => {
 
     return (
         <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-white pb-10">
-            <header className="p-4 flex items-center gap-4 sticky top-0 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md z-10">
-                <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5">
-                    <ArrowLeft size={24} />
+            <header className="p-4 flex items-center justify-between sticky top-0 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md z-10">
+                <div className="flex items-center gap-4">
+                    <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5">
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h1 className="text-xl font-bold">Registro de Água</h1>
+                </div>
+                <button
+                    onClick={() => navigate('/water-history')}
+                    className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-blue-500"
+                    title="Histórico de Consumo"
+                >
+                    <BarChart2 size={24} />
                 </button>
-                <h1 className="text-xl font-bold">Registro de Água</h1>
             </header>
 
             <div className="flex-1 px-4 flex flex-col items-center justify-center py-10">
