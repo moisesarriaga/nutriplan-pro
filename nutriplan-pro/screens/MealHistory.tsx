@@ -84,7 +84,7 @@ const MealHistory: React.FC = () => {
                 ) : history.length === 0 ? (
                     <div className="text-center py-12 flex flex-col items-center gap-4">
                         <History className="text-slate-300" size={64} />
-                        <p className="text-slate-500">Nenhuma refeição registrada ainda.</p>
+                        <p className="text-slate-500">Nenhuma lista registrada ainda.</p>
                     </div>
                 ) : (
                     <div className="space-y-3">

@@ -4,331 +4,178 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
-import { MOCK_RECIPES } from '../../constants';
-import { useSubscription } from '../../contexts/SubscriptionContext';
-import UpgradePrompt from '../../components/UpgradePrompt';
+import { ShoppingBasket, ChevronRight, Plus } from 'lucide-react';
 
-interface ShoppingItem {
-  usuario_id: string;
-  nome_item: string;
-  quantidade: number;
-  ultimo_preco_informado: number;
-  unidade_preco: string;
-  comprado?: boolean;
+interface ShoppingListGroup {
+  id: string;
+  name: string;
+  itemCount: number;
+  totalPrice: number;
+  completedCount: number;
+  createdAt: Date;
+  concluido: boolean;
 }
 
 const ShoppingCart: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [items, setItems] = useState<ShoppingItem[]>([]);
+  const [groups, setGroups] = useState<ShoppingListGroup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newItemName, setNewItemName] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const { hasFeature } = useSubscription();
-
-  const canSumPrices = hasFeature('price_sum');
-
-  // Efeito para travar o scroll da página de fundo quando o modal de upgrade estiver aberto
-  useEffect(() => {
-    if (showUpgradeModal) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [showUpgradeModal]);
+  const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
 
   useEffect(() => {
     if (user) {
-      fetchItems().then(() => {
-        syncWithMealPlan();
-      });
+      fetchGroups();
     }
   }, [user]);
 
-  const syncWithMealPlan = async () => {
+  const fetchGroups = async () => {
     if (!user) return;
 
-    // 1. Get current cart items (names) to avoid duplicates
-    const { data: currentCart } = await supabase
-      .from('lista_precos_mercado')
-      .select('nome_item')
-      .eq('usuario_id', user.id);
-
-    const existingNames = new Set(currentCart?.map(i => i.nome_item) || []);
-
-    // 2. Fetch Meal Plan
-    const { data: mealPlan } = await supabase
-      .from('cardapio_semanal')
-      .select('receita_id')
-      .eq('usuario_id', user.id);
-
-    if (!mealPlan || mealPlan.length === 0) return;
-
-    // 3. Extract unique ingredients from planned recipes
-    const ingredientsToAdd = new Map<string, { name: string; unit: string }>();
-
-    mealPlan.forEach(entry => {
-      const recipe = MOCK_RECIPES.find(r => r.id === entry.receita_id);
-      if (recipe?.ingredients) {
-        recipe.ingredients.forEach(ing => {
-          if (!existingNames.has(ing.name)) {
-            ingredientsToAdd.set(ing.name, { name: ing.name, unit: ing.unit });
-          }
-        });
-      }
-    });
-
-    if (ingredientsToAdd.size === 0) return;
-
-    // 4. Insert new items
-    const newItems = Array.from(ingredientsToAdd.values()).map(ing => ({
-      usuario_id: user.id,
-      nome_item: ing.name,
-      quantidade: 1, // Default or extracted
-      ultimo_preco_informado: 0,
-      unidade_preco: ing.unit,
-      comprado: false
-    }));
-
-    const { error } = await supabase.from('lista_precos_mercado').insert(newItems);
-
-    if (!error) {
-      fetchItems(); // Refresh list
-    }
-  };
-
-  const fetchItems = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('lista_precos_mercado')
       .select('*')
-      .eq('usuario_id', user?.id);
+      .eq('usuario_id', user.id);
 
-    if (!error && data) {
-      setItems(data);
+    if (error || !data) {
+      setLoading(false);
+      return;
     }
+
+    // Group items by grupo_nome (or "Sem Grupo" if null)
+    const groupedByName = data.reduce((acc: any, item: any) => {
+      const groupKey = item.grupo_nome || 'Sem Grupo';
+
+      if (!acc[groupKey]) {
+        acc[groupKey] = {
+          id: groupKey,
+          name: groupKey,
+          items: [],
+          createdAt: new Date(item.created_at || Date.now())
+        };
+      }
+
+      acc[groupKey].items.push(item);
+      return acc;
+    }, {});
+
+    // Convert to array and calculate stats
+    const groupsArray: ShoppingListGroup[] = Object.values(groupedByName).map((group: any) => ({
+      id: group.id,
+      name: group.name.split(' ::: ')[0], // Strip unique suffix for display
+      itemCount: group.items.length,
+      completedCount: group.items.filter((i: any) => i.comprado).length,
+      totalPrice: group.items.reduce((sum: number, item: any) => sum + (item.ultimo_preco_informado || 0), 0),
+      createdAt: group.createdAt,
+      concluido: group.items.some((i: any) => i.concluido) // If any item is marked as concluded, the group is
+    }));
+
+    // Sort by creation date (newest first)
+    groupsArray.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    setGroups(groupsArray);
     setLoading(false);
   };
 
-  const deleteItem = async (nomeItem: string) => {
-    if (!user) return;
-    const { error } = await supabase
-      .from('lista_precos_mercado')
-      .delete()
-      .eq('usuario_id', user.id)
-      .eq('nome_item', nomeItem);
-
-    if (!error) {
-      setItems(prev => prev.filter(i => i.nome_item !== nomeItem));
-    }
+  const createNewList = () => {
+    // Navigate to detail page with "new" as id to create a new list
+    navigate('/cart/new');
   };
-
-  const addItem = async () => {
-    if (!user || !newItemName.trim()) return;
-    setIsAdding(true);
-    const newItem: Partial<ShoppingItem> = {
-      usuario_id: user.id,
-      nome_item: newItemName,
-      quantidade: 1,
-      ultimo_preco_informado: 0,
-      unidade_preco: 'un'
-    };
-
-    const { error } = await supabase.from('lista_precos_mercado').upsert(newItem, { onConflict: 'usuario_id,nome_item' });
-
-    if (!error) {
-      setItems(prev => [...prev.filter(i => i.nome_item !== newItemName), newItem as ShoppingItem]);
-      setNewItemName('');
-    }
-    setIsAdding(false);
-  };
-
-  const togglePurchased = (nomeItem: string) => {
-    setItems(prev => prev.map(item =>
-      item.nome_item === nomeItem ? { ...item, comprado: !item.comprado } : item
-    ));
-  };
-
-  const totalPrice = items.reduce((acc, curr) => acc + (curr.ultimo_preco_informado || 0), 0).toFixed(2);
 
   return (
-    <div className="flex flex-col min-h-screen pb-52">
+    <div className="flex flex-col min-h-screen pb-24">
       <header className="sticky top-0 z-20 flex items-center justify-between bg-background-light/90 dark:bg-background-dark/90 px-4 py-4 backdrop-blur-md">
         <button onClick={() => navigate(-1)} className="flex size-10 items-center justify-center rounded-full text-slate-900 dark:text-white hover:bg-black/5">
           <span className="material-symbols-rounded text-[20px]">arrow_back</span>
         </button>
-        <h1 className="text-lg font-bold">Meu Carrinho</h1>
-        <button className="flex size-10 items-center justify-center rounded-full text-slate-900 dark:text-white hover:bg-black/5">
-          <span className="material-symbols-rounded text-[20px]">more_horiz</span>
-        </button>
+        <h1 className="text-lg font-bold">Minhas Listas</h1>
+        <div className="size-10"></div>
       </header>
 
-      <div className="px-4 pt-2 mb-6">
-        <div className="flex gap-2 mb-4">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              value={newItemName}
-              onChange={(e) => setNewItemName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addItem()}
-              placeholder="Adicionar item manualmente..."
-              className="w-full h-12 pl-10 pr-4 bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-            <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">add</span>
-          </div>
+      {/* Tabs */}
+      <div className="px-4 mt-2">
+        <div className="flex p-1 bg-slate-100 dark:bg-white/5 rounded-2xl">
           <button
-            onClick={addItem}
-            disabled={isAdding || !newItemName.trim()}
-            className="h-12 px-4 bg-primary text-background-dark rounded-xl font-bold text-sm shadow-sm active:scale-95 transition-all disabled:opacity-50"
+            onClick={() => setActiveTab('active')}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'active' ? 'bg-white dark:bg-surface-dark shadow-sm text-primary' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
           >
-            {isAdding ? '...' : 'Add'}
+            Ativas
           </button>
-        </div>
-
-        <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-surface-dark p-5 shadow-sm border border-slate-100 dark:border-white/5">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1">
-                Total Estimado
-                {!canSumPrices && <span className="material-symbols-rounded text-[12px]">lock</span>}
-              </span>
-              <div
-                className={`flex items-baseline gap-1 ${!canSumPrices ? 'cursor-pointer' : ''}`}
-                onClick={!canSumPrices ? () => setShowUpgradeModal(true) : undefined}
-              >
-                <h2 className={`text-3xl font-extrabold tracking-tight transition-all ${!canSumPrices ? 'blur-md select-none' : ''}`}>
-                  R$ {totalPrice}
-                </h2>
-                {!canSumPrices && <span className="text-xs text-primary font-bold ml-2">Upgrade p/ ver</span>}
-              </div>
-              <p className="text-sm font-medium text-primary-dark dark:text-primary flex items-center gap-1 mt-1">
-                <span className="material-symbols-rounded text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>shopping_basket</span>
-                {items.filter(i => !i.comprado).length} itens restantes
-              </p>
-            </div>
-            <div className="h-16 w-16 rounded-full bg-gradient-to-tr from-primary to-emerald-600 opacity-20 blur-xl absolute -right-4 -top-4"></div>
-          </div>
-          <div className="mt-5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-700"
-              style={{ width: items.length > 0 ? `${(items.filter(i => i.comprado).length / items.length) * 100}%` : '0%' }}
-            ></div>
-          </div>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'history' ? 'bg-white dark:bg-surface-dark shadow-sm text-primary' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+          >
+            Histórico
+          </button>
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 mb-4">
-        <div className="sticky top-[72px] z-10 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm px-4 py-2">
-          <h3 className="text-xl font-bold tracking-tight">Lista de Compras</h3>
-        </div>
-
+      <div className="flex-1 px-4 py-6">
         {loading ? (
-          <div className="px-4 py-10 text-center text-gray-500">Carregando itens...</div>
-        ) : items.length === 0 ? (
-          <div className="px-4 py-10 text-center text-gray-500">
-            <span className="material-symbols-rounded text-[40px] mb-2">inventory_2</span>
-            <p>Seu carrinho está vazio.</p>
+          <div className="flex justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          </div>
+        ) : groups.filter(g => activeTab === 'active' ? !g.concluido : g.concluido).length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="size-20 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-4">
+              {activeTab === 'active' ? (
+                <ShoppingBasket className="text-slate-400" size={32} />
+              ) : (
+                <span className="material-symbols-rounded text-slate-400 text-[32px]">history</span>
+              )}
+            </div>
+            <h3 className="text-lg font-bold mb-2">
+              {activeTab === 'active' ? 'Nenhuma lista ativa' : 'Histórico vazio'}
+            </h3>
+            <p className="text-sm text-slate-500 mb-6 max-w-[200px]">
+              {activeTab === 'active'
+                ? 'Gere uma nova lista de compras a partir do seu cardápio.'
+                : 'Suas listas finalizadas aparecerão aqui.'}
+            </p>
           </div>
         ) : (
-          <div className="space-y-6 pb-20">
-            {/* Pending Items */}
-            <div className="px-4">
-              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-3">Pendentes</h4>
-              <div className="flex flex-col gap-2">
-                {items.filter(i => !i.comprado).map((item) => (
-                  <div key={item.nome_item} className="flex flex-col rounded-xl bg-white dark:bg-surface-dark p-2 pl-4 pr-3 shadow-sm border border-slate-100 dark:border-white/5">
-                    <div className="flex justify-between items-center gap-2">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <button
-                          onClick={() => togglePurchased(item.nome_item)}
-                          className="size-6 rounded-md border-2 border-slate-200 dark:border-gray-600 flex items-center justify-center transition-colors"
-                        >
-                          {item.comprado && <span className="material-symbols-rounded text-primary text-[18px]">check</span>}
-                        </button>
-                        <div className="flex flex-col min-w-0">
-                          <h4 className="text-sm font-bold leading-tight truncate">{item.nome_item}</h4>
-                          <p className="text-[10px] text-slate-500 font-medium">
-                            {item.quantidade > 0 && <span>{item.quantidade} {item.unidade_preco || 'un'} • </span>}
-                            R$ {item.ultimo_preco_informado.toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => deleteItem(item.nome_item)}
-                        className="flex size-8 items-center justify-center rounded-full text-slate-300 hover:text-red-500 transition-colors"
-                      >
-                        <span className="material-symbols-rounded text-[20px]">delete</span>
-                      </button>
-                    </div>
+          <div className="space-y-3">
+            {groups
+              .filter(group => activeTab === 'active' ? !group.concluido : group.concluido)
+              .map((group) => (
+                <div
+                  key={group.id}
+                  onClick={() => navigate(`/cart/${encodeURIComponent(group.id)}`)}
+                  className="group relative flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-white/5 cursor-pointer active:scale-[0.98] transition-all hover:border-primary/30"
+                >
+                  <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${group.concluido ? 'bg-slate-100 dark:bg-white/5' : 'bg-primary/10'}`}>
+                    {group.concluido ? (
+                      <span className="material-symbols-rounded text-slate-400 text-[28px]">done_all</span>
+                    ) : (
+                      <ShoppingBasket className="text-primary" size={28} />
+                    )}
                   </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Purchased Items */}
-            {items.some(i => i.comprado) && (
-              <div className="px-4">
-                <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-3">Comprados</h4>
-                <div className="flex flex-col gap-2 opacity-60 grayscale-[0.5]">
-                  {items.filter(i => i.comprado).map((item) => (
-                    <div key={item.nome_item} className="flex flex-col rounded-xl bg-slate-50 dark:bg-white/[0.02] p-2 pl-4 pr-3 border border-dashed border-slate-200 dark:border-white/10">
-                      <div className="flex justify-between items-center gap-2">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <button
-                            onClick={() => togglePurchased(item.nome_item)}
-                            className="size-6 rounded-md bg-primary border-2 border-primary flex items-center justify-center transition-colors"
-                          >
-                            <span className="material-symbols-rounded text-background-dark text-[18px]">check</span>
-                          </button>
-                          <div className="flex flex-col min-w-0">
-                            <h4 className="text-sm font-bold leading-tight truncate line-through text-slate-400">{item.nome_item}</h4>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => deleteItem(item.nome_item)}
-                          className="flex size-8 items-center justify-center rounded-full text-slate-300 hover:text-red-500 transition-colors"
-                        >
-                          <span className="material-symbols-rounded text-[20px]">delete</span>
-                        </button>
-                      </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`text-base font-bold mb-1 ${group.concluido ? 'text-slate-500' : ''}`}>{group.name}</h3>
+                    <div className="flex items-center gap-3 text-xs text-slate-500">
+                      <span>{group.itemCount} {group.itemCount === 1 ? 'item' : 'itens'}</span>
+                      <span>•</span>
+                      <span className={`${group.concluido ? '' : 'text-primary'} font-medium`}>R$ {group.totalPrice.toFixed(2)}</span>
                     </div>
-                  ))}
+
+                    {!group.concluido && (
+                      <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all duration-300"
+                          style={{ width: `${group.itemCount > 0 ? (group.completedCount / group.itemCount) * 100 : 0}%` }}
+                        ></div>
+                      </div>
+                    )}
+                  </div>
+
+                  <ChevronRight className="text-slate-400 group-hover:text-primary transition-colors" size={20} />
                 </div>
-              </div>
-            )}
+              ))}
           </div>
         )}
       </div>
-
-      <div className="fixed bottom-20 left-0 z-50 w-full border-t border-gray-200 bg-white dark:bg-surface-dark p-4 pb-8">
-        <div className="mx-auto w-full max-w-md">
-          <div className="mb-4 flex items-center justify-between px-1">
-            <span className="text-sm text-slate-500">Total a Pagar</span>
-            <span className={`text-xl font-bold transition-all ${!canSumPrices ? 'blur-sm select-none' : ''}`}>
-              R$ {totalPrice}
-            </span>
-          </div>
-          <button
-            onClick={!canSumPrices ? () => setShowUpgradeModal(true) : undefined}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 font-bold text-black shadow-lg shadow-primary/25 active:scale-[0.98]"
-          >
-            <span>Confirmar Pedido</span>
-            <span className="material-symbols-rounded text-[20px]">arrow_forward</span>
-          </button>
-        </div>
-      </div>
-
-      {showUpgradeModal && (
-        <UpgradePrompt
-          feature="A Soma Automática de Preços da sua lista"
-          requiredPlan="simple"
-          onClose={() => setShowUpgradeModal(false)}
-        />
-      )}
 
       <Navigation />
     </div>

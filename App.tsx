@@ -6,6 +6,7 @@ import RecipeDetails from './nutriplan-pro/screens/RecipeDetails';
 import MealPlanner from './nutriplan-pro/screens/MealPlanner';
 import CreateRecipe from './nutriplan-pro/screens/CreateRecipe';
 import ShoppingCart from './nutriplan-pro/screens/ShoppingCart';
+import ShoppingListDetail from './nutriplan-pro/screens/ShoppingListDetail';
 import Profile from './nutriplan-pro/screens/Profile';
 import Login from './nutriplan-pro/screens/Login';
 import Register from './nutriplan-pro/screens/Register';
@@ -66,6 +67,7 @@ const AppContent: React.FC = () => {
                   <Route path="/planner" element={<MealPlanner />} />
                   <Route path="/create-recipe" element={<CreateRecipe />} />
                   <Route path="/cart" element={<ShoppingCart />} />
+                  <Route path="/cart/:listId" element={<ShoppingListDetail />} />
                   <Route path="/profile" element={<Profile onLogout={() => { }} />} />
                   <Route path="/favorites" element={<Favorites />} />
                   <Route path="/my-recipes" element={<MyRecipes />} />

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWaterNotifications } from '../../hooks/useWaterNotifications';
-import { ArrowLeft, Droplets, GlassWater, Bell } from 'lucide-react';
+import { ArrowLeft, GlassWater, Bell } from 'lucide-react';
 
 const WaterLog: React.FC = () => {
     const navigate = useNavigate();
@@ -125,7 +125,10 @@ const WaterLog: React.FC = () => {
                         />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <Droplets className="text-primary fill-current" size={48} />
+                        <div className="relative flex items-center justify-center w-12 h-12">
+                            <span className="material-symbols-outlined text-primary absolute -translate-x-3 -translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 0" }}>water_drop</span>
+                            <span className="material-symbols-outlined text-primary relative z-10 translate-x-1 translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 1" }}>water_drop</span>
+                        </div>
                         <span className="text-4xl font-black mt-2">{(currentWater / 1000).toFixed(1)}L</span>
                         <span className="text-slate-500 text-sm">da meta de {(goal / 1000).toFixed(1)}L</span>
                     </div>

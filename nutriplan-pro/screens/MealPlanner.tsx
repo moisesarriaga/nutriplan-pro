@@ -26,6 +26,10 @@ const MealPlanner: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isGeneratingList, setIsGeneratingList] = useState(false);
   const [showGenerateOptions, setShowGenerateOptions] = useState(false);
+  const [showGroupNamePrompt, setShowGroupNamePrompt] = useState(false);
+  const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false);
+  const [groupName, setGroupName] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly' | 'monthly' | null>(null);
   const [aggregatedIngredients, setAggregatedIngredients] = useState<AggregatedIngredient[]>([]);
 
   const days = [
@@ -132,26 +136,60 @@ const MealPlanner: React.FC = () => {
   };
 
   const handleGenerateList = (period: 'daily' | 'weekly' | 'monthly') => {
-    // Collect ingredients based on period
+    // Save period and show group name prompt
+    setSelectedPeriod(period);
+    setShowGenerateOptions(false);
+    setShowGroupNamePrompt(true);
+  };
+
+  const confirmGroupNameAndGenerate = async () => {
+    if (!groupName.trim()) {
+      showNotification('Por favor, informe um nome para o grupo.');
+      return;
+    }
+
+    // Check if a group with this name already exists (matching strictly the name part before ' ::: ')
+    const { data: existingRecords, error } = await supabase
+      .from('lista_precos_mercado')
+      .select('grupo_nome')
+      .eq('usuario_id', user?.id)
+      .ilike('grupo_nome', `${groupName.trim()} ::: %`)
+      .limit(1);
+
+    if (existingRecords && existingRecords.length > 0) {
+      setShowDuplicateConfirm(true);
+      return;
+    }
+
+    // If no duplicate, proceed to generation
+    generateIngredients();
+  };
+
+  const generateIngredients = () => {
+    // Collect ingredients based on saved period
     const allIngredients: Array<{ name: string; quantity: number; unit: string }> = [];
     let mealsToProcess: MealPlanEntry[] = [];
     let multiplier = 1;
 
-    if (period === 'daily') {
+    if (selectedPeriod === 'daily') {
       mealsToProcess = mealPlan.filter(m => m.dia_semana === selectedDay);
       if (mealsToProcess.length === 0) {
         showNotification(`Seu cardápio de ${selectedDay} está vazio.`);
+        setShowGroupNamePrompt(false);
+        setShowDuplicateConfirm(false);
         return;
       }
-    } else if (period === 'weekly') {
+    } else if (selectedPeriod === 'weekly') {
       mealsToProcess = mealPlan;
-    } else if (period === 'monthly') {
+    } else if (selectedPeriod === 'monthly') {
       mealsToProcess = mealPlan;
       multiplier = 4;
     }
 
     if (mealsToProcess.length === 0) {
       showNotification('Nenhuma refeição encontrada para o período selecionado.');
+      setShowGroupNamePrompt(false);
+      setShowDuplicateConfirm(false);
       return;
     }
 
@@ -169,7 +207,8 @@ const MealPlanner: React.FC = () => {
 
     const aggregated = aggregateIngredients(allIngredients);
     setAggregatedIngredients(aggregated);
-    setShowGenerateOptions(false);
+    setShowGroupNamePrompt(false);
+    setShowDuplicateConfirm(false);
     setIsGeneratingList(true);
   };
 
@@ -190,35 +229,27 @@ const MealPlanner: React.FC = () => {
     }
 
     try {
-      // 1. Fetch existing items in the cart to handle quantity summing
-      const { data: existingItems } = await supabase
-        .from('lista_precos_mercado')
-        .select('*')
-        .eq('usuario_id', user.id);
+      // Create unique group name with timestamp
+      // Create unique group name with full timestamp (including ms) to prevent any grouping
+      const now = new Date();
+      const uniqueSuffix = now.getTime(); // Use Unix timestamp for internal uniqueness
+      const uniqueGroupName = `${groupName.trim()} ::: ${uniqueSuffix}`;
 
-      const existingMap = new Map<string, any>();
-      existingItems?.forEach(item => {
-        existingMap.set(item.nome_item, item);
-      });
-
-      // 2. Prepare final items list (summing with existing)
+      // Prepare final items list (always create new items)
       const finalItems = itemsToAdd.map(ing => {
-        const existing = existingMap.get(ing.name);
-        const quantity = existing
-          ? Number(existing.quantidade || 0) + Number(ing.quantity)
-          : Number(ing.quantity);
-
         return {
           usuario_id: user.id,
           nome_item: ing.name,
-          quantidade: quantity,
-          ultimo_preco_informado: existing ? existing.ultimo_preco_informado : 0,
+          quantidade: Number(ing.quantity),
+          ultimo_preco_informado: 0,
           unidade_preco: ing.unit,
-          comprado: existing ? existing.comprado : false
+          comprado: false,
+          grupo_nome: uniqueGroupName, // Use unique group name with timestamp
+          concluido: false // Ensure it starts as active
         };
       });
 
-      const { error } = await supabase.from('lista_precos_mercado').upsert(finalItems, { onConflict: 'usuario_id,nome_item' });
+      const { error } = await supabase.from('lista_precos_mercado').insert(finalItems);
 
       if (error) throw error;
 
@@ -393,6 +424,74 @@ const MealPlanner: React.FC = () => {
             >
               Cancelar
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Nome do Grupo */}
+      {showGroupNamePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold mb-2 text-center">Nome do Grupo</h3>
+            <p className="text-sm text-center text-slate-500 mb-6">Dê um nome para esta lista de compras:</p>
+
+            <input
+              type="text"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && confirmGroupNameAndGenerate()}
+              placeholder="Ex: Feira Semanal, Churrasco..."
+              className="w-full p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary mb-6"
+              autoFocus
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowGroupNamePrompt(false); setGroupName(''); }}
+                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmGroupNameAndGenerate}
+                disabled={!groupName.trim()}
+                className="flex-1 h-12 rounded-xl bg-primary text-black font-bold shadow-lg shadow-primary/20 active:scale-[0.98] transition-all disabled:opacity-50"
+              >
+                Continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Nome Duplicado */}
+      {showDuplicateConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-white/5">
+            <div className="flex flex-col items-center text-center">
+              <div className="size-14 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
+                <span className="material-symbols-rounded text-[32px]">warning</span>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Nome já existe</h3>
+              <p className="text-sm text-slate-500 mb-6 px-2">
+                Já existe um grupo chamado "<span className="font-bold text-slate-800 dark:text-white">{groupName}</span>". Deseja criar outro grupo com o mesmo nome?
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDuplicateConfirm(false)}
+                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border border-slate-200 dark:border-slate-800"
+              >
+                Não
+              </button>
+              <button
+                onClick={generateIngredients}
+                className="flex-1 h-12 rounded-xl bg-primary text-black font-bold shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
+              >
+                Sim
+              </button>
+            </div>
           </div>
         </div>
       )}
