@@ -1,6 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Droplets, Utensils, BadgeCheck, BellOff } from 'lucide-react';
+import { ArrowLeft, Droplets, Utensils, BadgeCheck, BellOff, Trash2 } from 'lucide-react';
+
+interface NotificationItemProps {
+    notif: any;
+    onDelete: (id: number) => void;
+}
+
+const SwipeableNotification: React.FC<NotificationItemProps> = ({ notif, onDelete }) => {
+    const [startX, setStartX] = useState(0);
+    const [offsetX, setOffsetX] = useState(0);
+    const [isDeleting, setIsDeleting] = useState<'left' | 'right' | null>(null);
+    const itemRef = useRef<HTMLDivElement>(null);
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setStartX(e.touches[0].clientX);
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        const currentX = e.touches[0].clientX;
+        const diff = currentX - startX;
+        setOffsetX(diff);
+    };
+
+    const handleTouchEnd = () => {
+        const threshold = 100;
+        if (offsetX < -threshold) {
+            setIsDeleting('left');
+            setTimeout(() => {
+                onDelete(notif.id);
+            }, 300);
+        } else if (offsetX > threshold) {
+            setIsDeleting('right');
+            setTimeout(() => {
+                onDelete(notif.id);
+            }, 300);
+        } else {
+            setOffsetX(0);
+        }
+    };
+
+    return (
+        <div className="relative overflow-hidden bg-red-500 dark:bg-red-900/40">
+            {/* Background Action (Left side - shows when swiping right) */}
+            <div className={`absolute inset-y-0 left-0 flex items-center px-6 text-white transition-opacity ${offsetX > 20 ? 'opacity-100' : 'opacity-0'}`}>
+                <div className={`flex flex-col items-center gap-1 transition-transform duration-200 ${offsetX > 60 ? 'scale-110' : 'scale-90 opacity-50'}`}>
+                    <Trash2 size={24} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Excluir</span>
+                </div>
+            </div>
+
+            {/* Background Action (Right side - shows when swiping left) */}
+            <div className={`absolute inset-y-0 right-0 flex items-center px-6 text-white transition-opacity ${offsetX < -20 ? 'opacity-100' : 'opacity-0'}`}>
+                <div className={`flex flex-col items-center gap-1 transition-transform duration-200 ${offsetX < -60 ? 'scale-110' : 'scale-90 opacity-50'}`}>
+                    <Trash2 size={24} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Excluir</span>
+                </div>
+            </div>
+
+            {/* Foreground Content */}
+            <div
+                ref={itemRef}
+                className={`flex gap-4 p-4 bg-background-light dark:bg-background-dark transition-transform relative z-10 ${isDeleting ? 'opacity-0' : ''}`}
+                style={{
+                    transform: isDeleting === 'left' ? 'translateX(-100%)' : isDeleting === 'right' ? 'translateX(100%)' : `translateX(${offsetX}px)`,
+                    transition: (offsetX === 0 || isDeleting) ? 'transform 0.3s ease-out, opacity 0.3s ease' : 'none'
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+            >
+                <div className={`size-12 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center ${notif.color} shrink-0`}>
+                    <notif.icon className="fill-current" size={24} />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start gap-2">
+                        <h3 className="font-bold text-sm truncate">{notif.title}</h3>
+                        <span className="text-[10px] text-slate-400 shrink-0">{notif.time}</span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{notif.description}</p>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const Notifications: React.FC = () => {
     const navigate = useNavigate();
@@ -36,9 +119,13 @@ const Notifications: React.FC = () => {
         setNotifications([]);
     };
 
+    const handleDelete = (id: number) => {
+        setNotifications(prev => prev.filter(n => n.id !== id));
+    };
+
     return (
         <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-white">
-            <header className="p-4 flex items-center justify-between sticky top-0 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md z-10 w-full">
+            <header className="p-4 flex items-center justify-between sticky top-0 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md z-20 w-full border-b border-slate-100 dark:border-white/5">
                 <div className="flex items-center gap-4">
                     <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
                         <ArrowLeft size={24} />
@@ -48,28 +135,21 @@ const Notifications: React.FC = () => {
                 {notifications.length > 0 && (
                     <button
                         onClick={handleClearAll}
-                        className="flex size-10 items-center justify-center rounded-full text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all active:scale-90"
+                        className="flex size-10 items-center justify-center rounded-full text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 transition-all active:scale-90"
                         title="Limpar tudo"
                     >
-                        <span className="material-symbols-outlined text-[24px]">delete_sweep</span>
+                        <span className="material-symbols-outlined text-[28px]">clear_all</span>
                     </button>
                 )}
             </header>
 
-            <div className="flex-1 p-4 divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="flex-1 divide-y divide-slate-100 dark:divide-slate-800">
                 {notifications.map((notif) => (
-                    <div key={notif.id} className="py-4 flex gap-4 animate-in slide-in-from-right duration-300">
-                        <div className={`size-12 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center ${notif.color}`}>
-                            <notif.icon className="fill-current" size={24} />
-                        </div>
-                        <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                                <h3 className="font-bold text-sm">{notif.title}</h3>
-                                <span className="text-[10px] text-slate-400">{notif.time}</span>
-                            </div>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{notif.description}</p>
-                        </div>
-                    </div>
+                    <SwipeableNotification
+                        key={notif.id}
+                        notif={notif}
+                        onDelete={handleDelete}
+                    />
                 ))}
             </div>
 
