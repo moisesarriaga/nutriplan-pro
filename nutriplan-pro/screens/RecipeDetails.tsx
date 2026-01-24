@@ -250,7 +250,7 @@ const RecipeDetails: React.FC = () => {
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark min-h-screen pb-40">{/* Increased from pb-24 to pb-40 to prevent content being hidden */}
+    <div className="bg-background-light dark:bg-background-dark min-h-screen pb-72">
       <header className="relative w-full h-[320px]">
         <div
           className="absolute inset-0 w-full h-full bg-cover bg-center"
@@ -418,11 +418,11 @@ const RecipeDetails: React.FC = () => {
         </div>
       </main>
 
-      <div className="fixed bottom-20 left-0 right-0 z-30 p-4 bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark pt-8">
+      <div className="fixed bottom-0 left-0 right-0 z-30 p-4 pb-[96px] bg-gradient-to-t from-background-light via-background-light via-60% to-transparent dark:from-background-dark dark:via-background-dark dark:via-60% pt-32 px-4">
         <div className="max-w-md mx-auto">
           <button
             onClick={() => setIsAddingToPlanner(true)}
-            className="flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl h-14 bg-primary text-black text-base font-bold shadow-lg active:scale-[0.98] transition-all"
+            className="flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl h-14 bg-primary text-black text-base font-bold shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
           >
             <Calendar size={24} />
             Adicionar ao Cardápio Semanal

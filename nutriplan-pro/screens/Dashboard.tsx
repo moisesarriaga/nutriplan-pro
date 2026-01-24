@@ -444,11 +444,11 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Floating Action Button */}
-      <div className="fixed bottom-20 left-0 right-0 z-30 p-4 bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark pt-8">
+      <div className="fixed bottom-0 left-0 right-0 z-30 p-4 pb-[96px] bg-gradient-to-t from-background-light via-background-light via-60% to-transparent dark:from-background-dark dark:via-background-dark dark:via-60% pt-32 px-4">
         <div className="max-w-md mx-auto">
           <button
             onClick={() => navigate('/create-recipe')}
-            className="flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl h-14 bg-primary text-black text-base font-bold shadow-lg shadow-primary/20 active:scale-[0.98] transition-all hover:scale-[1.02]"
+            className="flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl h-14 bg-primary text-black text-base font-bold shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
             title="Nova Receita"
           >
             <Plus size={24} />

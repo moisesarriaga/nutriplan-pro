@@ -39,7 +39,7 @@ const MyRecipes: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark pb-24">
+        <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark pb-72">
             <div className="flex items-center px-4 py-4 justify-between sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
                 <button onClick={() => navigate(-1)} className="flex items-center justify-center rounded-full h-10 w-10 text-slate-900 dark:text-white hover:bg-black/5">
                     <ArrowLeft size={24} />
@@ -99,6 +99,20 @@ const MyRecipes: React.FC = () => {
                     </div>
                 )}
             </div>
+            {/* Floating Action Button */}
+            <div className="fixed bottom-0 left-0 right-0 z-30 p-4 pb-[96px] bg-gradient-to-t from-background-light via-background-light via-60% to-transparent dark:from-background-dark dark:via-background-dark dark:via-60% pt-32 px-4">
+                <div className="max-w-md mx-auto">
+                    <button
+                        onClick={() => navigate('/create-recipe')}
+                        className="flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl h-14 bg-primary text-black text-base font-bold shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
+                        title="Nova Receita"
+                    >
+                        <Plus size={24} />
+                        Nova Receita
+                    </button>
+                </div>
+            </div>
+
             <Navigation />
         </div>
     );

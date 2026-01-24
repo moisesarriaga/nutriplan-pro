@@ -346,7 +346,7 @@ const MealPlanner: React.FC = () => {
   const totalCalories = currentDayMeals.reduce((acc, curr) => acc + (curr.receita?.calories || 0), 0);
 
   return (
-    <div className="flex flex-col min-h-screen pb-52">
+    <div className="flex flex-col min-h-screen pb-72">
       <header className="sticky top-0 z-20 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 pb-2 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
         <div className="w-12"></div>
         <h2 className="text-lg font-bold flex-1 text-center">Cardápio Semanal</h2>
@@ -437,9 +437,9 @@ const MealPlanner: React.FC = () => {
         )}
       </div>
 
-      <div className="fixed bottom-20 left-0 right-0 z-30 p-4 bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark pt-8">
+      <div className="fixed bottom-0 left-0 right-0 z-30 p-4 pb-[96px] bg-gradient-to-t from-background-light via-background-light via-60% to-transparent dark:from-background-dark dark:via-background-dark dark:via-60% pt-32 px-4">
         <div className="max-w-md mx-auto flex flex-col gap-2">
-          <div className="flex justify-between items-center px-2 mb-2">
+          <div className="flex justify-between items-center px-2 mb-1">
             <p className="text-sm font-medium text-gray-500">Total diário: <span className="text-slate-900 dark:text-white font-bold">{totalCalories} kcal</span></p>
             <p className="text-xs text-gray-400">Meta: 2000 kcal</p>
           </div>
@@ -452,8 +452,6 @@ const MealPlanner: React.FC = () => {
           </button>
         </div>
       </div>
-
-      <Navigation />
 
       <Navigation />
 
