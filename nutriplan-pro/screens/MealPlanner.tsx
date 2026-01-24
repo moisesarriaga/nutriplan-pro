@@ -390,10 +390,12 @@ const MealPlanner: React.FC = () => {
                   {meals.length > 0 ? (
                     meals.map((entry) => (
                       <div key={entry.id} className="group relative flex items-stretch justify-between gap-4 rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm border border-transparent hover:border-primary/30 transition-all cursor-pointer" onClick={() => navigate(`/recipe/${entry.receita_id}`)}>
-                        <div
-                          className="w-20 h-20 shrink-0 bg-center bg-no-repeat bg-cover rounded-lg"
-                          style={{ backgroundImage: `url(${entry.receita?.image || 'https://picsum.photos/200'})` }}
-                        ></div>
+                        <img
+                          src={entry.receita?.image || 'https://picsum.photos/200'}
+                          alt={entry.receita?.name || 'Receita'}
+                          className="w-20 h-20 shrink-0 object-cover rounded-lg"
+                          loading="lazy"
+                        />
                         <div className="flex flex-col justify-center flex-1 min-w-0 py-1">
                           <p className="text-base font-bold leading-tight truncate">{entry.receita?.name || 'Receita Desconhecida'}</p>
                           <div className="flex items-center gap-2 mt-2">

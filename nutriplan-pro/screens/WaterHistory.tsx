@@ -378,12 +378,11 @@ const WaterHistory: React.FC = () => {
 
             {/* Quote of the day */}
             <div className="mx-6 mt-8 p-6 rounded-[24px] bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl shadow-blue-500/20">
-                <span className="material-symbols-outlined mb-2 opacity-50">format_quote</span>
                 <p className="font-bold text-sm leading-relaxed italic">
                     "A água é o combustível da vida. Mantenha seu motor rodando suavemente!"
                 </p>
                 <div className="mt-4 flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Dica NutriPlan</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">💡 Dica do dia</span>
                 </div>
             </div>
         </div>

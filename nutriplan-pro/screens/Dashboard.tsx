@@ -237,10 +237,12 @@ const Dashboard: React.FC = () => {
           <div className="relative cursor-pointer" onClick={() => navigate('/profile')}>
             <div className="flex items-center justify-center rounded-full size-10 ring-2 ring-primary/20 bg-white dark:bg-surface-dark overflow-hidden">
               {profile?.avatar_url ? (
-                <div
-                  className="w-full h-full bg-center bg-no-repeat bg-cover"
-                  style={{ backgroundImage: `url(${profile.avatar_url})` }}
-                ></div>
+                <img
+                  src={profile.avatar_url}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
               ) : (
                 <span className="material-symbols-rounded text-slate-300 text-[24px]">person</span>
               )}
@@ -321,10 +323,12 @@ const Dashboard: React.FC = () => {
                 className="flex flex-col gap-3 rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm min-w-[160px] w-[160px] flex-shrink-0 transition-transform active:scale-95"
               >
                 <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-                  <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${meal.recipe.image})` }}
-                  ></div>
+                  <img
+                    src={meal.recipe.image}
+                    alt={meal.recipe.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
+                  />
                   <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium text-white capitalize">
                     {meal.tipo_refeicao}
                   </div>
@@ -369,10 +373,13 @@ const Dashboard: React.FC = () => {
                 <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
               </button>
             </div>
-            <div
-              className="relative h-32 sm:h-auto sm:w-1/3 bg-cover bg-center"
-              style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBNp-rcyh4nX6sxrcGXBsu-ThFnB4WSAQrvzMLSSJ9Nn_Ky8fXih12OgA7r6NuQMAzYrFt_eBDu_piqtBujp3BCko7AJjYrAqWCEjcZbdI9ynhngdQg7VfeFnfq4NxRU9FTUTNXoDbEQxaC2Es-xicH0Zl7NXOu1KCgFRlsUCC1w7LSnuXD913TFtzuLkvrwjDTU6XJxAeTTnJbz8jX1vOP8XTNlzWINsJV9aStHyPx0RK4zaem-KWrRiyAtqVxiFDsdIipUuFf84c")' }}
-            >
+            <div className="relative h-32 sm:h-auto sm:w-1/3 overflow-hidden">
+              <img
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNp-rcyh4nX6sxrcGXBsu-ThFnB4WSAQrvzMLSSJ9Nn_Ky8fXih12OgA7r6NuQMAzYrFt_eBDu_piqtBujp3BCko7AJjYrAqWCEjcZbdI9ynhngdQg7VfeFnfq4NxRU9FTUTNXoDbEQxaC2Es-xicH0Zl7NXOu1KCgFRlsUCC1w7LSnuXD913TFtzuLkvrwjDTU6XJxAeTTnJbz8jX1vOP8XTNlzWINsJV9aStHyPx0RK4zaem-KWrRiyAtqVxiFDsdIipUuFf84c"
+                alt="Shopping List"
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
               <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-l from-white/10 to-white dark:from-surface-dark/10 dark:to-surface-dark via-transparent sm:via-transparent sm:to-90%"></div>
             </div>
           </div>
@@ -398,10 +405,12 @@ const Dashboard: React.FC = () => {
             >
               <div className="size-20 shrink-0 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/10 dark:to-primary/5 overflow-hidden flex items-center justify-center">
                 {recipe.imagem_url ? (
-                  <div
-                    className="w-full h-full bg-cover bg-center transition duration-500 group-hover:scale-110"
-                    style={{ backgroundImage: `url(${recipe.imagem_url})` }}
-                  ></div>
+                  <img
+                    src={recipe.imagem_url}
+                    alt={recipe.nome}
+                    className="w-full h-full object-cover transition duration-500 group-hover:scale-110"
+                    loading="lazy"
+                  />
                 ) : (
                   <span className="material-symbols-rounded text-primary text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>
                 )}

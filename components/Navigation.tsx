@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const Navigation: React.FC = () => {
+const Navigation: React.FC = React.memo(() => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -11,7 +11,7 @@ const Navigation: React.FC = () => {
   const navItems = [
     { label: 'Início', path: '/dashboard', icon: 'home' },
     { label: 'Buscar', path: '/search', icon: 'search' },
-    { label: 'Lista', path: '/cart', icon: 'receipt_long', isCenter: true },
+    { label: 'Lista', path: '/cart', icon: 'receipt_long' },
     { label: 'Plano', path: '/planner', icon: 'calendar_month' },
     { label: 'Perfil', path: '/profile', icon: 'person' },
   ];
@@ -36,6 +36,6 @@ const Navigation: React.FC = () => {
       </div>
     </nav>
   );
-};
+});
 
 export default Navigation;

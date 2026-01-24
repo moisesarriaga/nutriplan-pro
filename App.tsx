@@ -1,32 +1,40 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Dashboard from './nutriplan-pro/screens/Dashboard';
-import Search from './nutriplan-pro/screens/Search';
-import RecipeDetails from './nutriplan-pro/screens/RecipeDetails';
-import MealPlanner from './nutriplan-pro/screens/MealPlanner';
-import CreateRecipe from './nutriplan-pro/screens/CreateRecipe';
-import ShoppingCart from './nutriplan-pro/screens/ShoppingCart';
-import ShoppingListDetail from './nutriplan-pro/screens/ShoppingListDetail';
-import Profile from './nutriplan-pro/screens/Profile';
-import Login from './nutriplan-pro/screens/Login';
-import Register from './nutriplan-pro/screens/Register';
-import Favorites from './nutriplan-pro/screens/Favorites';
-import MyRecipes from './nutriplan-pro/screens/MyRecipes';
-import MealHistory from './nutriplan-pro/screens/MealHistory';
-import SavedLists from './nutriplan-pro/screens/SavedLists';
-import WaterLog from './nutriplan-pro/screens/WaterLog';
-import WaterHistory from './nutriplan-pro/screens/WaterHistory';
-import Notifications from './nutriplan-pro/screens/Notifications';
-import Scan from './nutriplan-pro/screens/Scan';
-import LandingPage from './nutriplan-pro/screens/LandingPage';
-import Checkout from './nutriplan-pro/screens/Checkout';
-import ThankYou from './nutriplan-pro/screens/ThankYou';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import AlertModal from './components/AlertModal';
 import ConfirmationModal from './components/ConfirmationModal';
 import { ThemeProvider } from './contexts/ThemeContext';
+
+// Lazy load screens for performance optimization
+const Dashboard = lazy(() => import('./nutriplan-pro/screens/Dashboard'));
+const Search = lazy(() => import('./nutriplan-pro/screens/Search'));
+const RecipeDetails = lazy(() => import('./nutriplan-pro/screens/RecipeDetails'));
+const MealPlanner = lazy(() => import('./nutriplan-pro/screens/MealPlanner'));
+const CreateRecipe = lazy(() => import('./nutriplan-pro/screens/CreateRecipe'));
+const ShoppingCart = lazy(() => import('./nutriplan-pro/screens/ShoppingCart'));
+const ShoppingListDetail = lazy(() => import('./nutriplan-pro/screens/ShoppingListDetail'));
+const Profile = lazy(() => import('./nutriplan-pro/screens/Profile'));
+const Login = lazy(() => import('./nutriplan-pro/screens/Login'));
+const Register = lazy(() => import('./nutriplan-pro/screens/Register'));
+const Favorites = lazy(() => import('./nutriplan-pro/screens/Favorites'));
+const MyRecipes = lazy(() => import('./nutriplan-pro/screens/MyRecipes'));
+const MealHistory = lazy(() => import('./nutriplan-pro/screens/MealHistory'));
+const SavedLists = lazy(() => import('./nutriplan-pro/screens/SavedLists'));
+const WaterLog = lazy(() => import('./nutriplan-pro/screens/WaterLog'));
+const WaterHistory = lazy(() => import('./nutriplan-pro/screens/WaterHistory'));
+const Notifications = lazy(() => import('./nutriplan-pro/screens/Notifications'));
+const Scan = lazy(() => import('./nutriplan-pro/screens/Scan'));
+const LandingPage = lazy(() => import('./nutriplan-pro/screens/LandingPage'));
+const Checkout = lazy(() => import('./nutriplan-pro/screens/Checkout'));
+const ThankYou = lazy(() => import('./nutriplan-pro/screens/ThankYou'));
+
+const LoadingFallback = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background-light dark:bg-background-dark">
+    <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+  </div>
+);
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
@@ -42,53 +50,51 @@ const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background-light dark:bg-background-dark">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      </div>
-    );
+    return <LoadingFallback />;
   }
 
   return (
     <>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login onLogin={() => { }} />} />
-        <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register onRegister={() => { }} />} />
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login onLogin={() => { }} />} />
+          <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register onRegister={() => { }} />} />
 
-        <Route
-          path="/*"
-          element={
-            user ? (
-              <AppLayout>
-                <Routes>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/search" element={<Search />} />
-                  <Route path="/recipe/:id" element={<RecipeDetails />} />
-                  <Route path="/planner" element={<MealPlanner />} />
-                  <Route path="/create-recipe" element={<CreateRecipe />} />
-                  <Route path="/cart" element={<ShoppingCart />} />
-                  <Route path="/cart/:listId" element={<ShoppingListDetail />} />
-                  <Route path="/profile" element={<Profile onLogout={() => { }} />} />
-                  <Route path="/favorites" element={<Favorites />} />
-                  <Route path="/my-recipes" element={<MyRecipes />} />
-                  <Route path="/history" element={<MealHistory />} />
-                  <Route path="/saved-lists" element={<SavedLists />} />
-                  <Route path="/water-log" element={<WaterLog />} />
-                  <Route path="/water-history" element={<WaterHistory />} />
-                  <Route path="/notifications" element={<Notifications />} />
-                  <Route path="/scan" element={<Scan />} />
-                  <Route path="/checkout/:plan" element={<Checkout />} />
-                  <Route path="/thank-you" element={<ThankYou />} />
-                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                </Routes>
-              </AppLayout>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
-      </Routes>
+          <Route
+            path="/*"
+            element={
+              user ? (
+                <AppLayout>
+                  <Routes>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/search" element={<Search />} />
+                    <Route path="/recipe/:id" element={<RecipeDetails />} />
+                    <Route path="/planner" element={<MealPlanner />} />
+                    <Route path="/create-recipe" element={<CreateRecipe />} />
+                    <Route path="/cart" element={<ShoppingCart />} />
+                    <Route path="/cart/:listId" element={<ShoppingListDetail />} />
+                    <Route path="/profile" element={<Profile onLogout={() => { }} />} />
+                    <Route path="/favorites" element={<Favorites />} />
+                    <Route path="/my-recipes" element={<MyRecipes />} />
+                    <Route path="/history" element={<MealHistory />} />
+                    <Route path="/saved-lists" element={<SavedLists />} />
+                    <Route path="/water-log" element={<WaterLog />} />
+                    <Route path="/water-history" element={<WaterHistory />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/scan" element={<Scan />} />
+                    <Route path="/checkout/:plan" element={<Checkout />} />
+                    <Route path="/thank-you" element={<ThankYou />} />
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  </Routes>
+                </AppLayout>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+        </Routes>
+      </Suspense>
       <AlertModal />
       <ConfirmationModal />
     </>
