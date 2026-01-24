@@ -112,7 +112,7 @@ const WaterLog: React.FC = () => {
                             cy="128"
                         />
                         <circle
-                            className="text-primary transition-all duration-500 ease-out"
+                            className="text-blue-500 transition-all duration-500 ease-out"
                             strokeWidth="12"
                             strokeDasharray={2 * Math.PI * 120}
                             strokeDashoffset={2 * Math.PI * 120 * (1 - percentage / 100)}
@@ -126,8 +126,8 @@ const WaterLog: React.FC = () => {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <div className="relative flex items-center justify-center w-12 h-12">
-                            <span className="material-symbols-outlined text-primary absolute -translate-x-3 -translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 0" }}>water_drop</span>
-                            <span className="material-symbols-outlined text-primary relative z-10 translate-x-1 translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 1" }}>water_drop</span>
+                            <span className="material-symbols-outlined text-blue-500 absolute -translate-x-3 -translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 0" }}>water_drop</span>
+                            <span className="material-symbols-outlined text-blue-500 relative z-10 translate-x-1 translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 1" }}>water_drop</span>
                         </div>
                         <span className="text-4xl font-black mt-2">{(currentWater / 1000).toFixed(1)}L</span>
                         <span className="text-slate-500 text-sm">da meta de {(goal / 1000).toFixed(1)}L</span>
@@ -139,10 +139,15 @@ const WaterLog: React.FC = () => {
                         <button
                             key={amount}
                             onClick={() => addWater(amount)}
-                            className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800 active:scale-95 transition"
+                            className="flex flex-col items-center justify-between gap-2 p-4 rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800 active:scale-95 transition min-h-[100px]"
                         >
-                            <GlassWater className="text-primary" size={24} />
-                            <span className="font-bold">{amount}ml</span>
+                            <div className="flex-1 flex items-center justify-center">
+                                <GlassWater
+                                    className="text-blue-500"
+                                    size={amount === 200 ? 20 : amount === 300 ? 28 : 36}
+                                />
+                            </div>
+                            <span className="font-bold shrink-0">{amount}ml</span>
                         </button>
                     ))}
                 </div>
@@ -156,7 +161,7 @@ const WaterLog: React.FC = () => {
                     </button>
 
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700">
-                        <Bell className="text-primary" size={24} />
+                        <Bell className="text-blue-500" size={24} />
                         <div className="flex-1">
                             <p className="text-sm font-semibold">Lembretes de Água</p>
                             <p className="text-xs text-slate-500">Receba notificações a cada 2 horas</p>
@@ -181,7 +186,7 @@ const WaterLog: React.FC = () => {
                                     .update({ lembretes_agua: newStatus })
                                     .eq('id', user?.id);
                             }}
-                            className={`relative w-12 h-6 rounded-full transition-colors ${remindersActive ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'
+                            className={`relative w-12 h-6 rounded-full transition-colors ${remindersActive ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
                                 }`}
                         >
                             <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${remindersActive ? 'translate-x-6' : 'translate-x-0'
