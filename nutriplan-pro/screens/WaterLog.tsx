@@ -95,64 +95,102 @@ const WaterLog: React.FC = () => {
         }
     };
 
-    const addWater = (amount: number) => {
-        setCurrentWater(prevWater => {
-            const newAmount = prevWater + amount;
+    const addWater = async (amount: number) => {
+        if (!user) return;
 
-            // Perform the async operation right here
-            (async () => {
-                const now = new Date();
-                const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const previousWater = currentWater;
+        const newAmount = currentWater + amount;
 
-                const { error } = await supabase
-                    .from('perfis_usuario')
-                    .update({
-                        consumo_agua_hoje: newAmount,
-                        data_ultimo_reset_agua: today
-                    })
-                    .eq('id', user?.id);
+        // Optimistic update
+        setCurrentWater(newAmount);
 
-                if (error) {
-                    console.error('Failed to update water intake, reverting state.');
-                    // Revert the state change if the DB update fails
-                    setCurrentWater(p => p - amount);
-                } else {
-                    // Also update history table
-                    await supabase
-                        .from('historico_consumo_agua')
-                        .upsert({
-                            usuario_id: user?.id,
-                            data: today,
-                            quantidade_ml: newAmount
-                        }, {
-                            onConflict: 'usuario_id,data'
-                        });
+        try {
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+            // 1. Update profile (Primary goal)
+            const { error: profileError } = await supabase
+                .from('perfis_usuario')
+                .update({
+                    consumo_agua_hoje: newAmount,
+                    data_ultimo_reset_agua: today
+                })
+                .eq('id', user.id);
+
+            if (profileError) {
+                console.error('Profile update error:', profileError);
+                throw new Error('Falha ao atualizar perfil');
+            }
+
+            // 2. Update history table (Secondary, non-blocking for the user)
+            // We do this in a separate try-catch so it doesn't revert the UI if the table is missing
+            try {
+                const { error: historyError } = await supabase
+                    .from('historico_consumo_agua')
+                    .upsert({
+                        usuario_id: user.id,
+                        data: today,
+                        quantidade_ml: newAmount
+                    }, {
+                        onConflict: 'usuario_id,data'
+                    });
+
+                if (historyError) {
+                    console.warn('History table update failed (maybe table is missing?):', historyError);
                 }
-            })();
+            } catch (hError) {
+                console.warn('Silent error updating history:', hError);
+            }
 
-            return newAmount;
-        });
+        } catch (error) {
+            console.error('Final addWater catch:', error);
+            // Revert on error only if the primary update failed
+            setCurrentWater(previousWater);
+            alert('Erro ao salvar consumo. Verifique sua conexão e tente novamente.');
+        }
     };
 
     const resetWater = async () => {
-        setCurrentWater(0);
-        await supabase
-            .from('perfis_usuario')
-            .update({ consumo_agua_hoje: 0 })
-            .eq('id', user?.id);
+        if (!user) return;
 
-        // Update history table for today
-        const now = new Date();
-        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        await supabase
-            .from('historico_consumo_agua')
-            .upsert({
-                usuario_id: user?.id,
-                data: today,
-                quantidade_ml: 0
-            }, {
-                onConflict: 'usuario_id,data'
-            });
+        const previousWater = currentWater;
+        setCurrentWater(0);
+
+        try {
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+            // 1. Update profile
+            const { error: profileError } = await supabase
+                .from('perfis_usuario')
+                .update({
+                    consumo_agua_hoje: 0,
+                    data_ultimo_reset_agua: today
+                })
+                .eq('id', user.id);
+
+            if (profileError) throw profileError;
+
+            // 2. Update history table (non-blocking)
+            try {
+                await supabase
+                    .from('historico_consumo_agua')
+                    .upsert({
+                        usuario_id: user.id,
+                        data: today,
+                        quantidade_ml: 0
+                    }, {
+                        onConflict: 'usuario_id,data'
+                    });
+            } catch (hError) {
+                console.warn('Silent error during reset history:', hError);
+            }
+
+        } catch (error) {
+            console.error('Reset water error:', error);
+            setCurrentWater(previousWater);
+            alert('Erro ao zerar consumo. Tente novamente.');
+        }
     };
 
     const saveSettings = async () => {
@@ -171,7 +209,7 @@ const WaterLog: React.FC = () => {
         setShowSettings(false);
     };
 
-    const percentage = Math.min(Math.round((currentWater / goal) * 100), 100);
+    const percentage = Math.min(Math.round((Math.max(0, currentWater) / goal) * 100), 100);
 
     return (
         <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-white pb-10">
@@ -221,7 +259,7 @@ const WaterLog: React.FC = () => {
                             <span className="material-symbols-outlined text-blue-500 absolute -translate-x-3 -translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 0" }}>water_drop</span>
                             <span className="material-symbols-outlined text-blue-500 relative z-10 translate-x-1 translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 1" }}>water_drop</span>
                         </div>
-                        <span className="text-4xl font-black mt-2">{(currentWater / 1000).toFixed(1)}L</span>
+                        <span className="text-4xl font-black mt-2">{(Math.max(0, currentWater) / 1000).toFixed(1)}L</span>
                         <span className="text-slate-500 text-sm">da meta de {(goal / 1000).toFixed(1)}L</span>
                     </div>
                 </div>

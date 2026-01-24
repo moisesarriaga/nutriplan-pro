@@ -230,9 +230,13 @@ const WaterHistory: React.FC = () => {
                     <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
                         <ArrowLeft size={24} />
                     </button>
-                    <div className="size-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                    <button
+                        onClick={() => navigate('/profile')}
+                        className="size-10 rounded-full bg-blue-500/10 flex items-center justify-center hover:bg-blue-500/20 active:scale-95 transition-all outline-none"
+                        title="Ver Perfil"
+                    >
                         <span className="material-symbols-outlined text-blue-500 text-[24px]">person</span>
-                    </div>
+                    </button>
                 </div>
                 <h1 className="text-3xl font-black tracking-tight flex items-center gap-2">
                     Olá, {userName || 'Atleta'}
