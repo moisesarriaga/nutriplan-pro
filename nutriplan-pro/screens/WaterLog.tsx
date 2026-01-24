@@ -63,9 +63,11 @@ const WaterLog: React.FC = () => {
                 .single();
 
             if (data) {
-                // Lógica de reset diário baseada no banco de dados
-                const today = new Date().toISOString().split('T')[0];
-                const lastReset = data.data_ultimo_reset_agua;
+                // Lógica de reset diário baseada no banco de dados local
+                const now = new Date();
+                const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                // Extract only the date part YYYY-MM-DD if it has T... (ISO)
+                const lastReset = data.data_ultimo_reset_agua ? data.data_ultimo_reset_agua.split('T')[0] : null;
 
                 if (lastReset !== today) {
                     await supabase
@@ -98,7 +100,8 @@ const WaterLog: React.FC = () => {
         setCurrentWater(newAmount);
 
         // Update today's consumption and ensure the reset date is current
-        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         await supabase
             .from('perfis_usuario')
             .update({
@@ -127,7 +130,8 @@ const WaterLog: React.FC = () => {
             .eq('id', user?.id);
 
         // Update history table for today
-        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         await supabase
             .from('historico_consumo_agua')
             .upsert({
