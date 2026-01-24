@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 import { useNotification } from '../../contexts/NotificationContext';
+import { useRef } from 'react';
 
 interface ProfileProps {
   onLogout: () => void;
@@ -28,6 +29,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
   const { showNotification } = useNotification();
   const { theme, setTheme } = useTheme();
   const { subscription } = useSubscription();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -102,35 +104,72 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
     navigate('/login');
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadAvatar = async (file: File): Promise<string> => {
+    if (!user) throw new Error('Usuário não autenticado');
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
+  const handleDirectAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
+      if (!user) return;
+      if (!event.target.files || event.target.files.length === 0) return;
+
       setUploading(true);
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error('Você deve selecionar uma imagem para fazer o upload.');
-      }
-
       const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user?.id}/${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const newAvatarUrl = await uploadAvatar(file);
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
+      // Automatically update profile in DB for direct upload
+      const { error: updateError } = await supabase
+        .from('perfis_usuario')
+        .update({ avatar_url: newAvatarUrl })
+        .eq('id', user.id);
 
-      if (uploadError) throw uploadError;
+      if (updateError) throw updateError;
 
-      const { data } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      // Update local states
+      if (profile) setProfile({ ...profile, avatar_url: newAvatarUrl });
+      setEditForm({ ...editForm, avatar_url: newAvatarUrl });
 
-      setEditForm({ ...editForm, avatar_url: data.publicUrl });
+      showNotification('Foto de perfil atualizada com sucesso!', {
+        title: 'Sucesso'
+      });
     } catch (error: any) {
-      showNotification(error.message);
+      console.error('Error uploading avatar:', error);
+      showNotification(error.message || 'Erro ao fazer upload da foto');
     } finally {
       setUploading(false);
     }
   };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (!event.target.files || event.target.files.length === 0) return;
+      setUploading(true);
+      const file = event.target.files[0];
+      const newAvatarUrl = await uploadAvatar(file);
+      setEditForm({ ...editForm, avatar_url: newAvatarUrl });
+    } catch (error: any) {
+      showNotification(error.message || 'Erro ao fazer upload da foto');
+    } finally {
+      setUploading(false);
+    }
+  };
+
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -201,11 +240,23 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
             )}
           </div>
           <div
-            onClick={() => setIsEditing(true)}
-            className="absolute bottom-1 right-1 bg-primary text-black rounded-full p-1.5 border-2 border-background-dark flex items-center justify-center"
+            onClick={() => fileInputRef.current?.click()}
+            className="absolute bottom-1 right-1 bg-primary text-black rounded-full p-1.5 border-2 border-background-dark flex items-center justify-center cursor-pointer shadow-lg active:scale-95 transition-transform"
           >
-            <span className="material-symbols-rounded text-[18px]">photo_camera</span>
+            {uploading ? (
+              <div className="h-4.5 w-4.5 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
+            ) : (
+              <span className="material-symbols-rounded text-[18px]">photo_camera</span>
+            )}
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept="image/*"
+            onChange={handleDirectAvatarUpload}
+            disabled={uploading}
+          />
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-center">{profile?.nome || user?.user_metadata?.full_name || 'Usuário'}</h1>
         <p className="text-slate-500 dark:text-slate-400 text-base font-normal mt-1 text-center">{user?.email}</p>

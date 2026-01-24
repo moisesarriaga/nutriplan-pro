@@ -193,7 +193,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen pb-24">
+    <div className="flex flex-col min-h-screen pb-24 relative w-full">
       <header className="sticky top-0 z-20 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 pt-6 pb-2">
         <div className="flex items-center gap-3">
           <div className="relative cursor-pointer" onClick={() => navigate('/profile')}>
@@ -243,7 +243,10 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm flex flex-col gap-2">
+        <div
+          onClick={() => navigate('/water-log')}
+          className="rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm flex flex-col gap-2 cursor-pointer active:scale-95 transition-all hover:border-primary/30 border border-transparent"
+        >
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
               <span className="material-symbols-rounded text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>water_drop</span>
@@ -344,73 +347,68 @@ const Dashboard: React.FC = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          {/* Add Recipe Card */}
-          <button
-            onClick={() => navigate('/create-recipe')}
-            className="flex flex-col items-center justify-center gap-2 aspect-[4/5] rounded-2xl bg-slate-100/50 dark:bg-white/5 border-2 border-dashed border-slate-200 dark:border-white/10 active:scale-95 transition hover:border-primary/50 group"
-          >
-            <div className="size-12 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-black transition-all">
-              <span className="material-symbols-rounded text-[28px]">add</span>
-            </div>
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Nova Receita</span>
-          </button>
-
+        <div className="flex flex-col gap-4">
           {userRecipes.map((recipe) => (
             <div
               key={recipe.id}
               onClick={() => navigate(`/recipe/${recipe.id}`)}
-              className="relative group flex flex-col rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-white/5 overflow-hidden active:scale-[0.98] transition-all"
+              className="group flex gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-[#23482f]/50 transition cursor-pointer border border-slate-100 dark:border-white/5 shadow-sm"
             >
-              <div className="aspect-[4/5] overflow-hidden relative">
+              <div className="size-20 shrink-0 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/10 dark:to-primary/5 overflow-hidden flex items-center justify-center">
                 {recipe.imagem_url ? (
                   <div
                     className="w-full h-full bg-cover bg-center transition duration-500 group-hover:scale-110"
                     style={{ backgroundImage: `url(${recipe.imagem_url})` }}
                   ></div>
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary/10 to-transparent flex items-center justify-center">
-                    <span className="material-symbols-rounded text-primary/30 text-[48px]">restaurant</span>
-                  </div>
+                  <span className="material-symbols-rounded text-primary text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>
                 )}
-
-                {/* Floating Bagdes */}
-                <div className="absolute top-2 left-2 flex flex-col gap-1">
-                  <div className="bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-lg text-[9px] font-black text-white uppercase tracking-wider">
-                    {recipe.total_calories || 0} kcal
+              </div>
+              <div className="flex flex-col justify-center flex-1 min-w-0">
+                <div className="flex justify-between items-start">
+                  <h4 className="font-bold text-sm truncate">{recipe.nome}</h4>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/create-recipe?id=${recipe.id}`);
+                      }}
+                      className="text-slate-400 hover:text-primary transition-colors p-1 rounded-full hover:bg-primary/10"
+                      title="Editar receita"
+                    >
+                      <span className="material-symbols-rounded text-[20px]">edit</span>
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteRecipe(recipe.id, e)}
+                      className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+                      title="Excluir receita"
+                    >
+                      <span className="material-symbols-rounded text-[20px]">delete</span>
+                    </button>
                   </div>
                 </div>
-
-                <div className="absolute top-2 right-2 flex gap-1 transform translate-y-[-40px] group-hover:translate-y-0 transition-transform duration-300">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/create-recipe?id=${recipe.id}`);
-                    }}
-                    className="size-8 rounded-full bg-white/90 dark:bg-black/60 backdrop-blur-md text-slate-700 dark:text-white flex items-center justify-center shadow-lg hover:text-primary transition-colors"
-                  >
-                    <span className="material-symbols-rounded text-[16px]">edit</span>
-                  </button>
-                  <button
-                    onClick={(e) => handleDeleteRecipe(recipe.id, e)}
-                    className="size-8 rounded-full bg-white/90 dark:bg-black/60 backdrop-blur-md text-slate-700 dark:text-white flex items-center justify-center shadow-lg hover:text-red-500 transition-colors"
-                  >
-                    <span className="material-symbols-rounded text-[16px]">delete</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-3">
-                <h4 className="font-bold text-xs truncate leading-tight">{recipe.nome}</h4>
-                <div className="flex items-center gap-1 mt-1 text-[10px] text-slate-500 font-medium lowercase">
-                  <span className="material-symbols-rounded text-[12px]">schedule</span>
-                  <span>{recipe.tempo_preparo || '20min'}</span>
+                <p className="text-xs text-slate-500 dark:text-[#92c9a4] line-clamp-2 mt-1">
+                  {recipe.modo_preparo ? recipe.modo_preparo.substring(0, 80) + '...' : 'Sem descrição'}
+                </p>
+                <div className="flex items-center gap-3 mt-2 text-xs text-slate-400 dark:text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <span className="material-symbols-rounded text-[14px]">bolt</span> {recipe.total_calories || 0} kcal
+                  </span>
                 </div>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Floating Action Button */}
+      <button
+        onClick={() => navigate('/create-recipe')}
+        className="fixed bottom-28 right-[31.5%] z-40 size-14 rounded-full bg-primary text-background-dark shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-all hover:scale-110 group"
+        title="Nova Receita"
+      >
+        <span className="material-symbols-rounded text-[32px] group-hover:rotate-90 transition-transform duration-300">add</span>
+      </button>
 
       <Navigation />
     </div>
