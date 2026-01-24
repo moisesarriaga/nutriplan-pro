@@ -74,11 +74,19 @@ const SwipeableNotification: React.FC<NotificationItemProps> = ({ notif, onDelet
                     <notif.icon className="fill-current" size={24} />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start gap-2">
-                        <h3 className="font-bold text-sm truncate">{notif.title}</h3>
-                        <span className="text-[10px] text-slate-400 shrink-0">{notif.time}</span>
-                    </div>
+                    <h3 className="font-bold text-sm truncate">{notif.title}</h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{notif.description}</p>
+                </div>
+
+                <div className="flex flex-col items-end justify-between shrink-0 gap-1 mt-0.5">
+                    <span className="text-[10px] text-slate-400">{notif.time}</span>
+                    <button
+                        onClick={() => onDelete(notif.id)}
+                        className="hidden md:flex size-7 items-center justify-center rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all active:scale-90"
+                        title="Remover"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                    </button>
                 </div>
             </div>
         </div>
