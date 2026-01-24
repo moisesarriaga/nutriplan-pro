@@ -34,6 +34,40 @@ const WaterHistory: React.FC = () => {
     useEffect(() => {
         if (user) {
             fetchData();
+
+            // Set up real-time subscriptions
+            const profileSubscription = supabase
+                .channel('profile_changes')
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'perfis_usuario',
+                    filter: `id=eq.${user.id}`
+                }, (payload) => {
+                    const updatedProfile = payload.new;
+                    setGoal(updatedProfile.meta_agua_ml);
+                    setTodayConsumption(updatedProfile.consumo_agua_hoje || 0);
+                    setUserName(updatedProfile.nome || '');
+                })
+                .subscribe();
+
+            const historySubscription = supabase
+                .channel('history_changes')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'historico_consumo_agua',
+                    filter: `usuario_id=eq.${user.id}`
+                }, () => {
+                    // Refetch history when anything changes in the history table
+                    fetchData();
+                })
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(profileSubscription);
+                supabase.removeChannel(historySubscription);
+            };
         }
     }, [user]);
 
@@ -98,10 +132,16 @@ const WaterHistory: React.FC = () => {
 
         // vs ontem %
         let vsOntem = 0;
+        let diffLabel = "";
+
         if (yesterdayWater > 0) {
             vsOntem = Math.round(((currentWater - yesterdayWater) / yesterdayWater) * 100);
+            diffLabel = `${vsOntem >= 0 ? '+' : ''}${vsOntem}% vs ontem`;
         } else if (currentWater > 0) {
             vsOntem = 100;
+            diffLabel = `+${currentWater.toLocaleString()}ml vs ontem`;
+        } else {
+            diffLabel = "Inicie agora!";
         }
 
         // Média Semanal (including today)
@@ -140,6 +180,7 @@ const WaterHistory: React.FC = () => {
         return {
             today: currentWater,
             vsOntem,
+            diffLabel,
             avgWeekly,
             streak,
             goal
@@ -214,7 +255,7 @@ const WaterHistory: React.FC = () => {
                     <p className="text-xl font-black mb-1">{stats.today.toLocaleString()}ml</p>
                     <div className={`flex items-center gap-1 text-[10px] font-bold ${stats.vsOntem >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                         <span className="material-symbols-outlined text-[14px]">{stats.vsOntem >= 0 ? 'trending_up' : 'trending_down'}</span>
-                        {stats.vsOntem >= 0 ? '+' : ''}{stats.vsOntem}% vs ontem
+                        {stats.diffLabel}
                     </div>
                 </div>
 
