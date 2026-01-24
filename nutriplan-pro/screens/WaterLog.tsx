@@ -95,31 +95,43 @@ const WaterLog: React.FC = () => {
         }
     };
 
-    const addWater = async (amount: number) => {
-        const newAmount = currentWater + amount;
-        setCurrentWater(newAmount);
+    const addWater = (amount: number) => {
+        setCurrentWater(prevWater => {
+            const newAmount = prevWater + amount;
 
-        // Update today's consumption and ensure the reset date is current
-        const now = new Date();
-        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        await supabase
-            .from('perfis_usuario')
-            .update({
-                consumo_agua_hoje: newAmount,
-                data_ultimo_reset_agua: today
-            })
-            .eq('id', user?.id);
+            // Perform the async operation right here
+            (async () => {
+                const now = new Date();
+                const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-        // Update history table (upsert)
-        await supabase
-            .from('historico_consumo_agua')
-            .upsert({
-                usuario_id: user?.id,
-                data: today,
-                quantidade_ml: newAmount
-            }, {
-                onConflict: 'usuario_id,data'
-            });
+                const { error } = await supabase
+                    .from('perfis_usuario')
+                    .update({
+                        consumo_agua_hoje: newAmount,
+                        data_ultimo_reset_agua: today
+                    })
+                    .eq('id', user?.id);
+
+                if (error) {
+                    console.error('Failed to update water intake, reverting state.');
+                    // Revert the state change if the DB update fails
+                    setCurrentWater(p => p - amount);
+                } else {
+                    // Also update history table
+                    await supabase
+                        .from('historico_consumo_agua')
+                        .upsert({
+                            usuario_id: user?.id,
+                            data: today,
+                            quantidade_ml: newAmount
+                        }, {
+                            onConflict: 'usuario_id,data'
+                        });
+                }
+            })();
+
+            return newAmount;
+        });
     };
 
     const resetWater = async () => {
