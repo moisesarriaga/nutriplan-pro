@@ -31,6 +31,11 @@ const MealPlanner: React.FC = () => {
   const [groupName, setGroupName] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly' | 'monthly' | null>(null);
   const [aggregatedIngredients, setAggregatedIngredients] = useState<AggregatedIngredient[]>([]);
+  const [showRecipeSelector, setShowRecipeSelector] = useState(false);
+  const [mealTypeToAdd, setMealTypeToAdd] = useState('');
+  const [recipeSearchTerm, setRecipeSearchTerm] = useState('');
+  const [allSelectableRecipes, setAllSelectableRecipes] = useState<any[]>([]);
+  const [isAddingMeal, setIsAddingMeal] = useState(false);
 
   const days = [
     { label: 'Seg', name: 'Segunda' },
@@ -117,6 +122,78 @@ const MealPlanner: React.FC = () => {
       console.error('Error fetching meal plan:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSelectableRecipes = async () => {
+    if (!user) return;
+    try {
+      // Combinar Mock + DB
+      const { data: dbRecipes, error } = await supabase
+        .from('receitas')
+        .select('id, nome, total_calories, imagem_url')
+        .eq('usuario_id', user.id);
+
+      const formattedDb = (dbRecipes || []).map(r => ({
+        id: r.id,
+        name: r.nome,
+        image: r.imagem_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+        calories: r.total_calories || 0,
+        isCustom: true
+      }));
+
+      const formattedMock = MOCK_RECIPES.map(r => ({
+        id: r.id,
+        name: r.name,
+        image: r.image,
+        calories: r.calories,
+        isCustom: false
+      }));
+
+      setAllSelectableRecipes([...formattedDb, ...formattedMock]);
+    } catch (err) {
+      console.error('Error fetching selectable recipes:', err);
+    }
+  };
+
+  const addMealToPlan = async (recipe: any) => {
+    if (!user || isAddingMeal) return;
+    setIsAddingMeal(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('cardapio_semanal')
+        .insert({
+          usuario_id: user.id,
+          dia_semana: selectedDay,
+          tipo_refeicao: mealTypeToAdd,
+          receita_id: recipe.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Optimistic update
+      const newEntry = {
+        ...data,
+        receita: {
+          id: recipe.id,
+          name: recipe.name,
+          image: recipe.image,
+          calories: recipe.calories
+        }
+      };
+
+      setMealPlan(prev => [...prev, newEntry]);
+      showNotification(`${recipe.name} adicionada ao ${mealTypeToAdd}!`, { iconType: 'success' });
+      setShowRecipeSelector(false);
+      setRecipeSearchTerm('');
+    } catch (err) {
+      console.error('Error adding meal:', err);
+      showNotification('Erro ao adicionar receita. Tente novamente.', { iconType: 'error' });
+    } finally {
+      setIsAddingMeal(false);
     }
   };
 
@@ -324,21 +401,30 @@ const MealPlanner: React.FC = () => {
                         </div>
                         <button
                           onClick={(e) => { e.stopPropagation(); deleteMeal(entry.id); }}
-                          className="absolute top-2 right-2 p-1 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="p-1 px-2 text-gray-300 hover:text-red-500 transition-colors"
                         >
                           <Trash2 size={20} />
                         </button>
                       </div>
                     ))
-                  ) : (
+                  ) : null}
+
+                  {/* Always show Add button if less than 5 recipes (flexible plan) */}
+                  {meals.length < 5 && (
                     <button
-                      onClick={() => navigate('/search')}
-                      className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-surface-dark/50 py-6 hover:border-primary transition-all group"
+                      onClick={() => {
+                        setMealTypeToAdd(mealType);
+                        setShowRecipeSelector(true);
+                        fetchSelectableRecipes();
+                      }}
+                      className={`flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-surface-dark/50 hover:border-primary transition-all group ${meals.length > 0 ? 'py-3' : 'py-6'}`}
                     >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-primary group-hover:scale-110 transition-transform">
-                        <Plus size={20} />
+                      <div className={`flex items-center justify-center rounded-full bg-primary/20 text-primary group-hover:scale-110 transition-transform ${meals.length > 0 ? 'h-6 w-6' : 'h-8 w-8'}`}>
+                        <Plus size={meals.length > 0 ? 16 : 20} />
                       </div>
-                      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Adicionar {mealType}</span>
+                      <span className={`${meals.length > 0 ? 'text-[10px]' : 'text-xs'} font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider`}>
+                        Adicionar {meals.length > 0 ? 'mais' : mealType}
+                      </span>
                     </button>
                   )}
                 </div>
@@ -548,6 +634,133 @@ const MealPlanner: React.FC = () => {
               >
                 Adicionar {aggregatedIngredients.filter(i => i.checked).length} Itens
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de Seleção de Receita */}
+      {showRecipeSelector && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center p-0 sm:p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-surface-dark rounded-t-[32px] sm:rounded-3xl p-6 shadow-2xl flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300">
+            <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
+
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold">Adicionar {mealTypeToAdd}</h3>
+              <button
+                onClick={() => { setShowRecipeSelector(false); setRecipeSearchTerm(''); }}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full"
+              >
+                <Plus size={24} className="rotate-45" />
+              </button>
+            </div>
+
+            <div className="relative mb-6">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <span className="material-symbols-rounded">search</span>
+              </span>
+              <input
+                type="text"
+                placeholder="Buscar receitas..."
+                value={recipeSearchTerm}
+                onChange={(e) => setRecipeSearchTerm(e.target.value)}
+                className="w-full bg-gray-50 dark:bg-white/5 border-none rounded-2xl py-3.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary transition-all text-slate-900 dark:text-white"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-6 pr-1 no-scrollbar pb-10">
+              {/* Minhas Receitas Section */}
+              {allSelectableRecipes.filter(r => r.isCustom && r.name.toLowerCase().includes(recipeSearchTerm.toLowerCase())).length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">Minhas Receitas</h4>
+                  <div className="space-y-3">
+                    {allSelectableRecipes
+                      .filter(r => r.isCustom && r.name.toLowerCase().includes(recipeSearchTerm.toLowerCase()))
+                      .map((recipe) => (
+                        <div
+                          key={recipe.id}
+                          onClick={() => addMealToPlan(recipe)}
+                          className="flex items-center gap-4 p-3 rounded-2xl border border-transparent bg-gray-50 dark:bg-white/5 hover:border-primary/30 transition-all cursor-pointer group active:scale-[0.98]"
+                        >
+                          <div
+                            className="size-16 rounded-xl bg-center bg-cover bg-no-repeat"
+                            style={{ backgroundImage: `url(${recipe.image})` }}
+                          ></div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-sm truncate">{recipe.name}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-primary font-bold text-xs flex items-center gap-0.5">
+                                <Zap size={10} className="fill-current" /> {recipe.calories} kcal
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); navigate(`/recipe/${recipe.id}`); }}
+                              className="size-10 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-primary transition-colors flex items-center justify-center"
+                              title="Ver Detalhes"
+                            >
+                              <span className="material-symbols-rounded text-[20px]">visibility</span>
+                            </button>
+                            <div className="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-black transition-colors">
+                              <Plus size={20} />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Populares Section */}
+              {allSelectableRecipes.filter(r => !r.isCustom && r.name.toLowerCase().includes(recipeSearchTerm.toLowerCase())).length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">Populares esta semana</h4>
+                  <div className="space-y-3">
+                    {allSelectableRecipes
+                      .filter(r => !r.isCustom && r.name.toLowerCase().includes(recipeSearchTerm.toLowerCase()))
+                      .map((recipe) => (
+                        <div
+                          key={recipe.id}
+                          onClick={() => addMealToPlan(recipe)}
+                          className="flex items-center gap-4 p-3 rounded-2xl border border-transparent bg-gray-50 dark:bg-white/5 hover:border-primary/30 transition-all cursor-pointer group active:scale-[0.98]"
+                        >
+                          <div
+                            className="size-16 rounded-xl bg-center bg-cover bg-no-repeat"
+                            style={{ backgroundImage: `url(${recipe.image})` }}
+                          ></div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-sm truncate">{recipe.name}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-primary font-bold text-xs flex items-center gap-0.5">
+                                <Zap size={10} className="fill-current" /> {recipe.calories} kcal
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); navigate(`/recipe/${recipe.id}`); }}
+                              className="size-10 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-primary transition-colors flex items-center justify-center"
+                              title="Ver Detalhes"
+                            >
+                              <span className="material-symbols-rounded text-[20px]">visibility</span>
+                            </button>
+                            <div className="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-black transition-colors">
+                              <Plus size={20} />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {allSelectableRecipes.length > 0 &&
+                allSelectableRecipes.filter(r => r.name.toLowerCase().includes(recipeSearchTerm.toLowerCase())).length === 0 && (
+                  <div className="py-12 text-center">
+                    <p className="text-gray-500 text-sm">Nenhuma receita encontrada.</p>
+                  </div>
+                )}
             </div>
           </div>
         </div>

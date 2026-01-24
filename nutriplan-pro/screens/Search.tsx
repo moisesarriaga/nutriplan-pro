@@ -117,9 +117,6 @@ const Search: React.FC = () => {
                     <button className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 dark:bg-black/80 text-primary shadow-md">
                       <Plus size={20} />
                     </button>
-                    <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/40 backdrop-blur-md border border-white/10">
-                      <span className="text-[10px] font-bold text-white uppercase tracking-wider">MINHAS</span>
-                    </div>
                   </div>
                   <div className="p-3 flex flex-col flex-1 gap-1">
                     <h4 className="text-sm font-bold leading-tight line-clamp-2">{recipe.nome}</h4>
@@ -157,9 +154,6 @@ const Search: React.FC = () => {
                 <button className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 dark:bg-black/80 text-primary shadow-md">
                   <Plus size={20} />
                 </button>
-                <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/40 backdrop-blur-md border border-white/10">
-                  <span className="text-[10px] font-bold text-white uppercase tracking-wider">{recipe.category.split(' ')[0]}</span>
-                </div>
               </div>
               <div className="p-3 flex flex-col flex-1 gap-1">
                 <h4 className="text-sm font-bold leading-tight line-clamp-2">{recipe.name}</h4>

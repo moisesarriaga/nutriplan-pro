@@ -231,7 +231,6 @@ const MealHistory: React.FC = () => {
                                     >
                                         <RefreshCcw size={18} />
                                     </button>
-                                    <ChevronRight className="text-slate-400 group-hover:text-primary transition-colors" size={20} />
                                 </div>
                             </div>
                         ))}
