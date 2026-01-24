@@ -6,6 +6,7 @@ import { MOCK_RECIPES, MOCK_USER } from '../../constants';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { supabase } from '../../lib/supabaseClient';
+import { Plus } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -193,7 +194,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen pb-24 relative w-full">
+    <div className="flex flex-col min-h-screen pb-52 relative w-full">
       <header className="sticky top-0 z-20 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 pt-6 pb-2">
         <div className="flex items-center gap-3">
           <div className="relative cursor-pointer" onClick={() => navigate('/profile')}>
@@ -402,13 +403,18 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Floating Action Button */}
-      <button
-        onClick={() => navigate('/create-recipe')}
-        className="fixed bottom-28 right-[31.5%] z-40 size-14 rounded-full bg-primary text-background-dark shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-all hover:scale-110 group"
-        title="Nova Receita"
-      >
-        <span className="material-symbols-rounded text-[32px] group-hover:rotate-90 transition-transform duration-300">add</span>
-      </button>
+      <div className="fixed bottom-20 left-0 right-0 z-30 p-4 bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark pt-8">
+        <div className="max-w-md mx-auto">
+          <button
+            onClick={() => navigate('/create-recipe')}
+            className="flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl h-14 bg-primary text-black text-base font-bold shadow-lg shadow-primary/20 active:scale-[0.98] transition-all hover:scale-[1.02]"
+            title="Nova Receita"
+          >
+            <Plus size={24} />
+            Nova Receita
+          </button>
+        </div>
+      </div>
 
       <Navigation />
     </div>
