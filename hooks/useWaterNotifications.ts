@@ -28,7 +28,6 @@ export const useWaterNotifications = (iconPath = '/favicon.svg') => {
 
     const sendNotification = (title: string, body: string) => {
         if (permission === 'granted') {
-            // Garante que o caminho seja uma URL absoluta (ex: http://localhost:3000/favicon.ico)
             const fullIconPath = new URL(iconPath, window.location.origin).href;
 
             new Notification(title, {
@@ -40,16 +39,43 @@ export const useWaterNotifications = (iconPath = '/favicon.svg') => {
         }
     };
 
-    const scheduleWaterReminders = () => {
+    const isInsideSleepWindow = (start: string, end: string) => {
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+
+        const [startH, startM] = start.split(':').map(Number);
+        const [endH, endM] = end.split(':').map(Number);
+
+        const startTime = startH * 60 + startM;
+        const endTime = endH * 60 + endM;
+
+        if (startTime < endTime) {
+            // Sleep window is within the same day (e.g., 22:00 to 23:59)
+            return currentTime >= startTime && currentTime <= endTime;
+        } else {
+            // Sleep window spans midnight (e.g., 22:00 to 07:00)
+            return currentTime >= startTime || currentTime <= endTime;
+        }
+    };
+
+    const scheduleWaterReminders = (
+        intervalMinutes: number = 120,
+        sleepStart: string = '22:00',
+        sleepEnd: string = '07:00'
+    ) => {
         if (permission !== 'granted') return;
 
-        // Send reminder every 2 hours (7200000 ms)
+        // Clear existing interval if any (managed by the component usually, but good to be safe)
         const interval = setInterval(() => {
-            sendNotification(
-                '💧 Hora de beber água!',
-                'Lembre-se de se manter hidratado. Beba um copo de água agora!'
-            );
-        }, 7200000); // 2 hours
+            if (!isInsideSleepWindow(sleepStart, sleepEnd)) {
+                sendNotification(
+                    '💧 Hora de beber água!',
+                    'Lembre-se de se manter hidratado. Beba um copo de água agora!'
+                );
+            } else {
+                console.log('Skipping water reminder due to sleep window');
+            }
+        }, intervalMinutes * 60 * 1000);
 
         return () => clearInterval(interval);
     };

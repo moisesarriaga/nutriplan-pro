@@ -13,6 +13,10 @@ const WaterLog: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const { permission, requestPermission, scheduleWaterReminders } = useWaterNotifications();
     const [remindersActive, setRemindersActive] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [intervalMinutes, setIntervalMinutes] = useState(120);
+    const [sleepStart, setSleepStart] = useState('22:00');
+    const [sleepEnd, setSleepEnd] = useState('07:00');
 
     useEffect(() => {
         if (user) {
@@ -48,11 +52,28 @@ const WaterLog: React.FC = () => {
         }
     };
 
+    // Efeito para gerenciar o agendamento dos lembretes
+    useEffect(() => {
+        let cleanup: (() => void) | undefined;
+
+        if (remindersActive && permission === 'granted') {
+            console.log('Agendando lembretes:', { intervalMinutes, sleepStart, sleepEnd });
+            cleanup = scheduleWaterReminders(intervalMinutes, sleepStart, sleepEnd);
+        }
+
+        return () => {
+            if (cleanup) {
+                console.log('Limpando agendamento de lembretes');
+                cleanup();
+            }
+        };
+    }, [remindersActive, intervalMinutes, sleepStart, sleepEnd, permission]);
+
     const fetchWaterData = async () => {
         try {
             const { data, error } = await supabase
                 .from('perfis_usuario')
-                .select('consumo_agua_hoje, meta_agua_ml, lembretes_agua')
+                .select('consumo_agua_hoje, meta_agua_ml, lembretes_agua, intervalo_agua_minutos, hora_inicio_sono, hora_fim_sono')
                 .eq('id', user?.id)
                 .single();
 
@@ -60,11 +81,10 @@ const WaterLog: React.FC = () => {
                 setCurrentWater(data.consumo_agua_hoje || 0);
                 setGoal(data.meta_agua_ml || 2000);
                 setRemindersActive(data.lembretes_agua || false);
+                setIntervalMinutes(data.intervalo_agua_minutos || 120);
 
-                // If reminders should be active, ensure they are scheduled
-                if (data.lembretes_agua) {
-                    scheduleWaterReminders();
-                }
+                if (data.hora_inicio_sono) setSleepStart(data.hora_inicio_sono.substring(0, 5));
+                if (data.hora_fim_sono) setSleepEnd(data.hora_fim_sono.substring(0, 5));
             }
         } finally {
             setLoading(false);
@@ -86,6 +106,21 @@ const WaterLog: React.FC = () => {
             .from('perfis_usuario')
             .update({ consumo_agua_hoje: 0 })
             .eq('id', user?.id);
+    };
+
+    const saveSettings = async () => {
+        if (!user) return;
+
+        await supabase
+            .from('perfis_usuario')
+            .update({
+                intervalo_agua_minutos: intervalMinutes,
+                hora_inicio_sono: sleepStart,
+                hora_fim_sono: sleepEnd
+            })
+            .eq('id', user.id);
+
+        setShowSettings(false);
     };
 
     const percentage = Math.min(Math.round((currentWater / goal) * 100), 100);
@@ -155,46 +190,121 @@ const WaterLog: React.FC = () => {
                 <div className="mt-10 flex flex-col items-center gap-4">
                     <button
                         onClick={resetWater}
-                        className="text-slate-500 text-sm font-medium hover:text-red-500"
+                        className="text-slate-500 text-sm font-medium hover:text-red-500 transition-colors"
                     >
                         Zerar consumo de hoje
                     </button>
 
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700">
-                        <Bell className="text-blue-500" size={24} />
-                        <div className="flex-1">
-                            <p className="text-sm font-semibold">Lembretes de Água</p>
-                            <p className="text-xs text-slate-500">Receba notificações a cada 2 horas</p>
+                    <div className="flex items-stretch gap-4">
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 min-w-[280px]">
+                            <Bell className="text-blue-500" size={24} />
+                            <div className="flex-1">
+                                <p className="text-sm font-semibold">Lembretes de Água</p>
+                                <p className="text-xs text-slate-500">
+                                    A cada {intervalMinutes >= 60 ? `${intervalMinutes / 60}h` : `${intervalMinutes}min`}
+                                </p>
+                            </div>
+                            <button
+                                onClick={async () => {
+                                    const newStatus = !remindersActive;
+                                    if (newStatus && permission !== 'granted') {
+                                        const granted = await requestPermission();
+                                        if (!granted) return;
+                                    }
+
+                                    setRemindersActive(newStatus);
+
+                                    // Save to Supabase
+                                    await supabase
+                                        .from('perfis_usuario')
+                                        .update({ lembretes_agua: newStatus })
+                                        .eq('id', user?.id);
+                                }}
+                                className={`relative w-12 h-6 rounded-full transition-colors ${remindersActive ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
+                                    }`}
+                            >
+                                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${remindersActive ? 'translate-x-6' : 'translate-x-0'
+                                    }`} />
+                            </button>
                         </div>
+
                         <button
-                            onClick={async () => {
-                                const newStatus = !remindersActive;
-                                if (newStatus && permission !== 'granted') {
-                                    const granted = await requestPermission();
-                                    if (!granted) return;
-                                }
-
-                                if (newStatus) {
-                                    scheduleWaterReminders();
-                                }
-
-                                setRemindersActive(newStatus);
-
-                                // Save to Supabase
-                                await supabase
-                                    .from('perfis_usuario')
-                                    .update({ lembretes_agua: newStatus })
-                                    .eq('id', user?.id);
-                            }}
-                            className={`relative w-12 h-6 rounded-full transition-colors ${remindersActive ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
-                                }`}
+                            onClick={() => setShowSettings(true)}
+                            className="flex items-center justify-center px-4 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                         >
-                            <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${remindersActive ? 'translate-x-6' : 'translate-x-0'
-                                }`} />
+                            <span className="material-symbols-outlined text-slate-500" style={{ fontSize: '24px' }}>settings</span>
                         </button>
                     </div>
                 </div>
             </div>
+
+            {/* Settings Modal */}
+            {showSettings && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-surface-dark w-full max-w-md p-6 rounded-t-[32px] sm:rounded-3xl shadow-2xl animate-in slide-in-from-bottom duration-300">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold">Configurar Lembretes</h2>
+                            <button onClick={() => setShowSettings(false)} className="p-2 -mr-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/5">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <div className="space-y-6">
+                            <section>
+                                <label className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-3">Frequência das notificações</label>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {[30, 60, 120, 180, 240, 300].map((mins) => (
+                                        <button
+                                            key={mins}
+                                            onClick={() => setIntervalMinutes(mins)}
+                                            className={`py-2 px-3 rounded-xl border-2 transition-all font-medium text-sm ${intervalMinutes === mins
+                                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                                                : 'border-slate-100 dark:border-slate-800 hover:border-slate-300'
+                                                }`}
+                                        >
+                                            {mins >= 60 ? `${mins / 60}h` : `${mins}min`}
+                                        </button>
+                                    ))}
+                                </div>
+                            </section>
+
+                            <section>
+                                <label className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-3">Modo Sono (Sem notificações)</label>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1">
+                                        <span className="text-xs text-slate-400 block mb-1">Início</span>
+                                        <input
+                                            type="time"
+                                            value={sleepStart}
+                                            onChange={(e) => setSleepStart(e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <span className="text-xs text-slate-400 block mb-1">Fim</span>
+                                        <input
+                                            type="time"
+                                            value={sleepEnd}
+                                            onChange={(e) => setSleepEnd(e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-[10px] text-slate-400 mt-2 italic px-1">
+                                    As notificações serão pausadas automaticamente durante esse período.
+                                </p>
+                            </section>
+
+                            <button
+                                onClick={saveSettings}
+                                className="w-full py-4 rounded-2xl bg-blue-500 text-white font-bold hover:bg-blue-600 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20"
+                            >
+                                Salvar Configurações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
