@@ -498,7 +498,7 @@ const ShoppingListDetail: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">Concluir Lista</h3>
               <p className="text-sm text-slate-500 mb-6 px-2">
-                Todos os itens foram marcados! Deseja concluir esta lista e enviá-la para o histórico?
+                Todos os itens foram marcados. Concluir esta lista?
               </p>
             </div>
 
