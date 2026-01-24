@@ -70,8 +70,12 @@ const SwipeableNotification: React.FC<NotificationItemProps> = ({ notif, onDelet
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
             >
-                <div className={`size-12 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center ${notif.color} shrink-0`}>
-                    <notif.icon className="fill-current" size={24} />
+                <div className={`size-12 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center ${notif.color} shrink-0 text-center`}>
+                    {notif.iconType === 'material' ? (
+                        <span className="material-symbols-rounded text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>{notif.iconName}</span>
+                    ) : (
+                        <notif.icon className="fill-current" size={24} />
+                    )}
                 </div>
                 <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-sm truncate">{notif.title}</h3>
@@ -102,7 +106,8 @@ const Notifications: React.FC = () => {
             title: 'Meta de água atingida!',
             description: 'Parabéns! Você bebeu 2L de água hoje.',
             time: '2h atrás',
-            icon: Droplets,
+            iconType: 'material',
+            iconName: 'water_drop',
             color: 'text-blue-500'
         },
         {
