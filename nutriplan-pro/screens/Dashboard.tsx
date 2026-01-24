@@ -136,7 +136,7 @@ const Dashboard: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('receitas')
-        .select('id, nome, modo_preparo, total_calories, created_at, imagem_url')
+        .select('id, nome, modo_preparo, total_calories, created_at, imagem_url, tempo_preparo')
         .eq('usuario_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -304,120 +304,111 @@ const Dashboard: React.FC = () => {
 
       <div className="px-4 py-2">
         <h2 className="text-xl font-bold tracking-tight mb-3">Lista de Compras</h2>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <div
-            onClick={() => navigate('/cart')}
-            className="flex-1 relative overflow-hidden rounded-xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-white/5 cursor-pointer"
-          >
-            <div className="flex flex-col sm:flex-row">
-              <div className="p-5 flex-1 flex flex-col justify-center gap-4 z-10">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold">Weekly Groceries</h3>
-                    <span className="flex size-2 rounded-full bg-primary animate-pulse"></span>
-                  </div>
-                  <p className="text-slate-500 dark:text-[#92c9a4] text-sm">
-                    Você tem <span className="text-primary font-bold">12 itens</span> pendentes para comprar.
-                  </p>
+        <div
+          onClick={() => navigate('/cart')}
+          className="relative overflow-hidden rounded-xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-white/5 cursor-pointer"
+        >
+          <div className="flex flex-col sm:flex-row">
+            <div className="p-5 flex-1 flex flex-col justify-center gap-4 z-10">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-bold">Weekly Groceries</h3>
+                  <span className="flex size-2 rounded-full bg-primary animate-pulse"></span>
                 </div>
-                <button className="flex items-center justify-center gap-2 rounded-lg bg-primary h-10 px-5 text-sm font-bold text-background-dark shadow-lg shadow-primary/20">
-                  <span>Ver Lista</span>
-                  <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
-                </button>
+                <p className="text-slate-500 dark:text-[#92c9a4] text-sm">
+                  Você tem <span className="text-primary font-bold">12 itens</span> pendentes para comprar.
+                </p>
               </div>
-              <div
-                className="relative h-32 sm:h-auto sm:w-1/3 bg-cover bg-center"
-                style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBNp-rcyh4nX6sxrcGXBsu-ThFnB4WSAQrvzMLSSJ9Nn_Ky8fXih12OgA7r6NuQMAzYrFt_eBDu_piqtBujp3BCko7AJjYrAqWCEjcZbdI9ynhngdQg7VfeFnfq4NxRU9FTUTNXoDbEQxaC2Es-xicH0Zl7NXOu1KCgFRlsUCC1w7LSnuXD913TFtzuLkvrwjDTU6XJxAeTTnJbz8jX1vOP8XTNlzWINsJV9aStHyPx0RK4zaem-KWrRiyAtqVxiFDsdIipUuFf84c")' }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-l from-white/10 to-white dark:from-surface-dark/10 dark:to-surface-dark via-transparent sm:via-transparent sm:to-90%"></div>
-              </div>
+              <button className="flex items-center justify-center gap-2 rounded-lg bg-primary h-10 px-5 text-sm font-bold text-background-dark shadow-lg shadow-primary/20">
+                <span>Ver Lista</span>
+                <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
+              </button>
+            </div>
+            <div
+              className="relative h-32 sm:h-auto sm:w-1/3 bg-cover bg-center"
+              style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBNp-rcyh4nX6sxrcGXBsu-ThFnB4WSAQrvzMLSSJ9Nn_Ky8fXih12OgA7r6NuQMAzYrFt_eBDu_piqtBujp3BCko7AJjYrAqWCEjcZbdI9ynhngdQg7VfeFnfq4NxRU9FTUTNXoDbEQxaC2Es-xicH0Zl7NXOu1KCgFRlsUCC1w7LSnuXD913TFtzuLkvrwjDTU6XJxAeTTnJbz8jX1vOP8XTNlzWINsJV9aStHyPx0RK4zaem-KWrRiyAtqVxiFDsdIipUuFf84c")' }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-l from-white/10 to-white dark:from-surface-dark/10 dark:to-surface-dark via-transparent sm:via-transparent sm:to-90%"></div>
             </div>
           </div>
-
-          <button
-            onClick={() => navigate('/create-recipe')}
-            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5 active:scale-95 transition text-center shadow-sm w-full sm:w-32"
-          >
-            <div className="size-10 shrink-0 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 flex items-center justify-center">
-              <span className="material-symbols-rounded text-[20px]">menu_book</span>
-            </div>
-            <span className="text-xs font-bold leading-tight">Nova Receita</span>
-          </button>
         </div>
       </div>
 
 
 
-      <div className="px-4 pb-6">
-        <h2 className="text-xl font-bold tracking-tight mb-3">Minhas Receitas</h2>
-        <div className="flex flex-col gap-4">
-          {userRecipes.length > 0 ? (
-            userRecipes.map((recipe) => (
-              <div
-                key={recipe.id}
-                onClick={() => navigate(`/recipe/${recipe.id}`)}
-                className="group flex gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-[#23482f]/50 transition cursor-pointer"
-              >
-                <div className="size-20 shrink-0 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/10 dark:to-primary/5 overflow-hidden flex items-center justify-center">
-                  {recipe.imagem_url ? (
-                    <div
-                      className="w-full h-full bg-cover bg-center transition duration-500 group-hover:scale-110"
-                      style={{ backgroundImage: `url(${recipe.imagem_url})` }}
-                    ></div>
-                  ) : (
-                    <span className="material-symbols-rounded text-primary text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>
-                  )}
-                </div>
-                <div className="flex flex-col justify-center flex-1">
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-bold text-sm">{recipe.nome}</h4>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/create-recipe?id=${recipe.id}`);
-                        }}
-                        className="text-slate-400 hover:text-primary transition-colors p-1 rounded-full hover:bg-primary/10"
-                        title="Editar receita"
-                      >
-                        <span className="material-symbols-rounded text-[20px]">edit</span>
-                      </button>
-                      <button
-                        onClick={(e) => handleDeleteRecipe(recipe.id, e)}
-                        className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
-                        title="Excluir receita"
-                      >
-                        <span className="material-symbols-rounded text-[20px]">delete</span>
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-[#92c9a4] line-clamp-2 mt-1">
-                    {recipe.modo_preparo ? recipe.modo_preparo.substring(0, 80) + '...' : 'Sem descrição'}
-                  </p>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-slate-400 dark:text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <span className="material-symbols-rounded text-[14px]">bolt</span> {recipe.total_calories || 0} kcal
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-xl bg-white dark:bg-surface-dark p-8 border-2 border-dashed border-slate-200 dark:border-slate-800">
-              <span className="material-symbols-rounded text-slate-400 text-[48px]">menu_book</span>
-              <div className="text-center">
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Nenhuma receita criada ainda</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Crie sua primeira receita usando o botão acima</p>
-              </div>
-              <button
-                onClick={() => navigate('/create-recipe')}
-                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-black shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
-              >
-                <span className="material-symbols-rounded text-[18px]">add</span>
-                Nova Receita
-              </button>
+      <div className="px-4 pb-12">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold tracking-tight">Minhas Receitas</h2>
+          <button onClick={() => navigate('/my-recipes')} className="text-xs font-medium text-primary active:opacity-70 transition-opacity">
+            Gerenciar
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          {/* Add Recipe Card */}
+          <button
+            onClick={() => navigate('/create-recipe')}
+            className="flex flex-col items-center justify-center gap-2 aspect-[4/5] rounded-2xl bg-slate-100/50 dark:bg-white/5 border-2 border-dashed border-slate-200 dark:border-white/10 active:scale-95 transition hover:border-primary/50 group"
+          >
+            <div className="size-12 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-black transition-all">
+              <span className="material-symbols-rounded text-[28px]">add</span>
             </div>
-          )}
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Nova Receita</span>
+          </button>
+
+          {userRecipes.map((recipe) => (
+            <div
+              key={recipe.id}
+              onClick={() => navigate(`/recipe/${recipe.id}`)}
+              className="relative group flex flex-col rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-white/5 overflow-hidden active:scale-[0.98] transition-all"
+            >
+              <div className="aspect-[4/5] overflow-hidden relative">
+                {recipe.imagem_url ? (
+                  <div
+                    className="w-full h-full bg-cover bg-center transition duration-500 group-hover:scale-110"
+                    style={{ backgroundImage: `url(${recipe.imagem_url})` }}
+                  ></div>
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary/10 to-transparent flex items-center justify-center">
+                    <span className="material-symbols-rounded text-primary/30 text-[48px]">restaurant</span>
+                  </div>
+                )}
+
+                {/* Floating Bagdes */}
+                <div className="absolute top-2 left-2 flex flex-col gap-1">
+                  <div className="bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-lg text-[9px] font-black text-white uppercase tracking-wider">
+                    {recipe.total_calories || 0} kcal
+                  </div>
+                </div>
+
+                <div className="absolute top-2 right-2 flex gap-1 transform translate-y-[-40px] group-hover:translate-y-0 transition-transform duration-300">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/create-recipe?id=${recipe.id}`);
+                    }}
+                    className="size-8 rounded-full bg-white/90 dark:bg-black/60 backdrop-blur-md text-slate-700 dark:text-white flex items-center justify-center shadow-lg hover:text-primary transition-colors"
+                  >
+                    <span className="material-symbols-rounded text-[16px]">edit</span>
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteRecipe(recipe.id, e)}
+                    className="size-8 rounded-full bg-white/90 dark:bg-black/60 backdrop-blur-md text-slate-700 dark:text-white flex items-center justify-center shadow-lg hover:text-red-500 transition-colors"
+                  >
+                    <span className="material-symbols-rounded text-[16px]">delete</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-3">
+                <h4 className="font-bold text-xs truncate leading-tight">{recipe.nome}</h4>
+                <div className="flex items-center gap-1 mt-1 text-[10px] text-slate-500 font-medium lowercase">
+                  <span className="material-symbols-rounded text-[12px]">schedule</span>
+                  <span>{recipe.tempo_preparo || '20min'}</span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
