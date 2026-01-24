@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
-import { ShoppingBasket, ChevronRight, Plus } from 'lucide-react';
+import { ShoppingBasket, ChevronRight, Plus, History } from 'lucide-react';
 
 interface ShoppingListGroup {
   id: string;
@@ -21,7 +21,6 @@ const ShoppingCart: React.FC = () => {
   const { user } = useAuth();
   const [groups, setGroups] = useState<ShoppingListGroup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
 
   useEffect(() => {
     if (user) {
@@ -90,54 +89,30 @@ const ShoppingCart: React.FC = () => {
           <span className="material-symbols-rounded text-[20px]">arrow_back</span>
         </button>
         <h1 className="text-lg font-bold">Minhas Listas</h1>
-        <div className="size-10"></div>
+        <button onClick={() => navigate('/history')} className="flex size-10 items-center justify-center rounded-full text-slate-900 dark:text-white hover:bg-black/5 transition-colors">
+          <History size={20} />
+        </button>
       </header>
-
-      {/* Tabs */}
-      <div className="px-4 mt-2">
-        <div className="flex p-1 bg-slate-100 dark:bg-white/5 rounded-2xl">
-          <button
-            onClick={() => setActiveTab('active')}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'active' ? 'bg-white dark:bg-surface-dark shadow-sm text-primary' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-          >
-            Ativas
-          </button>
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'history' ? 'bg-white dark:bg-surface-dark shadow-sm text-primary' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-          >
-            Histórico
-          </button>
-        </div>
-      </div>
 
       <div className="flex-1 px-4 py-6">
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
           </div>
-        ) : groups.filter(g => activeTab === 'active' ? !g.concluido : g.concluido).length === 0 ? (
+        ) : groups.filter(g => !g.concluido).length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="size-20 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-4">
-              {activeTab === 'active' ? (
-                <ShoppingBasket className="text-slate-400" size={32} />
-              ) : (
-                <span className="material-symbols-rounded text-slate-400 text-[32px]">history</span>
-              )}
+              <ShoppingBasket className="text-slate-400" size={32} />
             </div>
-            <h3 className="text-lg font-bold mb-2">
-              {activeTab === 'active' ? 'Nenhuma lista ativa' : 'Histórico vazio'}
-            </h3>
+            <h3 className="text-lg font-bold mb-2">Nenhuma lista ativa</h3>
             <p className="text-sm text-slate-500 mb-6 max-w-[200px]">
-              {activeTab === 'active'
-                ? 'Gere uma nova lista de compras a partir do seu cardápio.'
-                : 'Suas listas finalizadas aparecerão aqui.'}
+              Gere uma nova lista de compras a partir do seu cardápio.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
             {groups
-              .filter(group => activeTab === 'active' ? !group.concluido : group.concluido)
+              .filter(group => !group.concluido)
               .map((group) => (
                 <div
                   key={group.id}
@@ -178,7 +153,7 @@ const ShoppingCart: React.FC = () => {
       </div>
 
       <Navigation />
-    </div>
+    </div >
   );
 };
 

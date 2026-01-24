@@ -270,9 +270,7 @@ const MealPlanner: React.FC = () => {
       <header className="sticky top-0 z-20 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 pb-2 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
         <div className="w-12"></div>
         <h2 className="text-lg font-bold flex-1 text-center">Cardápio Semanal</h2>
-        <button className="flex items-center justify-center rounded-full p-2 hover:bg-black/5 dark:hover:bg-white/10">
-          <History size={24} />
-        </button>
+        <div className="w-12"></div>
       </header>
 
       <div className="sticky top-[60px] z-10 bg-background-light dark:bg-background-dark py-3 pl-4 border-b border-gray-100 dark:border-gray-800 shadow-sm overflow-x-auto no-scrollbar">

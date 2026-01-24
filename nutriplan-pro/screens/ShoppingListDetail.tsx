@@ -32,6 +32,7 @@ const ShoppingListDetail: React.FC = () => {
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [tempGroupName, setTempGroupName] = useState('');
   const [showDuplicateRenameConfirm, setShowDuplicateRenameConfirm] = useState(false);
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const { hasFeature } = useSubscription();
 
   const canSumPrices = hasFeature('price_sum');
@@ -100,12 +101,15 @@ const ShoppingListDetail: React.FC = () => {
   };
 
   const deleteItem = async (nomeItem: string) => {
-    if (!user) return;
+    if (!user || !listId) return;
+    const decodedListId = decodeURIComponent(listId);
+
     const { error } = await supabase
       .from('lista_precos_mercado')
       .delete()
       .eq('usuario_id', user.id)
-      .eq('nome_item', nomeItem);
+      .eq('nome_item', nomeItem)
+      .eq('grupo_nome', decodedListId);
 
     if (!error) {
       setItems(prev => prev.filter(i => i.nome_item !== nomeItem));
@@ -113,15 +117,20 @@ const ShoppingListDetail: React.FC = () => {
   };
 
   const addItem = async () => {
-    if (!user || !newItemName.trim()) return;
+    if (!user || !newItemName.trim() || !listId) return;
     setIsAdding(true);
+
+    const decodedListId = decodeURIComponent(listId);
+
     const newItem: Partial<ShoppingItem> = {
       usuario_id: user.id,
       nome_item: newItemName,
       quantidade: 1,
       ultimo_preco_informado: 0,
       unidade_preco: 'un',
-      comprado: false
+      comprado: false,
+      grupo_nome: decodedListId,
+      concluido: false
     };
 
     const { data, error } = await supabase
@@ -139,15 +148,17 @@ const ShoppingListDetail: React.FC = () => {
 
   const togglePurchased = async (nomeItem: string) => {
     const item = items.find(i => i.nome_item === nomeItem);
-    if (!item || !user) return;
+    if (!item || !user || !listId) return;
 
+    const decodedListId = decodeURIComponent(listId);
     const newCompradoState = !item.comprado;
 
     const { error } = await supabase
       .from('lista_precos_mercado')
       .update({ comprado: newCompradoState })
       .eq('usuario_id', user.id)
-      .eq('nome_item', nomeItem);
+      .eq('nome_item', nomeItem)
+      .eq('grupo_nome', decodedListId);
 
     if (!error) {
       setItems(prev => prev.map(i =>
@@ -213,7 +224,7 @@ const ShoppingListDetail: React.FC = () => {
       .eq('grupo_nome', decodedListId);
 
     if (!error) {
-      navigate('/cart'); // Return to overview
+      navigate('/history'); // Send to dedicated history page
     }
   };
 
@@ -221,10 +232,20 @@ const ShoppingListDetail: React.FC = () => {
   const allChecked = items.length > 0 && items.every(i => i.comprado);
   const isHistoryList = items.length > 0 && items[0].concluido;
 
+  useEffect(() => {
+    if (allChecked && !isHistoryList && !loading && !showFinishConfirm) {
+      // Small delay to ensure the UI updates the last checkmark before showing modal
+      const timer = setTimeout(() => {
+        setShowFinishConfirm(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [allChecked, isHistoryList, loading]);
+
   return (
     <div className="flex flex-col min-h-screen pb-52">
       <header className="sticky top-0 z-20 flex items-center justify-between bg-background-light/90 dark:bg-background-dark/90 px-4 py-4 backdrop-blur-md">
-        <button onClick={() => navigate('/cart')} className="flex size-10 items-center justify-center rounded-full text-slate-900 dark:text-white hover:bg-black/5">
+        <button onClick={() => navigate(-1)} className="flex size-10 items-center justify-center rounded-full text-slate-900 dark:text-white hover:bg-black/5">
           <span className="material-symbols-rounded text-[20px]">arrow_back</span>
         </button>
         <div className="flex items-center gap-2">
@@ -252,9 +273,13 @@ const ShoppingListDetail: React.FC = () => {
           <button
             onClick={addItem}
             disabled={isAdding || !newItemName.trim()}
-            className="h-12 px-4 bg-primary text-background-dark rounded-xl font-bold text-sm shadow-sm active:scale-95 transition-all disabled:opacity-50"
+            className="h-12 w-12 flex items-center justify-center bg-primary text-background-dark rounded-xl shadow-sm active:scale-95 transition-all disabled:opacity-50 shrink-0"
           >
-            {isAdding ? '...' : 'Add'}
+            {isAdding ? (
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-background-dark border-t-transparent"></div>
+            ) : (
+              <span className="material-symbols-rounded text-[24px]">add</span>
+            )}
           </button>
         </div>
 
@@ -378,7 +403,7 @@ const ShoppingListDetail: React.FC = () => {
             </span>
           </div>
           <button
-            onClick={allChecked && !isHistoryList ? finishList : (!canSumPrices ? () => setShowUpgradeModal(true) : undefined)}
+            onClick={allChecked && !isHistoryList ? () => setShowFinishConfirm(true) : (!canSumPrices ? () => setShowUpgradeModal(true) : undefined)}
             className={`flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 font-bold text-black shadow-lg active:scale-[0.98] transition-all ${allChecked && !isHistoryList ? 'bg-primary shadow-primary/30' : 'bg-primary/80 shadow-primary/20'}`}
           >
             <span>{allChecked && !isHistoryList ? 'Finalizar Compra' : 'Confirmar Pedido'}</span>
@@ -454,6 +479,38 @@ const ShoppingListDetail: React.FC = () => {
               </button>
               <button
                 onClick={executeRename}
+                className="flex-1 h-12 rounded-xl bg-primary text-black font-bold shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
+              >
+                Sim
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Finalização */}
+      {showFinishConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-white/5">
+            <div className="flex flex-col items-center text-center">
+              <div className="size-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4">
+                <span className="material-symbols-rounded text-[32px]">task_alt</span>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Concluir Lista</h3>
+              <p className="text-sm text-slate-500 mb-6 px-2">
+                Todos os itens foram marcados! Deseja concluir esta lista e enviá-la para o histórico?
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowFinishConfirm(false)}
+                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border border-slate-200 dark:border-slate-800"
+              >
+                Não
+              </button>
+              <button
+                onClick={finishList}
                 className="flex-1 h-12 rounded-xl bg-primary text-black font-bold shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
               >
                 Sim

@@ -304,56 +304,49 @@ const Dashboard: React.FC = () => {
 
       <div className="px-4 py-2">
         <h2 className="text-xl font-bold tracking-tight mb-3">Lista de Compras</h2>
-        <div
-          onClick={() => navigate('/cart')}
-          className="relative overflow-hidden rounded-xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-white/5 cursor-pointer"
-        >
-          <div className="flex flex-col sm:flex-row">
-            <div className="p-5 flex-1 flex flex-col justify-center gap-4 z-10">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold">Weekly Groceries</h3>
-                  <span className="flex size-2 rounded-full bg-primary animate-pulse"></span>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div
+            onClick={() => navigate('/cart')}
+            className="flex-1 relative overflow-hidden rounded-xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-white/5 cursor-pointer"
+          >
+            <div className="flex flex-col sm:flex-row">
+              <div className="p-5 flex-1 flex flex-col justify-center gap-4 z-10">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold">Weekly Groceries</h3>
+                    <span className="flex size-2 rounded-full bg-primary animate-pulse"></span>
+                  </div>
+                  <p className="text-slate-500 dark:text-[#92c9a4] text-sm">
+                    Você tem <span className="text-primary font-bold">12 itens</span> pendentes para comprar.
+                  </p>
                 </div>
-                <p className="text-slate-500 dark:text-[#92c9a4] text-sm">
-                  Você tem <span className="text-primary font-bold">12 itens</span> pendentes para comprar.
-                </p>
+                <button className="flex items-center justify-center gap-2 rounded-lg bg-primary h-10 px-5 text-sm font-bold text-background-dark shadow-lg shadow-primary/20">
+                  <span>Ver Lista</span>
+                  <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
+                </button>
               </div>
-              <button className="flex items-center justify-center gap-2 rounded-lg bg-primary h-10 px-5 text-sm font-bold text-background-dark shadow-lg shadow-primary/20">
-                <span>Ver Lista</span>
-                <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
-              </button>
-            </div>
-            <div
-              className="relative h-32 sm:h-auto sm:w-1/3 bg-cover bg-center"
-              style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBNp-rcyh4nX6sxrcGXBsu-ThFnB4WSAQrvzMLSSJ9Nn_Ky8fXih12OgA7r6NuQMAzYrFt_eBDu_piqtBujp3BCko7AJjYrAqWCEjcZbdI9ynhngdQg7VfeFnfq4NxRU9FTUTNXoDbEQxaC2Es-xicH0Zl7NXOu1KCgFRlsUCC1w7LSnuXD913TFtzuLkvrwjDTU6XJxAeTTnJbz8jX1vOP8XTNlzWINsJV9aStHyPx0RK4zaem-KWrRiyAtqVxiFDsdIipUuFf84c")' }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-l from-white/10 to-white dark:from-surface-dark/10 dark:to-surface-dark via-transparent sm:via-transparent sm:to-90%"></div>
+              <div
+                className="relative h-32 sm:h-auto sm:w-1/3 bg-cover bg-center"
+                style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBNp-rcyh4nX6sxrcGXBsu-ThFnB4WSAQrvzMLSSJ9Nn_Ky8fXih12OgA7r6NuQMAzYrFt_eBDu_piqtBujp3BCko7AJjYrAqWCEjcZbdI9ynhngdQg7VfeFnfq4NxRU9FTUTNXoDbEQxaC2Es-xicH0Zl7NXOu1KCgFRlsUCC1w7LSnuXD913TFtzuLkvrwjDTU6XJxAeTTnJbz8jX1vOP8XTNlzWINsJV9aStHyPx0RK4zaem-KWrRiyAtqVxiFDsdIipUuFf84c")' }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-l from-white/10 to-white dark:from-surface-dark/10 dark:to-surface-dark via-transparent sm:via-transparent sm:to-90%"></div>
+              </div>
             </div>
           </div>
+
+          <button
+            onClick={() => navigate('/create-recipe')}
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5 active:scale-95 transition text-center shadow-sm w-full sm:w-32"
+          >
+            <div className="size-10 shrink-0 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 flex items-center justify-center">
+              <span className="material-symbols-rounded text-[20px]">menu_book</span>
+            </div>
+            <span className="text-xs font-bold leading-tight">Nova Receita</span>
+          </button>
         </div>
       </div>
 
-      <div className="px-4 py-4 grid grid-cols-3 gap-2">
-        <button onClick={() => navigate('/planner')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5 active:scale-95 transition text-center">
-          <div className="size-10 shrink-0 rounded-full bg-green-100 dark:bg-[#23482f] text-green-600 dark:text-primary flex items-center justify-center">
-            <span className="material-symbols-rounded text-[20px]">add</span>
-          </div>
-          <span className="text-[11px] font-bold leading-tight">Add Refeição</span>
-        </button>
-        <button onClick={() => navigate('/create-recipe')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5 active:scale-95 transition text-center">
-          <div className="size-10 shrink-0 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 flex items-center justify-center">
-            <span className="material-symbols-rounded text-[20px]">menu_book</span>
-          </div>
-          <span className="text-[11px] font-bold leading-tight">Nova Receita</span>
-        </button>
-        <button onClick={() => navigate('/water-log')} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5 active:scale-95 transition text-center">
-          <div className="size-10 shrink-0 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-            <span className="material-symbols-rounded text-[20px]">water_drop</span>
-          </div>
-          <span className="text-[11px] font-bold leading-tight">Água</span>
-        </button>
-      </div>
+
 
       <div className="px-4 pb-6">
         <h2 className="text-xl font-bold tracking-tight mb-3">Minhas Receitas</h2>

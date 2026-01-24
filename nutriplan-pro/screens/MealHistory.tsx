@@ -3,31 +3,22 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
-import { useSubscription } from '../../contexts/SubscriptionContext';
-import UpgradePrompt from '../../components/UpgradePrompt';
 import Navigation from '../../components/Navigation';
-import { ArrowLeft, History, Flame, Lock } from 'lucide-react';
+import { ArrowLeft, ShoppingBasket, ChevronRight, History } from 'lucide-react';
 
-interface HistoryItem {
+interface ShoppingListHistoryGroup {
     id: string;
-    tipo_refeicao: string;
-    data_consumo: string;
-    calorias: number;
-    nome_receita_manual: string;
-    receitas?: {
-        nome: string;
-    } | null;
+    name: string;
+    itemCount: number;
+    totalPrice: number;
+    createdAt: Date;
 }
 
 const MealHistory: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const [history, setHistory] = useState<HistoryItem[]>([]);
+    const [groups, setGroups] = useState<ShoppingListHistoryGroup[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-    const { hasFeature } = useSubscription();
-
-    const canTrackCalories = hasFeature('calorie_tracking');
 
     useEffect(() => {
         if (user) {
@@ -37,23 +28,50 @@ const MealHistory: React.FC = () => {
 
     const fetchHistory = async () => {
         try {
+            setLoading(true);
             const { data, error } = await supabase
-                .from('historico_refeicoes')
-                .select(`
-          id,
-          tipo_refeicao,
-          data_consumo,
-          calorias,
-          nome_receita_manual,
-          receitas (
-            nome
-          )
-        `)
+                .from('lista_precos_mercado')
+                .select('*')
                 .eq('usuario_id', user?.id)
-                .order('data_consumo', { ascending: false });
+                .eq('concluido', true);
 
             if (error) throw error;
-            setHistory(data as any);
+
+            if (!data) {
+                setGroups([]);
+                return;
+            }
+
+            // Group items by grupo_nome
+            const groupedByName = data.reduce((acc: any, item: any) => {
+                const groupKey = item.grupo_nome || 'Sem Grupo';
+
+                if (!acc[groupKey]) {
+                    acc[groupKey] = {
+                        id: groupKey,
+                        name: groupKey,
+                        items: [],
+                        createdAt: new Date(item.created_at || Date.now())
+                    };
+                }
+
+                acc[groupKey].items.push(item);
+                return acc;
+            }, {});
+
+            // Convert to array and calculate stats
+            const groupsArray: ShoppingListHistoryGroup[] = Object.values(groupedByName).map((group: any) => ({
+                id: group.id,
+                name: group.name.split(' ::: ')[0], // Strip unique suffix for display
+                itemCount: group.items.length,
+                totalPrice: group.items.reduce((sum: number, item: any) => sum + (item.ultimo_preco_informado || 0), 0),
+                createdAt: group.createdAt
+            }));
+
+            // Sort by creation date (newest first)
+            groupsArray.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+            setGroups(groupsArray);
         } catch (err) {
             console.error('Error fetching history:', err);
         } finally {
@@ -61,9 +79,8 @@ const MealHistory: React.FC = () => {
         }
     };
 
-    const formatDate = (dateString: string) => {
-        const d = new Date(dateString);
-        return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const formatDate = (date: Date) => {
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
     };
 
     return (
@@ -81,50 +98,47 @@ const MealHistory: React.FC = () => {
                     <div className="flex justify-center py-12">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
                     </div>
-                ) : history.length === 0 ? (
+                ) : groups.length === 0 ? (
                     <div className="text-center py-12 flex flex-col items-center gap-4">
-                        <History className="text-slate-300" size={64} />
-                        <p className="text-slate-500">Nenhuma lista registrada ainda.</p>
+                        <div className="size-20 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-2">
+                            <History className="text-slate-300" size={40} />
+                        </div>
+                        <p className="text-slate-500">Nenhuma lista foi registrada ainda.</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {history.map((item) => (
+                        {groups.map((group) => (
                             <div
-                                key={item.id}
-                                className="p-4 rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-white/5"
+                                key={group.id}
+                                onClick={() => navigate(`/cart/${encodeURIComponent(group.id)}`)}
+                                className="group relative flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-white/5 cursor-pointer active:scale-[0.98] transition-all hover:border-primary/30"
                             >
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                                        {item.tipo_refeicao}
-                                    </span>
-                                    <span className="text-xs text-slate-400 font-medium">
-                                        {formatDate(item.data_consumo)}
-                                    </span>
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5">
+                                    <span className="material-symbols-rounded text-slate-400 text-[28px]">done_all</span>
                                 </div>
-                                <h3 className="font-bold text-lg">{item.receitas?.nome || item.nome_receita_manual || 'Refeição'}</h3>
-                                <div
-                                    className={`flex items-center gap-1 mt-1 text-sm text-slate-500 ${!canTrackCalories ? 'cursor-pointer' : ''}`}
-                                    onClick={!canTrackCalories ? () => setShowUpgradeModal(true) : undefined}
-                                >
-                                    <Flame className="text-orange-400 fill-current" size={16} />
-                                    <span className={!canTrackCalories ? 'blur-[3px] select-none' : ''}>
-                                        {item.calorias} kcal
-                                    </span>
-                                    {!canTrackCalories && <Lock className="ml-1" size={12} />}
+
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-base font-bold mb-1 text-slate-500">{group.name}</h3>
+                                    <div className="flex items-center gap-3 text-xs text-slate-500">
+                                        <span className="flex items-center gap-1">
+                                            <ShoppingBasket size={12} />
+                                            {group.itemCount} {group.itemCount === 1 ? 'item' : 'itens'}
+                                        </span>
+                                        <span>•</span>
+                                        <span className="font-medium text-primary">R$ {group.totalPrice.toFixed(2)}</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-1">
+                                        Finalizada em {formatDate(group.createdAt)}
+                                    </p>
                                 </div>
+
+                                <ChevronRight className="text-slate-400 group-hover:text-primary transition-colors" size={20} />
                             </div>
                         ))}
                     </div>
                 )}
             </div>
 
-            {showUpgradeModal && (
-                <UpgradePrompt
-                    feature="O histórico detalhado de calorias"
-                    requiredPlan="simple"
-                    onClose={() => setShowUpgradeModal(false)}
-                />
-            )}
             <Navigation />
         </div>
     );
