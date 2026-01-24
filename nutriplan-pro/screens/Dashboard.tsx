@@ -22,12 +22,30 @@ const Dashboard: React.FC = () => {
   const [todayMeals, setTodayMeals] = useState<any[]>([]);
   const [todayCalories, setTodayCalories] = useState(0);
   const [userRecipes, setUserRecipes] = useState<any[]>([]);
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [welcomeMessage, setWelcomeMessage] = useState('');
 
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchTodayCalories();
       fetchUserRecipes();
+
+      const storageKey = `welcome_shown_${user.id}`;
+      const hasBeenWelcomed = localStorage.getItem(storageKey);
+
+      if (!hasBeenWelcomed) {
+        setWelcomeMessage('Bem vindo');
+        localStorage.setItem(storageKey, 'true');
+      } else {
+        setWelcomeMessage('Bem vindo de volta');
+      }
+
+      const timer = setTimeout(() => {
+        setShowWelcome(false);
+      }, 7000);
+
+      return () => clearTimeout(timer);
     }
   }, [user]);
 
@@ -211,7 +229,11 @@ const Dashboard: React.FC = () => {
             <div className="absolute bottom-0 right-0 size-3 rounded-full bg-primary border-2 border-background-light dark:border-background-dark"></div>
           </div>
           <div className="flex flex-col">
-            <span className="text-xs font-medium text-slate-500 dark:text-[#92c9a4]">Welcome back</span>
+            <div className={`overflow-hidden transition-all duration-700 ${showWelcome ? 'max-h-5 opacity-100' : 'max-h-0 opacity-0'}`}>
+              <span className="text-xs font-medium text-slate-500 dark:text-[#92c9a4]">
+                {welcomeMessage}
+              </span>
+            </div>
             <h2 className="text-lg font-bold leading-tight tracking-tight">
               {profile?.nome ? `${profile.nome}!` : 'Usuário!'}
             </h2>
