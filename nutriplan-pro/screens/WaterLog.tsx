@@ -20,37 +20,22 @@ const WaterLog: React.FC = () => {
 
     useEffect(() => {
         if (user) {
-            checkAndResetIfNewDay();
             fetchWaterData();
         }
     }, [user]);
 
-    // Check if it's a new day and auto-reset water consumption
+    // Verifica mudança de dia a cada minuto
     useEffect(() => {
-        const checkMidnight = setInterval(() => {
-            checkAndResetIfNewDay();
-        }, 60000); // Check every minute
+        const interval = setInterval(() => {
+            const now = new Date();
+            // Se for exatamente meia-noite, recarrega os dados (o que acionará o reset se necessário)
+            if (now.getHours() === 0 && now.getMinutes() === 0) {
+                fetchWaterData();
+            }
+        }, 60000);
 
-        return () => clearInterval(checkMidnight);
+        return () => clearInterval(interval);
     }, [user]);
-
-    const checkAndResetIfNewDay = async () => {
-        if (!user) return;
-
-        const today = new Date().toDateString();
-        const lastResetDate = localStorage.getItem(`waterlog_last_reset_${user.id}`);
-
-        if (lastResetDate !== today) {
-            // It's a new day, reset water consumption
-            await supabase
-                .from('perfis_usuario')
-                .update({ consumo_agua_hoje: 0 })
-                .eq('id', user.id);
-
-            localStorage.setItem(`waterlog_last_reset_${user.id}`, today);
-            setCurrentWater(0);
-        }
-    };
 
     // Efeito para gerenciar o agendamento dos lembretes
     useEffect(() => {
@@ -73,12 +58,29 @@ const WaterLog: React.FC = () => {
         try {
             const { data, error } = await supabase
                 .from('perfis_usuario')
-                .select('consumo_agua_hoje, meta_agua_ml, lembretes_agua, intervalo_agua_minutos, hora_inicio_sono, hora_fim_sono')
+                .select('consumo_agua_hoje, meta_agua_ml, lembretes_agua, intervalo_agua_minutos, hora_inicio_sono, hora_fim_sono, data_ultimo_reset_agua')
                 .eq('id', user?.id)
                 .single();
 
             if (data) {
-                setCurrentWater(data.consumo_agua_hoje || 0);
+                // Lógica de reset diário baseada no banco de dados
+                const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+                const lastReset = data.data_ultimo_reset_agua;
+
+                if (lastReset !== today) {
+                    await supabase
+                        .from('perfis_usuario')
+                        .update({
+                            consumo_agua_hoje: 0,
+                            data_ultimo_reset_agua: today
+                        })
+                        .eq('id', user?.id);
+
+                    setCurrentWater(0);
+                } else {
+                    setCurrentWater(data.consumo_agua_hoje || 0);
+                }
+
                 setGoal(data.meta_agua_ml || 2000);
                 setRemindersActive(data.lembretes_agua || false);
                 setIntervalMinutes(data.intervalo_agua_minutos || 120);

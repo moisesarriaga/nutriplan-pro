@@ -148,11 +148,11 @@ const MealPlanner: React.FC = () => {
       return;
     }
 
-    // Check if a group with this name already exists (matching strictly the name part before ' ::: ')
     const { data: existingRecords, error } = await supabase
       .from('lista_precos_mercado')
       .select('grupo_nome')
       .eq('usuario_id', user?.id)
+      .eq('concluido', false) // Somente listas ativas
       .ilike('grupo_nome', `${groupName.trim()} ::: %`)
       .limit(1);
 

@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
-import { ShoppingBasket, ChevronRight, Plus, History } from 'lucide-react';
+import { useNotification } from '../../contexts/NotificationContext';
+import { ShoppingBasket, ChevronRight, History, Trash2 } from 'lucide-react';
 
 interface ShoppingListGroup {
   id: string;
@@ -14,11 +15,13 @@ interface ShoppingListGroup {
   completedCount: number;
   createdAt: Date;
   concluido: boolean;
+  originalName: string; // Keep track of the full database name for deletion
 }
 
 const ShoppingCart: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showConfirmation, showNotification } = useNotification();
   const [groups, setGroups] = useState<ShoppingListGroup[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -63,6 +66,7 @@ const ShoppingCart: React.FC = () => {
     const groupsArray: ShoppingListGroup[] = Object.values(groupedByName).map((group: any) => ({
       id: group.id,
       name: group.name.split(' ::: ')[0], // Strip unique suffix for display
+      originalName: group.name,
       itemCount: group.items.length,
       completedCount: group.items.filter((i: any) => i.comprado).length,
       totalPrice: group.items.reduce((sum: number, item: any) => sum + (item.ultimo_preco_informado || 0), 0),
@@ -75,6 +79,38 @@ const ShoppingCart: React.FC = () => {
 
     setGroups(groupsArray);
     setLoading(false);
+  };
+
+  const handleDeleteGroup = (group: ShoppingListGroup, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    showConfirmation(`Deseja realmente apagar a lista "${group.name}"? Esta ação removerá todos os itens desta lista.`, {
+      title: 'Apagar Lista',
+      onConfirm: async () => {
+        try {
+          const query = supabase
+            .from('lista_precos_mercado')
+            .delete()
+            .eq('usuario_id', user?.id);
+
+          if (group.originalName === 'Sem Grupo') {
+            query.is('grupo_nome', null);
+          } else {
+            query.eq('grupo_nome', group.originalName);
+          }
+
+          const { error } = await query;
+
+          if (error) throw error;
+
+          showNotification('Lista apagada com sucesso!');
+          fetchGroups();
+        } catch (err) {
+          console.error('Error deleting group:', err);
+          showNotification('Erro ao apagar lista. Tente novamente.', { iconType: 'error' });
+        }
+      }
+    });
   };
 
   const createNewList = () => {
@@ -145,7 +181,16 @@ const ShoppingCart: React.FC = () => {
                     )}
                   </div>
 
-                  <ChevronRight className="text-slate-400 group-hover:text-primary transition-colors" size={20} />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => handleDeleteGroup(group, e)}
+                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
+                      title="Apagar Grupo"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                    <ChevronRight className="text-slate-400 group-hover:text-primary transition-colors" size={20} />
+                  </div>
                 </div>
               ))}
           </div>

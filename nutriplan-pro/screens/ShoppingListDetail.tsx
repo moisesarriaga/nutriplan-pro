@@ -175,11 +175,11 @@ const ShoppingListDetail: React.FC = () => {
   const checkAndPrepareRename = async () => {
     if (!tempGroupName.trim() || !user) return;
 
-    // Search for any group that has this display name (part before ' ::: ')
     const { data: existingGroups, error } = await supabase
       .from('lista_precos_mercado')
       .select('grupo_nome')
       .eq('usuario_id', user.id)
+      .eq('concluido', false) // Somente listas ativas
       .ilike('grupo_nome', `${tempGroupName.trim()} ::: %`)
       .limit(1);
 
