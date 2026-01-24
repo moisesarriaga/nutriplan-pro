@@ -10,6 +10,7 @@ import Profile from './nutriplan-pro/screens/Profile';
 import Login from './nutriplan-pro/screens/Login';
 import Register from './nutriplan-pro/screens/Register';
 import Favorites from './nutriplan-pro/screens/Favorites';
+import MyRecipes from './nutriplan-pro/screens/MyRecipes';
 import MealHistory from './nutriplan-pro/screens/MealHistory';
 import SavedLists from './nutriplan-pro/screens/SavedLists';
 import WaterLog from './nutriplan-pro/screens/WaterLog';
@@ -67,6 +68,7 @@ const AppContent: React.FC = () => {
                   <Route path="/cart" element={<ShoppingCart />} />
                   <Route path="/profile" element={<Profile onLogout={() => { }} />} />
                   <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/my-recipes" element={<MyRecipes />} />
                   <Route path="/history" element={<MealHistory />} />
                   <Route path="/saved-lists" element={<SavedLists />} />
                   <Route path="/water-log" element={<WaterLog />} />
