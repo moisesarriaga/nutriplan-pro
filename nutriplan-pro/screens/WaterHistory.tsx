@@ -11,10 +11,7 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    ReferenceLine,
-    Defs,
-    LinearGradient,
-    Stop
+    ReferenceLine
 } from 'recharts';
 
 type Period = 'dia' | 'semana' | 'mês' | 'ano';
@@ -30,6 +27,8 @@ const WaterHistory: React.FC = () => {
     const [period, setPeriod] = useState<Period>('dia');
     const [history, setHistory] = useState<HistoryRecord[]>([]);
     const [goal, setGoal] = useState(2000);
+    const [todayConsumption, setTodayConsumption] = useState(0);
+    const [userName, setUserName] = useState('');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -41,13 +40,17 @@ const WaterHistory: React.FC = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            // Fetch goal
+            // Fetch goal and real-time today consumption
             const { data: profile } = await supabase
                 .from('perfis_usuario')
-                .select('meta_agua_ml, nome')
+                .select('meta_agua_ml, nome, consumo_agua_hoje')
                 .eq('id', user?.id)
                 .single();
-            if (profile) setGoal(profile.meta_agua_ml);
+            if (profile) {
+                setGoal(profile.meta_agua_ml);
+                setTodayConsumption(profile.consumo_agua_hoje || 0);
+                setUserName(profile.nome || '');
+            }
 
             // Fetch history for the last 30 days to calculate stats
             const startDate = new Date();
@@ -73,13 +76,22 @@ const WaterHistory: React.FC = () => {
 
     // Calculate Statistics
     const stats = useMemo(() => {
-        const todayStr = new Date().toLocaleDateString('en-CA');
-        const yesterdayStr = new Date(Date.now() - 86400000).toLocaleDateString('en-CA');
+        const todayStr = new Date().toISOString().split('T')[0];
+        const yesterdayDate = new Date();
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
 
-        const todayRecord = history.find(h => h.data === todayStr);
-        const yesterdayRecord = history.find(h => h.data === yesterdayStr);
+        // Merge today's real-time data into a virtual combined history if not present
+        const processedHistory = [...history];
+        const existingToday = processedHistory.find(h => h.data === todayStr);
+        if (!existingToday && todayConsumption > 0) {
+            processedHistory.push({ data: todayStr, quantidade_ml: todayConsumption });
+        } else if (existingToday) {
+            existingToday.quantidade_ml = Math.max(existingToday.quantidade_ml, todayConsumption);
+        }
 
-        const currentWater = todayRecord?.quantidade_ml || 0;
+        const yesterdayRecord = processedHistory.find(h => h.data === yesterdayStr);
+        const currentWater = todayConsumption;
         const yesterdayWater = yesterdayRecord?.quantidade_ml || 0;
 
         // vs ontem %
@@ -90,21 +102,36 @@ const WaterHistory: React.FC = () => {
             vsOntem = 100;
         }
 
-        // Média Semanal
-        const last7Days = history.slice(-7);
+        // Média Semanal (including today)
+        const last7Days = processedHistory.slice(-7);
         const avgWeekly = last7Days.length > 0
             ? Math.round(last7Days.reduce((a, b) => a + b.quantidade_ml, 0) / 7)
             : 0;
 
-        // Sequência (Streak)
+        // Sequência (Streak) - Consecutive days with records > 0
         let streak = 0;
-        const sortedHistory = [...history].sort((a, b) => b.data.localeCompare(a.data));
-        for (const record of sortedHistory) {
-            if (record.quantidade_ml >= goal) {
-                streak++;
-            } else if (record.data !== todayStr) {
-                // Ignore today if goal isn't reached yet, but break if previous days missed
-                break;
+        const sortedHistory = [...processedHistory].sort((a, b) => b.data.localeCompare(a.data));
+
+        // Check if there's any record at all
+        if (sortedHistory.length > 0) {
+            // Start from today or the most recent day
+            let expectedDate = new Date();
+            // If today has no record, start from yesterday
+            if (todayConsumption === 0 && sortedHistory[0].data !== todayStr) {
+                expectedDate.setDate(expectedDate.getDate() - 1);
+            }
+
+            for (const record of sortedHistory) {
+                const recordDate = new Date(record.data + 'T00:00:00');
+                const diffDays = Math.floor((expectedDate.getTime() - recordDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                if (diffDays === 0 && record.quantidade_ml > 0) {
+                    streak++;
+                    expectedDate.setDate(expectedDate.getDate() - 1);
+                } else if (diffDays > 0) {
+                    // Gap found
+                    break;
+                }
             }
         }
 
@@ -115,7 +142,7 @@ const WaterHistory: React.FC = () => {
             streak,
             goal
         };
-    }, [history, goal]);
+    }, [history, todayConsumption, goal]);
 
     const chartData = useMemo(() => {
         // Map history to chart format
@@ -165,7 +192,7 @@ const WaterHistory: React.FC = () => {
                     </div>
                 </div>
                 <h1 className="text-3xl font-black tracking-tight flex items-center gap-2">
-                    Olá, Atleta 👋
+                    Olá, {userName || 'Atleta'}
                 </h1>
                 <p className="text-slate-500 dark:text-slate-400 font-medium">
                     Mantenha-se hidratado e acompanhe seu progresso.
@@ -244,8 +271,8 @@ const WaterHistory: React.FC = () => {
                                     key={p}
                                     onClick={() => setPeriod(p)}
                                     className={`px-4 py-1.5 text-[11px] font-black rounded-full transition-all duration-300 ${period === p
-                                            ? 'bg-white dark:bg-surface-dark shadow-md text-slate-900 dark:text-white'
-                                            : 'text-slate-400'
+                                        ? 'bg-white dark:bg-surface-dark shadow-md text-slate-900 dark:text-white'
+                                        : 'text-slate-400'
                                         }`}
                                 >
                                     {p.charAt(0).toUpperCase() + p.slice(1)}
@@ -310,7 +337,6 @@ const WaterHistory: React.FC = () => {
                 </p>
                 <div className="mt-4 flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Dica NutriPlan</span>
-                    <button className="text-[10px] font-black uppercase tracking-widest underline">Saiba mais</button>
                 </div>
             </div>
         </div>

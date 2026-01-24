@@ -64,7 +64,7 @@ const WaterLog: React.FC = () => {
 
             if (data) {
                 // Lógica de reset diário baseada no banco de dados
-                const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+                const today = new Date().toISOString().split('T')[0];
                 const lastReset = data.data_ultimo_reset_agua;
 
                 if (lastReset !== today) {
@@ -97,14 +97,17 @@ const WaterLog: React.FC = () => {
         const newAmount = currentWater + amount;
         setCurrentWater(newAmount);
 
-        // Update today's consumption in profile
+        // Update today's consumption and ensure the reset date is current
+        const today = new Date().toISOString().split('T')[0];
         await supabase
             .from('perfis_usuario')
-            .update({ consumo_agua_hoje: newAmount })
+            .update({
+                consumo_agua_hoje: newAmount,
+                data_ultimo_reset_agua: today
+            })
             .eq('id', user?.id);
 
         // Update history table (upsert)
-        const today = new Date().toLocaleDateString('en-CA');
         await supabase
             .from('historico_consumo_agua')
             .upsert({
@@ -124,7 +127,7 @@ const WaterLog: React.FC = () => {
             .eq('id', user?.id);
 
         // Update history table for today
-        const today = new Date().toLocaleDateString('en-CA');
+        const today = new Date().toISOString().split('T')[0];
         await supabase
             .from('historico_consumo_agua')
             .upsert({
@@ -142,6 +145,7 @@ const WaterLog: React.FC = () => {
         await supabase
             .from('perfis_usuario')
             .update({
+                meta_agua_ml: goal,
                 intervalo_agua_minutos: intervalMinutes,
                 hora_inicio_sono: sleepStart,
                 hora_fim_sono: sleepEnd
@@ -287,6 +291,33 @@ const WaterLog: React.FC = () => {
                         </div>
 
                         <div className="space-y-6">
+                            <section>
+                                <label className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-3">Meta Diária (ml)</label>
+                                <div className="flex gap-3 mb-3">
+                                    <input
+                                        type="number"
+                                        value={goal}
+                                        onChange={(e) => setGoal(Number(e.target.value))}
+                                        className="flex-1 bg-slate-50 dark:bg-white/5 border-2 border-slate-100 dark:border-slate-800 rounded-xl p-3 text-lg font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                        placeholder="Ex: 2000"
+                                    />
+                                    <div className="flex flex-col gap-2">
+                                        {[2000, 3000].map((preset) => (
+                                            <button
+                                                key={preset}
+                                                onClick={() => setGoal(preset)}
+                                                className={`px-3 py-1 text-xs font-bold rounded-lg border transition-all ${goal === preset
+                                                    ? 'bg-blue-500 border-blue-500 text-white'
+                                                    : 'border-slate-200 dark:border-slate-700 text-slate-500'
+                                                    }`}
+                                            >
+                                                {preset / 1000}L
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </section>
+
                             <section>
                                 <label className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-3">Frequência das notificações</label>
                                 <div className="grid grid-cols-3 gap-3">
