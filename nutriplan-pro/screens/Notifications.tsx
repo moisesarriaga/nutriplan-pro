@@ -78,8 +78,7 @@ const SwipeableNotification: React.FC<NotificationItemProps> = ({ notif, onDelet
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{notif.description}</p>
                 </div>
 
-                <div className="flex flex-col items-end justify-between shrink-0 gap-1 mt-0.5">
-                    <span className="text-[10px] text-slate-400">{notif.time}</span>
+                <div className="flex flex-col items-end justify-between shrink-0 gap-1 -mt-2">
                     <button
                         onClick={() => onDelete(notif.id)}
                         className="hidden md:flex size-7 items-center justify-center rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all active:scale-90"
@@ -87,6 +86,7 @@ const SwipeableNotification: React.FC<NotificationItemProps> = ({ notif, onDelet
                     >
                         <span className="material-symbols-outlined text-[18px]">close</span>
                     </button>
+                    <span className="text-[10px] text-slate-400">{notif.time}</span>
                 </div>
             </div>
         </div>
