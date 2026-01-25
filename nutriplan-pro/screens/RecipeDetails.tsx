@@ -33,7 +33,8 @@ const RecipeDetails: React.FC = () => {
   const [isCreatingNewGroup, setIsCreatingNewGroup] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  const canTrackCalories = hasFeature('calorie_tracking');
+  // Calories are now free for all users
+  const canTrackCalories = true;
 
   useEffect(() => {
     fetchRecipe();
@@ -451,13 +452,13 @@ const RecipeDetails: React.FC = () => {
           <div className="flex flex-wrap gap-3">
             {[
               { icon: Clock, label: recipe.time },
-              { icon: Flame, label: canTrackCalories ? `${recipe.calories} kcal` : 'Premium' },
+              { icon: Flame, label: `${recipe.calories} kcal` },
               { icon: Activity, label: recipe.difficulty },
               { icon: Users, label: `${recipe.servings} porções` }
             ].map((stat, idx) => (
               <div
                 key={idx}
-                className={`flex items-center gap-1.5 backdrop-blur-md px-3 py-1.5 rounded-lg border ${stat.icon === Flame && !canTrackCalories ? 'cursor-pointer hover:bg-surface-dark transition-colors' : ''} bg-background-light dark:bg-white/5 border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none`}
+                className={`flex items-center gap-1.5 backdrop-blur-md px-3 py-1.5 rounded-lg border bg-background-light dark:bg-white/5 border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none`}
                 onClick={stat.icon === Flame && !canTrackCalories ? () => setShowUpgradeModal(true) : undefined}
               >
                 <stat.icon className="text-primary" size={18} />
@@ -475,17 +476,12 @@ const RecipeDetails: React.FC = () => {
               <button
                 key={tab}
                 onClick={() => {
-                  if (tab === 'nutrition' && !canTrackCalories) {
-                    setShowUpgradeModal(true);
-                  } else {
-                    setActiveTab(tab);
-                  }
+                  setActiveTab(tab);
                 }}
                 className={`flex-1 pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === tab ? 'text-primary border-primary' : 'text-gray-500 border-transparent'
                   }`}
               >
                 <div className="flex items-center justify-center gap-1">
-                  {tab === 'nutrition' && !canTrackCalories && <Lock size={14} />}
                   {tab === 'ingredients' ? 'Ingredientes' : tab === 'prep' ? 'Preparo' : 'Nutrição'}
                 </div>
               </button>

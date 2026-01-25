@@ -17,6 +17,7 @@
         "language": "Langue",
         "appearance": "Apparence",
         "notifications": "Notifications",
-        "logout": "Se déconnecter"
+        "logout": "Se déconnecter",
+        "favorites": "Favoris"
     }
 }

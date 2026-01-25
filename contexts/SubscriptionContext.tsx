@@ -27,56 +27,16 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
     const [loading, setLoading] = useState(true);
 
     const fetchSubscription = async () => {
-        if (!user) {
-            setSubscription(null);
-            setLoading(false);
-            return;
-        }
-
-        try {
-            // Call the database function to get subscription with features
-            const { data, error } = await supabase
-                .rpc('get_user_subscription_features', { p_user_id: user.id });
-
-            if (error) {
-                console.error('Error fetching subscription:', error);
-                // Default to free plan if error
-                setSubscription({
-                    plan_type: 'free',
-                    status: 'active',
-                    has_calorie_tracking: false,
-                    has_price_sum: false,
-                    has_family_plan: false,
-                    has_priority_support: false,
-                });
-            } else if (data && data.length > 0) {
-                setSubscription(data[0]);
-            } else {
-                // No subscription found, create free subscription
-                const { error: insertError } = await supabase
-                    .from('subscriptions')
-                    .insert({
-                        user_id: user.id,
-                        plan_type: 'free',
-                        status: 'active',
-                    });
-
-                if (!insertError) {
-                    setSubscription({
-                        plan_type: 'free',
-                        status: 'active',
-                        has_calorie_tracking: false,
-                        has_price_sum: false,
-                        has_family_plan: false,
-                        has_priority_support: false,
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('Error in fetchSubscription:', error);
-        } finally {
-            setLoading(false);
-        }
+        // UNLOCK: Force Premium for everyone
+        setSubscription({
+            plan_type: 'premium',
+            status: 'active',
+            has_calorie_tracking: true,
+            has_price_sum: true,
+            has_family_plan: true,
+            has_priority_support: true,
+        });
+        setLoading(false);
     };
 
     useEffect(() => {
@@ -84,22 +44,8 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
     }, [user]);
 
     const hasFeature = (feature: string): boolean => {
-        if (!subscription || subscription.status !== 'active') {
-            return false;
-        }
-
-        switch (feature) {
-            case 'calorie_tracking':
-                return subscription.has_calorie_tracking;
-            case 'price_sum':
-                return subscription.has_price_sum;
-            case 'family_plan':
-                return subscription.has_family_plan;
-            case 'priority_support':
-                return subscription.has_priority_support;
-            default:
-                return false;
-        }
+        // UNLOCK: Always allow all features
+        return true;
     };
 
     const isActive = subscription?.status === 'active';

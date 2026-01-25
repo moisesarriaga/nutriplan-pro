@@ -17,6 +17,7 @@
         "language": "Idioma",
         "appearance": "Apariencia",
         "notifications": "Notificaciones",
-        "logout": "Cerrar Sesión"
+        "logout": "Cerrar Sesión",
+        "favorites": "Favoritos"
     }
 }

@@ -17,6 +17,7 @@
         "language": "Sprache",
         "appearance": "Aussehen",
         "notifications": "Benachrichtigungen",
-        "logout": "Abmelden"
+        "logout": "Abmelden",
+        "favorites": "Favoriten"
     }
 }

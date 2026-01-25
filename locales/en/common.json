@@ -17,6 +17,7 @@
         "language": "Language",
         "appearance": "Appearance",
         "notifications": "Notifications",
-        "logout": "Logout"
+        "logout": "Logout",
+        "favorites": "Favorites"
     }
 }

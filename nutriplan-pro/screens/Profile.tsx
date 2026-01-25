@@ -389,7 +389,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
       <div className="px-4">
         <div className="grid grid-cols-3 gap-3">
           {[
-            { icon: 'favorite', label: 'Receitas', color: 'red', path: '/favorites' },
+            { icon: 'favorite', label: t('profile.favorites'), color: 'red', path: '/favorites' },
             { icon: 'history', label: 'Histórico', color: 'orange', path: '/history' },
             { icon: 'bar_chart_4_bars', label: 'Hidratação', color: 'blue', path: '/water-history' }
           ].map((item) => (
@@ -462,6 +462,15 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                 <span className="material-symbols-rounded text-slate-600 text-[20px]">lock</span>
               </div>
               <span className="text-base font-medium">Privacidade e Dados</span>
+            </div>
+            <span className="material-symbols-rounded text-slate-400 text-[20px]">chevron_right</span>
+          </div>
+          <div className="flex items-center justify-between p-4 active:bg-slate-50 cursor-pointer">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600">
+                <span className="material-symbols-rounded text-slate-600 text-[20px]">description</span>
+              </div>
+              <span className="text-base font-medium">Termos de Uso</span>
             </div>
             <span className="material-symbols-rounded text-slate-400 text-[20px]">chevron_right</span>
           </div>

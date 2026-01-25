@@ -17,6 +17,7 @@
         "language": "Taal",
         "appearance": "Uiterlijk",
         "notifications": "Meldingen",
-        "logout": "Uitloggen"
+        "logout": "Uitloggen",
+        "favorites": "Favorieten"
     }
 }
