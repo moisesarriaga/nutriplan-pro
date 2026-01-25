@@ -11,7 +11,7 @@ const Search: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState('Todas');
+  const [activeCategories, setActiveCategories] = useState<string[]>([]);
   const [userRecipes, setUserRecipes] = useState<any[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -43,9 +43,19 @@ const Search: React.FC = () => {
   };
 
   const filteredRecipes = MOCK_RECIPES.filter(r =>
-    (activeCategory === 'Todas' || r.category === activeCategory) &&
+    (activeCategories.length === 0 || activeCategories.includes(r.category)) &&
     (r.name.toLowerCase().includes(searchTerm.toLowerCase()) || r.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  const toggleCategory = (cat: string) => {
+    if (cat === 'Todas') {
+      setActiveCategories([]);
+      return;
+    }
+    setActiveCategories(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
+  };
 
   return (
     <div className="flex flex-col min-h-screen pb-44 md:pb-24">
@@ -87,8 +97,8 @@ const Search: React.FC = () => {
             {categories.map((cat) => (
               <button
                 key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`flex h-9 shrink-0 items-center justify-center rounded-full px-4 transition-all ${activeCategory === cat
+                onClick={() => toggleCategory(cat)}
+                className={`flex h-9 shrink-0 items-center justify-center rounded-full px-4 transition-all ${((cat === 'Todas' && activeCategories.length === 0) || activeCategories.includes(cat))
                   ? 'bg-primary text-black shadow-lg shadow-primary/20 ring-1 ring-primary font-semibold'
                   : 'bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                   }`}
@@ -182,7 +192,7 @@ const Search: React.FC = () => {
       </div>
 
       {/* Mobile Search Bar & Filters */}
-      <div className="md:hidden fixed bottom-[80px] left-0 right-0 z-30 px-4 transition-all duration-300 pointer-events-none">
+      <div className="md:hidden fixed bottom-[80px] left-0 right-0 z-30 transition-all duration-300 pointer-events-none">
         {/* Background Gradient Effect - Appears with delay, slower and smoother */}
         <div
           className={`absolute bottom-[-80px] left-0 right-0 h-[340px] bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark to-transparent transition-opacity duration-1000 ease-in-out -z-10 ${showFilters ? 'opacity-100 delay-500' : 'opacity-0 delay-0'}`}
@@ -191,12 +201,12 @@ const Search: React.FC = () => {
         <div className="max-w-md mx-auto flex flex-col items-end relative z-10">
           {/* Filters Container with "Slide out" effect */}
           <div className={`w-full overflow-hidden transition-all duration-500 ease-out pointer-events-auto ${showFilters ? 'max-h-20 opacity-100 translate-y-0' : 'max-h-0 opacity-0 translate-y-full'}`}>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-4 pt-2">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-4 pt-2 px-4">
               {categories.map((cat) => (
                 <button
                   key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`flex h-9 shrink-0 items-center justify-center rounded-full px-4 transition-all ${activeCategory === cat
+                  onClick={() => toggleCategory(cat)}
+                  className={`flex h-9 shrink-0 items-center justify-center rounded-full px-4 transition-all ${((cat === 'Todas' && activeCategories.length === 0) || activeCategories.includes(cat))
                     ? 'bg-primary text-black shadow-lg shadow-primary/20 ring-1 ring-primary font-semibold'
                     : 'bg-white/80 dark:bg-surface-dark/80 border border-slate-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 backdrop-blur-md'
                     }`}
@@ -208,7 +218,7 @@ const Search: React.FC = () => {
           </div>
 
           {/* Search Bar with Higher Z-Index */}
-          <div className="relative group w-full z-10 pointer-events-auto shadow-2xl rounded-xl">
+          <div className="relative group w-full z-10 pointer-events-auto shadow-2xl rounded-xl px-4">
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
               <SearchIcon size={20} />
             </span>
