@@ -51,6 +51,17 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
     image: string;
     onComplete: (blob: Blob) => void;
   } | null>(null);
+  const objectiveRef = useRef<HTMLDivElement>(null);
+  const modalScrollRef = useRef<HTMLDivElement>(null);
+
+  // Efeito para scrollar automaticamente quando abrir o dropdown de objetivo
+  useEffect(() => {
+    if (isEditing && isObjectiveOpen && objectiveRef.current) {
+      setTimeout(() => {
+        objectiveRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  }, [isObjectiveOpen, isEditing]);
 
   // Efeito para travar o scroll da página de fundo quando o modal de edição estiver aberto
   useEffect(() => {
@@ -501,7 +512,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 py-2 no-scrollbar">
+            <div ref={modalScrollRef} className="flex-1 overflow-y-auto px-6 py-2 no-scrollbar">
               <div className="space-y-4">
                 <div className="flex flex-col items-center mb-6 pt-2">
                   <div className="relative">
@@ -580,7 +591,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                   />
                 </div>
 
-                <div className="relative">
+                <div className="relative" ref={objectiveRef}>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Objetivo</label>
                   <button
                     type="button"
