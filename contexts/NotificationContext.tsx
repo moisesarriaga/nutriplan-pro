@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 
 interface NotificationOptions {
     onConfirm?: () => void;
@@ -26,11 +26,18 @@ interface NotificationContextType {
         message: string;
         options?: ConfirmationOptions;
     };
+    isNotificationsEnabled: boolean;
+    updateNotificationPreference: (enabled: boolean) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(() => {
+        const saved = localStorage.getItem('nutriplan_notifications_enabled');
+        return saved !== null ? saved === 'true' : true;
+    });
+
     const [notification, setNotification] = useState<{
         visible: boolean;
         message: string;
@@ -49,13 +56,19 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         message: '',
     });
 
+    const updateNotificationPreference = useCallback((enabled: boolean) => {
+        setIsNotificationsEnabled(enabled);
+        localStorage.setItem('nutriplan_notifications_enabled', String(enabled));
+    }, []);
+
     const showNotification = useCallback((message: string, options?: NotificationOptions) => {
+        if (!isNotificationsEnabled) return;
         setNotification({
             visible: true,
             message,
             options,
         });
-    }, []);
+    }, [isNotificationsEnabled]);
 
     const hideNotification = useCallback(() => {
         if (notification.options?.onConfirm) {
@@ -65,12 +78,13 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }, [notification]);
 
     const showConfirmation = useCallback((message: string, options?: ConfirmationOptions) => {
+        if (!isNotificationsEnabled) return;
         setConfirmation({
             visible: true,
             message,
             options,
         });
-    }, []);
+    }, [isNotificationsEnabled]);
 
     const hideConfirmation = useCallback(() => {
         setConfirmation((prev) => ({ ...prev, visible: false }));
@@ -83,7 +97,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             notification,
             showConfirmation,
             hideConfirmation,
-            confirmation
+            confirmation,
+            isNotificationsEnabled,
+            updateNotificationPreference
         }}>
             {children}
         </NotificationContext.Provider>

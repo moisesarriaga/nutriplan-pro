@@ -58,14 +58,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
   } | null>(null);
   const objectiveRef = useRef<HTMLDivElement>(null);
   const modalScrollRef = useRef<HTMLDivElement>(null);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-
-  // Efeito para verificar permissão de notificação ao carregar
-  useEffect(() => {
-    if ('Notification' in window) {
-      setNotificationsEnabled(Notification.permission === 'granted');
-    }
-  }, []);
+  const { isNotificationsEnabled, updateNotificationPreference } = useNotification();
 
   // Função auxiliar para calcular idade
   const calculateAge = (birthDate: string | undefined) => {
@@ -170,31 +163,41 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
   };
 
   const handleToggleNotifications = async () => {
+    // Se já estiver habilitado, apenas desabilita no app
+    if (isNotificationsEnabled) {
+      updateNotificationPreference(false);
+      return;
+    }
+
+    // Tentando habilitar
     if (!('Notification' in window)) {
       showNotification('Seu navegador não suporta notificações.', { iconType: 'error' });
       return;
     }
 
+    // Verifica se a permissão já foi concedida ou negada
     if (Notification.permission === 'denied') {
-      showNotification('As notificações foram bloqueadas. Você precisa habilitá-las nas configurações do seu navegador.', { iconType: 'warning' });
+      showNotification('Notificações bloqueadas no navegador. Habilite-as nas configurações do site.', { iconType: 'warning' });
       return;
     }
 
     if (Notification.permission === 'granted') {
-      // In a real app, we might update a preference in DB here
-      setNotificationsEnabled(false);
-      // Logic for disabling (unsubscribing from push) would go here
+      updateNotificationPreference(true);
+      showNotification('Notificações ativadas!', { iconType: 'success' });
       return;
     }
 
+    // Permissão 'default', solicita ao usuário
     try {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
-        setNotificationsEnabled(true);
+        updateNotificationPreference(true);
         showNotification('Notificações habilitadas com sucesso!', {
           title: 'Sucesso',
           iconType: 'success'
         });
+      } else {
+        showNotification('Permissão para notificações foi recusada.', { iconType: 'warning' });
       }
     } catch (error) {
       console.error('Error requesting notification permission:', error);
@@ -445,7 +448,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
-                checked={notificationsEnabled}
+                checked={isNotificationsEnabled}
                 onChange={handleToggleNotifications}
                 className="sr-only peer"
                 type="checkbox"
