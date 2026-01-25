@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Navigation from '../../components/Navigation';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { ArrowLeft } from 'lucide-react';
@@ -224,8 +225,8 @@ const WaterHistory: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#F0F7FA] dark:bg-background-dark text-slate-900 dark:text-white pb-10 transition-colors duration-500">
-            <header className="px-6 pt-10 pb-6">
+        <div className="flex flex-col min-h-screen bg-[#F0F7FA] dark:bg-background-dark text-slate-900 dark:text-white pb-32 transition-colors duration-500 overflow-x-hidden">
+            <header className="px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-2">
                     <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
                         <ArrowLeft size={24} />
@@ -238,10 +239,10 @@ const WaterHistory: React.FC = () => {
                         <span className="material-symbols-outlined text-blue-500 text-[24px]">person</span>
                     </button>
                 </div>
-                <h1 className="text-3xl font-black tracking-tight flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
                     Olá, {userName || 'Atleta'}
                 </h1>
-                <p className="text-slate-500 dark:text-slate-400 font-medium">
+                <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium">
                     Mantenha-se hidratado e acompanhe seu progresso.
                 </p>
             </header>
@@ -249,75 +250,75 @@ const WaterHistory: React.FC = () => {
             {/* Stat Cards Row */}
             <div className="flex overflow-x-auto no-scrollbar gap-4 px-6 pb-4 cursor-grab active:cursor-grabbing">
                 {/* Card Hoje */}
-                <div className="min-w-[160px] bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5">
+                <div className="min-w-[140px] sm:min-w-[160px] flex-1 bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hoje</span>
-                        <div className="size-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-blue-500 text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>water_drop</span>
+                        <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hoje</span>
+                        <div className="size-7 sm:size-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-blue-500 text-[16px] sm:text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>water_drop</span>
                         </div>
                     </div>
-                    <p className="text-xl font-black mb-1">{stats.today.toLocaleString()}ml</p>
-                    <div className={`flex items-center gap-1 text-[10px] font-bold ${stats.vsOntem >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        <span className="material-symbols-outlined text-[14px]">{stats.vsOntem >= 0 ? 'trending_up' : 'trending_down'}</span>
+                    <p className="text-lg sm:text-xl font-black mb-1">{stats.today.toLocaleString()}ml</p>
+                    <div className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-bold ${stats.vsOntem >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        <span className="material-symbols-outlined text-[12px] sm:text-[14px]">{stats.vsOntem >= 0 ? 'trending_up' : 'trending_down'}</span>
                         {stats.diffLabel}
                     </div>
                 </div>
 
                 {/* Card Média */}
-                <div className="min-w-[160px] bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5">
+                <div className="min-w-[140px] sm:min-w-[160px] flex-1 bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Média Semanal</span>
-                        <div className="size-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-blue-500 text-[18px]">show_chart</span>
+                        <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Média</span>
+                        <div className="size-7 sm:size-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-blue-500 text-[16px] sm:text-[18px]">show_chart</span>
                         </div>
                     </div>
-                    <p className="text-xl font-black mb-1">{stats.avgWeekly.toLocaleString()}ml</p>
-                    <div className={`flex items-center gap-1 text-[10px] font-bold ${stats.avgWeekly >= goal ? 'text-green-500' : 'text-blue-500'}`}>
-                        <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
-                        {stats.avgWeekly >= goal ? 'Na meta' : 'Quase lá'}
+                    <p className="text-lg sm:text-xl font-black mb-1">{stats.avgWeekly.toLocaleString()}ml</p>
+                    <div className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-bold ${stats.avgWeekly >= goal ? 'text-green-500' : 'text-blue-500'}`}>
+                        <span className="material-symbols-outlined text-[12px] sm:text-[14px]">auto_awesome</span>
+                        {stats.avgWeekly >= goal ? 'Bateu' : 'Meta'}
                     </div>
                 </div>
 
                 {/* Card Sequência */}
-                <div className="min-w-[160px] bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5">
+                <div className="min-w-[140px] sm:min-w-[160px] flex-1 bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sequência</span>
-                        <div className="size-8 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-orange-500 text-[18px]">emoji_events</span>
+                        <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Dias</span>
+                        <div className="size-7 sm:size-8 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-orange-500 text-[16px] sm:text-[18px]">emoji_events</span>
                         </div>
                     </div>
-                    <p className="text-xl font-black mb-1">{stats.streak} Dias</p>
-                    <div className="flex items-center gap-1 text-orange-500 text-[10px] font-bold">
-                        Fogo! 🔥
+                    <p className="text-lg sm:text-xl font-black mb-1">{stats.streak}</p>
+                    <div className="flex items-center gap-1 text-orange-500 text-[9px] sm:text-[10px] font-bold">
+                        🔥 Fogo!
                     </div>
                 </div>
 
                 {/* Card Meta */}
-                <div className="min-w-[160px] bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5">
+                <div className="min-w-[140px] sm:min-w-[160px] flex-1 bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Meta Diária</span>
-                        <div className="size-8 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-green-500 text-[18px]">trending_up</span>
+                        <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Meta</span>
+                        <div className="size-7 sm:size-8 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-green-500 text-[16px] sm:text-[18px]">flag</span>
                         </div>
                     </div>
-                    <p className="text-xl font-black mb-1">{stats.goal.toLocaleString()}ml</p>
-                    <div className="flex items-center gap-1 text-slate-400 text-[10px] font-bold">
-                        Padrão
+                    <p className="text-lg sm:text-xl font-black mb-1">{stats.goal}ml</p>
+                    <div className="flex items-center gap-1 text-slate-400 text-[9px] sm:text-[10px] font-bold">
+                        🎯 Alvo
                     </div>
                 </div>
             </div>
 
             {/* Graph Card */}
-            <div className="px-6 mt-6">
-                <div className="bg-white dark:bg-surface-dark rounded-[32px] p-6 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.08)] border border-slate-50 dark:border-white/5">
-                    <div className="flex items-center justify-between mb-8">
+            <div className="px-4 sm:px-6 mt-6">
+                <div className="bg-white dark:bg-surface-dark rounded-[32px] p-4 sm:p-6 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.08)] border border-slate-50 dark:border-white/5">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                         <h3 className="font-black text-lg tracking-tight">Histórico de Hidratação</h3>
-                        <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-full items-center">
+                        <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-full items-center w-full sm:w-auto overflow-x-auto no-scrollbar">
                             {(['dia', 'semana', 'mês', 'ano'] as Period[]).map((p) => (
                                 <button
                                     key={p}
                                     onClick={() => setPeriod(p)}
-                                    className={`px-4 py-1.5 text-[11px] font-black rounded-full transition-all duration-300 ${period === p
+                                    className={`flex-1 sm:flex-none px-4 py-1.5 text-[11px] font-black rounded-full transition-all duration-300 whitespace-nowrap ${period === p
                                         ? 'bg-white dark:bg-surface-dark shadow-md text-slate-900 dark:text-white'
                                         : 'text-slate-400'
                                         }`}
@@ -385,6 +386,8 @@ const WaterHistory: React.FC = () => {
                     <span className="text-[10px] font-black uppercase tracking-widest opacity-60">💡 Dica do dia</span>
                 </div>
             </div>
+
+            <Navigation />
         </div>
     );
 };
