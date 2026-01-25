@@ -69,7 +69,7 @@ const Search: React.FC = () => {
 
       <div className="sticky top-[60px] z-20 bg-background-light dark:bg-background-dark pt-1 pb-4 shadow-sm transition-all duration-300">
         {/* Desktop Search Bar */}
-        <div className="hidden md:block px-4 mb-4">
+        <div className="hidden md:block px-4">
           <div className="relative group">
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
               <SearchIcon size={20} />
@@ -92,8 +92,9 @@ const Search: React.FC = () => {
           </div>
         </div>
 
-        {showFilters && (
-          <div className="hidden md:flex gap-2 overflow-x-auto no-scrollbar px-4 pb-1 animate-in slide-in-from-top-2 duration-200">
+        {/* Desktop Filters with smooth slide-out */}
+        <div className={`hidden md:block overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${showFilters ? 'max-h-20 opacity-100 translate-y-0 mt-3' : 'max-h-0 opacity-0 -translate-y-4'}`}>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-1">
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -107,7 +108,7 @@ const Search: React.FC = () => {
               </button>
             ))}
           </div>
-        )}
+        </div>
       </div>
 
       <div className="flex flex-col flex-1 p-4">
