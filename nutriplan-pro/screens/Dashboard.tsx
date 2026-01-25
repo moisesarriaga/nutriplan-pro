@@ -281,7 +281,7 @@ const Dashboard: React.FC = () => {
               <p className="text-sm font-bold">{todayCalories.toLocaleString()} <span className="text-[10px] font-normal opacity-70">/ {profile?.meta_calorica_diaria || 1800}</span></p>
             </div>
           </div>
-          <div className="w-full bg-slate-100 dark:bg-white/5 h-1.5 rounded-full overflow-hidden mt-1">
+          <div className="w-full bg-slate-100 dark:bg-white/5 h-2.5 rounded-full overflow-hidden mt-1">
             <div
               className="bg-orange-500 h-full rounded-full transition-all duration-500"
               style={{ width: `${Math.min((todayCalories / (profile?.meta_calorica_diaria || 1800)) * 100, 100)}%` }}
@@ -302,7 +302,7 @@ const Dashboard: React.FC = () => {
               <p className="text-sm font-bold">{(profile?.consumo_agua_hoje || 0) / 1000}L <span className="text-[10px] font-normal opacity-70">/ {(profile?.meta_agua_ml || 2000) / 1000}L</span></p>
             </div>
           </div>
-          <div className="w-full bg-slate-100 dark:bg-white/5 h-1.5 rounded-full overflow-hidden mt-1">
+          <div className="w-full bg-slate-100 dark:bg-white/5 h-2.5 rounded-full overflow-hidden mt-1">
             <div
               className="bg-blue-500 h-full rounded-full transition-all duration-500"
               style={{ width: `${Math.min(((profile?.consumo_agua_hoje || 0) / (profile?.meta_agua_ml || 2000)) * 100, 100)}%` }}

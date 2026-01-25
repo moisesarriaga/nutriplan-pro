@@ -225,7 +225,7 @@ const WaterLog: React.FC = () => {
                     className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-blue-500"
                     title="Histórico de Consumo"
                 >
-                    <BarChart2 size={24} />
+                    <BarChart2 size={24} strokeWidth={3} />
                 </button>
             </header>
 
@@ -234,7 +234,7 @@ const WaterLog: React.FC = () => {
                     <svg className="size-full -rotate-90 transform">
                         <circle
                             className="text-slate-200 dark:text-slate-800"
-                            strokeWidth="12"
+                            strokeWidth="16"
                             stroke="currentColor"
                             fill="transparent"
                             r="120"
@@ -243,7 +243,7 @@ const WaterLog: React.FC = () => {
                         />
                         <circle
                             className="text-blue-500 transition-all duration-500 ease-out"
-                            strokeWidth="12"
+                            strokeWidth="16"
                             strokeDasharray={2 * Math.PI * 120}
                             strokeDashoffset={2 * Math.PI * 120 * (1 - percentage / 100)}
                             strokeLinecap="round"

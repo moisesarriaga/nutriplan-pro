@@ -357,7 +357,7 @@ const WaterHistory: React.FC = () => {
                                     type="monotone"
                                     dataKey="ml"
                                     stroke="#3B82F6"
-                                    strokeWidth={4}
+                                    strokeWidth={6}
                                     fillOpacity={1}
                                     fill="url(#colorMl)"
                                     animationDuration={1500}
