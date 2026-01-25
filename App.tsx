@@ -6,6 +6,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import AlertModal from './components/AlertModal';
 import ConfirmationModal from './components/ConfirmationModal';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 // Lazy load screens for performance optimization
 const Dashboard = lazy(() => import('./nutriplan-pro/screens/Dashboard'));
@@ -109,6 +110,7 @@ const App: React.FC = () => {
           <AuthProvider>
             <SubscriptionProvider>
               <AppContent />
+              <SpeedInsights />
             </SubscriptionProvider>
           </AuthProvider>
         </NotificationProvider>
