@@ -489,9 +489,9 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
       </div>
 
       {isEditing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center mb-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-md bg-white dark:bg-surface-dark rounded-[32px] shadow-2xl animate-in zoom-in slide-in-from-bottom-10 duration-300 flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center p-6 pb-2 shrink-0">
               <h3 className="text-xl font-bold">Editar Perfil</h3>
               <button
                 onClick={() => setIsEditing(false)}
@@ -501,128 +501,137 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex flex-col items-center mb-4">
-                <div className="relative">
-                  <div className="h-24 w-24 rounded-full border-4 border-slate-100 dark:border-slate-800 overflow-hidden relative flex items-center justify-center bg-white dark:bg-surface-dark">
-                    {editForm.avatar_url || profile?.avatar_url ? (
-                      <img
-                        src={editForm.avatar_url || profile?.avatar_url || ''}
-                        alt="Preview"
-                        className="h-full w-full object-cover"
+            <div className="flex-1 overflow-y-auto px-6 py-2 no-scrollbar">
+              <div className="space-y-4">
+                <div className="flex flex-col items-center mb-6 pt-2">
+                  <div className="relative">
+                    <div className="h-28 w-28 rounded-full border-4 border-slate-100 dark:border-slate-800 overflow-hidden relative flex items-center justify-center bg-white dark:bg-surface-dark shadow-inner">
+                      {editForm.avatar_url || profile?.avatar_url ? (
+                        <img
+                          src={editForm.avatar_url || profile?.avatar_url || ''}
+                          alt="Preview"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <span className="material-symbols-rounded text-slate-300 text-[70px]">person</span>
+                      )}
+                      {uploading && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                        </div>
+                      )}
+                    </div>
+                    <label className="absolute bottom-1 right-1 bg-primary text-black rounded-full p-2 border-4 border-white dark:border-surface-dark cursor-pointer shadow-lg active:scale-90 transition-transform">
+                      <span className="material-symbols-rounded text-[20px]">upload</span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        disabled={uploading}
                       />
-                    ) : (
-                      <span className="material-symbols-rounded text-slate-300 text-[60px]">person</span>
-                    )}
-                    {uploading && (
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                      </div>
-                    )}
+                    </label>
                   </div>
-                  <label className="absolute bottom-0 right-0 bg-primary text-black rounded-full p-1.5 border-2 border-white dark:border-surface-dark cursor-pointer shadow-lg active:scale-90 transition-transform">
-                    <span className="material-symbols-rounded text-[18px]">upload</span>
+                  <span className="text-xs font-semibold text-slate-400 mt-3 tracking-wide uppercase">Toque para trocar foto</span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Nome</label>
+                  <input
+                    type="text"
+                    value={editForm.nome}
+                    onFocus={() => setIsObjectiveOpen(false)}
+                    onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })}
+                    className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-background-dark/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Peso (kg)</label>
                     <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      disabled={uploading}
+                      type="number"
+                      value={editForm.peso_kg}
+                      onFocus={() => setIsObjectiveOpen(false)}
+                      onChange={(e) => setEditForm({ ...editForm, peso_kg: Number(e.target.value) })}
+                      className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-background-dark/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-center font-bold"
                     />
-                  </label>
-                </div>
-                <span className="text-xs font-medium text-slate-500 mt-2">Toque para trocar foto</span>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1.5 ml-1">Nome</label>
-                <input
-                  type="text"
-                  value={editForm.nome}
-                  onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })}
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-primary"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5 ml-1">Peso (kg)</label>
-                  <input
-                    type="number"
-                    value={editForm.peso_kg}
-                    onChange={(e) => setEditForm({ ...editForm, peso_kg: Number(e.target.value) })}
-                    className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5 ml-1">Altura (cm)</label>
-                  <input
-                    type="number"
-                    value={editForm.altura_cm}
-                    onChange={(e) => setEditForm({ ...editForm, altura_cm: Number(e.target.value) })}
-                    className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1.5 ml-1">Idade</label>
-                <input
-                  type="number"
-                  value={editForm.idade}
-                  onChange={(e) => setEditForm({ ...editForm, idade: Number(e.target.value) })}
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-primary"
-                />
-              </div>
-
-              <div className="relative">
-                <label className="block text-sm font-medium mb-1.5 ml-1">Objetivo</label>
-                <button
-                  type="button"
-                  onClick={() => setIsObjectiveOpen(!isObjectiveOpen)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent dark:bg-surface-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary transition-all text-left"
-                >
-                  <span>
-                    {editForm.objetivo === 'emagrecer' ? 'Emagrecer' :
-                      editForm.objetivo === 'ganhar_massa' ? 'Ganhar Massa' : 'Manter Peso'}
-                  </span>
-                  <span className={`material-symbols-rounded text-[20px] transition-transform ${isObjectiveOpen ? 'rotate-180' : ''}`}>keyboard_arrow_down</span>
-                </button>
-
-                {isObjectiveOpen && (
-                  <div className="absolute z-10 w-full mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark shadow-xl animate-in fade-in slide-in-from-top-2 duration-200 max-h-32 overflow-y-scroll no-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
-                    {[
-                      { value: 'emagrecer', label: 'Emagrecer' },
-                      { value: 'manter', label: 'Manter Peso' },
-                      { value: 'ganhar_massa', label: 'Ganhar Massa' }
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => {
-                          setEditForm({ ...editForm, objetivo: opt.value });
-                          setIsObjectiveOpen(false);
-                        }}
-                        className={`w-full p-4 text-left text-sm font-medium transition-colors ${editForm.objetivo === opt.value
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-slate-900 dark:text-white hover:bg-primary hover:text-black'
-                          }`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
                   </div>
-                )}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Altura (cm)</label>
+                    <input
+                      type="number"
+                      value={editForm.altura_cm}
+                      onFocus={() => setIsObjectiveOpen(false)}
+                      onChange={(e) => setEditForm({ ...editForm, altura_cm: Number(e.target.value) })}
+                      className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-background-dark/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-center font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Idade</label>
+                  <input
+                    type="number"
+                    value={editForm.idade}
+                    onFocus={() => setIsObjectiveOpen(false)}
+                    onChange={(e) => setEditForm({ ...editForm, idade: Number(e.target.value) })}
+                    className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-background-dark/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-center font-bold"
+                  />
+                </div>
+
+                <div className="relative">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Objetivo</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsObjectiveOpen(!isObjectiveOpen)}
+                    className="w-full flex items-center justify-between p-3.5 rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-background-dark/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-left font-medium"
+                  >
+                    <span>
+                      {editForm.objetivo === 'emagrecer' ? 'Emagrecer' :
+                        editForm.objetivo === 'ganhar_massa' ? 'Ganhar Massa' : 'Manter Peso'}
+                    </span>
+                    <span className={`material-symbols-rounded text-[24px] transition-transform ${isObjectiveOpen ? 'rotate-180 text-primary' : 'text-slate-400'}`}>keyboard_arrow_down</span>
+                  </button>
+
+                  {isObjectiveOpen && (
+                    <div className="absolute z-20 w-full mt-2 rounded-2xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-surface-dark shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300 overflow-hidden ring-4 ring-black/5">
+                      {[
+                        { value: 'emagrecer', label: 'Emagrecer' },
+                        { value: 'manter', label: 'Manter Peso' },
+                        { value: 'ganhar_massa', label: 'Ganhar Massa' }
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            setEditForm({ ...editForm, objetivo: opt.value });
+                            setIsObjectiveOpen(false);
+                          }}
+                          className={`w-full p-4 text-left text-sm font-bold transition-all flex items-center justify-between ${editForm.objetivo === opt.value
+                            ? 'bg-primary text-black'
+                            : 'text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5'
+                            }`}
+                        >
+                          {opt.label}
+                          {editForm.objetivo === opt.value && <span className="material-symbols-rounded text-[20px]">check_circle</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            <button
-              onClick={handleSaveProfile}
-              disabled={loading}
-              className="w-full mt-8 bg-primary text-black font-bold py-4 rounded-xl active:scale-[0.98] transition-all disabled:opacity-50"
-            >
-              {loading ? 'Salvando...' : 'Salvar Alterações'}
-            </button>
+            <div className="p-6 pt-2 shrink-0">
+              <button
+                onClick={handleSaveProfile}
+                disabled={loading}
+                className="w-full bg-primary text-black font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-all disabled:opacity-50"
+              >
+                {loading ? 'Salvando...' : 'Salvar Alterações'}
+              </button>
+            </div>
           </div>
         </div>
       )}

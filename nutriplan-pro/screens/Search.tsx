@@ -198,7 +198,7 @@ const Search: React.FC = () => {
           className={`absolute bottom-[-80px] left-0 right-0 h-[340px] bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark to-transparent transition-opacity duration-1000 ease-in-out -z-10 ${showFilters ? 'opacity-100 delay-500' : 'opacity-0 delay-0'}`}
         ></div>
 
-        <div className="max-w-md mx-auto flex flex-col items-end relative z-10">
+        <div className="flex flex-col items-end relative z-10 w-full">
           {/* Filters Container with "Slide out" effect */}
           <div className={`w-full overflow-hidden transition-all duration-500 ease-out pointer-events-auto ${showFilters ? 'max-h-20 opacity-100 translate-y-0' : 'max-h-0 opacity-0 translate-y-full'}`}>
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-4 pt-2 px-4">
@@ -218,25 +218,27 @@ const Search: React.FC = () => {
           </div>
 
           {/* Search Bar with Higher Z-Index */}
-          <div className="relative group w-full z-10 pointer-events-auto shadow-2xl rounded-xl px-4">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-              <SearchIcon size={20} />
-            </span>
-            <input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-xl border-none bg-white dark:bg-surface-dark py-3.5 pl-10 pr-12 text-sm ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-2 focus:ring-primary transition-all backdrop-blur-md"
-              placeholder="Receitas, ingredientes, tags..."
-              type="text"
-            />
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`absolute inset-y-0 right-0 flex items-center pr-2 transition-colors ${showFilters ? 'text-primary' : 'text-gray-400'}`}
-            >
-              <span className={`p-1.5 rounded-lg ${showFilters ? 'bg-primary/10' : ''}`}>
-                <Sliders size={20} />
+          <div className="w-full max-w-md mx-auto px-4 pointer-events-auto">
+            <div className="relative group w-full z-10 shadow-2xl rounded-xl overflow-hidden">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <SearchIcon size={20} />
               </span>
-            </button>
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full border-none bg-white dark:bg-surface-dark py-3.5 pl-10 pr-12 text-sm ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-2 focus:ring-primary transition-all backdrop-blur-md"
+                placeholder="Receitas, ingredientes, tags..."
+                type="text"
+              />
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`absolute inset-y-0 right-0 flex items-center pr-2 transition-colors ${showFilters ? 'text-primary' : 'text-gray-400'}`}
+              >
+                <span className={`p-1.5 rounded-lg ${showFilters ? 'bg-primary/10' : ''}`}>
+                  <Sliders size={20} />
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
