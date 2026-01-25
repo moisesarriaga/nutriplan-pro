@@ -104,7 +104,7 @@ const Dashboard: React.FC = () => {
             recipe = {
               id: dbRecipe.id,
               name: dbRecipe.nome,
-              image: dbRecipe.imagem_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800', // Fallback image
+              image: dbRecipe.imagem_url || null,
               calories: dbRecipe.total_calories || 0,
               description: 'Receita personalizada',
               time: '30 min',
@@ -125,6 +125,12 @@ const Dashboard: React.FC = () => {
           });
         }
       }
+
+      // 5. Sort meals logically: Café da Manhã, Almoço, Jantar, Lanche
+      const mealOrder = ['Café da Manhã', 'Almoço', 'Jantar', 'Lanche'];
+      enrichedMeals.sort((a, b) => {
+        return mealOrder.indexOf(a.tipo_refeicao) - mealOrder.indexOf(b.tipo_refeicao);
+      });
 
       setTodayMeals(enrichedMeals);
 
@@ -327,13 +333,17 @@ const Dashboard: React.FC = () => {
                 onClick={() => navigate(`/recipe/${meal.receita_id}`)}
                 className="flex flex-col gap-3 rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm min-w-[160px] w-[160px] flex-shrink-0 transition-transform active:scale-95"
               >
-                <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-                  <img
-                    src={meal.recipe.image}
-                    alt={meal.recipe.name}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    loading="lazy"
-                  />
+                <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-slate-100 dark:bg-white/5 flex items-center justify-center">
+                  {meal.recipe.image ? (
+                    <img
+                      src={meal.recipe.image}
+                      alt={meal.recipe.name}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[40px]">restaurant_menu</span>
+                  )}
                   <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium text-white capitalize">
                     {meal.tipo_refeicao}
                   </div>

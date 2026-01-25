@@ -371,6 +371,27 @@ const CreateRecipe: React.FC = () => {
         ) : (
           <>
             <section className="flex flex-col gap-5">
+              <div className="w-full h-48 rounded-2xl bg-slate-100 dark:bg-white/5 overflow-hidden flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 relative">
+                {generatedImageUrl ? (
+                  <img
+                    src={generatedImageUrl}
+                    alt="Recipe"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="material-symbols-outlined text-slate-300 dark:text-slate-700 text-[64px]">local_dining</span>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhuma imagem</p>
+                  </div>
+                )}
+                {isGeneratingImage && (
+                  <div className="absolute inset-0 bg-white/60 dark:bg-background-dark/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3">
+                    <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                    <p className="text-sm font-bold animate-pulse">Gerando Imagem...</p>
+                  </div>
+                )}
+              </div>
+
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome da Receita</label>
                 <input
