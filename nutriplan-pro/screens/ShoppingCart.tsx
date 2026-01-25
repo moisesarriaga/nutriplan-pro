@@ -63,16 +63,18 @@ const ShoppingCart: React.FC = () => {
     }, {});
 
     // Convert to array and calculate stats
-    const groupsArray: ShoppingListGroup[] = Object.values(groupedByName).map((group: any) => ({
-      id: group.id,
-      name: group.name.split(' ::: ')[0], // Strip unique suffix for display
-      originalName: group.name,
-      itemCount: group.items.length,
-      completedCount: group.items.filter((i: any) => i.comprado).length,
-      totalPrice: group.items.reduce((sum: number, item: any) => sum + (item.ultimo_preco_informado || 0), 0),
-      createdAt: group.createdAt,
-      concluido: group.items.some((i: any) => i.concluido) // If any item is marked as concluded, the group is
-    }));
+    const groupsArray: ShoppingListGroup[] = Object.values(groupedByName)
+      .map((group: any) => ({
+        id: group.id,
+        name: group.name.split(' ::: ')[0], // Strip unique suffix for display
+        originalName: group.name,
+        itemCount: group.items.length,
+        completedCount: group.items.filter((i: any) => i.comprado).length,
+        totalPrice: group.items.reduce((sum: number, item: any) => sum + (item.ultimo_preco_informado || 0), 0),
+        createdAt: group.createdAt,
+        concluido: group.items.some((i: any) => i.concluido) // If any item is marked as concluded, the group is
+      }))
+      .filter(g => g.id !== 'Sem Grupo'); // Hide "Sem Grupo" from the UI
 
     // Sort by creation date (newest first)
     groupsArray.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());

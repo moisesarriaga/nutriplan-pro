@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWaterNotifications } from '../../hooks/useWaterNotifications';
-import { ArrowLeft, Bell, BarChart2 } from 'lucide-react';
+import { ArrowLeft, Bell } from 'lucide-react';
 
 const WaterLog: React.FC = () => {
     const navigate = useNavigate();
@@ -222,10 +222,10 @@ const WaterLog: React.FC = () => {
                 </div>
                 <button
                     onClick={() => navigate('/water-history')}
-                    className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-blue-500"
+                    className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-blue-500 flex items-center justify-center"
                     title="Histórico de Consumo"
                 >
-                    <BarChart2 size={24} strokeWidth={3} />
+                    <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>bar_chart_4_bars</span>
                 </button>
             </header>
 

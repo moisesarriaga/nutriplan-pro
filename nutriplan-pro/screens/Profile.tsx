@@ -316,7 +316,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
           {[
             { icon: 'favorite', label: 'Receitas', color: 'red', path: '/favorites' },
             { icon: 'history', label: 'Histórico', color: 'orange', path: '/history' },
-            { icon: 'water_drop', label: 'Hidratação', color: 'blue', path: '/water-history' }
+            { icon: 'bar_chart_4_bars', label: 'Hidratação', color: 'blue', path: '/water-history' }
           ].map((item) => (
             <button
               key={item.label}

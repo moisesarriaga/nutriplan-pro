@@ -27,6 +27,11 @@ const RecipeDetails: React.FC = () => {
   const { hasFeature } = useSubscription();
   const [recipe, setRecipe] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showGroupSelector, setShowGroupSelector] = useState(false);
+  const [existingGroups, setExistingGroups] = useState<{ id: string, name: string }[]>([]);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [isCreatingNewGroup, setIsCreatingNewGroup] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const canTrackCalories = hasFeature('calorie_tracking');
 
@@ -145,25 +150,83 @@ const RecipeDetails: React.FC = () => {
     );
   };
 
-  const handleAddToCart = async () => {
-    if (!user || selectedIngredients.length === 0) return;
+  const fetchExistingGroups = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('lista_precos_mercado')
+      .select('grupo_nome')
+      .eq('usuario_id', user.id)
+      .eq('concluido', false);
 
-    const ingredientsToAdd = recipe.ingredients.filter(ing => selectedIngredients.includes(ing.id));
+    if (error) return;
 
-    // Prepare items for insertion into lista_precos_mercado (which acts as our cart items source)
+    const uniqueGroups = Array.from(new Set(data.map(item => item.grupo_nome || 'Sem Grupo')))
+      .map(group => ({
+        id: group,
+        name: group.split(' ::: ')[0]
+      }))
+      .filter(group => group.id !== 'Sem Grupo')
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    setExistingGroups(uniqueGroups);
+  };
+
+  const handleAddToCartClick = () => {
+    const ingredientsToCartCount = recipe.ingredients.length - selectedIngredients.length;
+    if (ingredientsToCartCount === 0) {
+      showNotification('Todos os itens foram marcados como "já possuo".');
+      return;
+    }
+    fetchExistingGroups();
+    setShowGroupSelector(true);
+  };
+
+  const handleAddToCart = async (targetGroupName: string | null) => {
+    if (!user) return;
+    setIsAddingToCart(true);
+
+    const ingredientsToAdd = recipe.ingredients.filter(ing => !selectedIngredients.includes(ing.id));
+
+    if (ingredientsToAdd.length === 0) {
+      setIsAddingToCart(false);
+      setShowGroupSelector(false);
+      return;
+    }
+
+    let finalGroupName = targetGroupName;
+    if (targetGroupName === 'NEW') {
+      if (!newGroupName.trim()) {
+        showNotification('Digite um nome para o novo grupo.');
+        setIsAddingToCart(false);
+        return;
+      }
+      finalGroupName = `${newGroupName.trim()} ::: ${Date.now()}`;
+    }
+
     const items = ingredientsToAdd.map(ing => ({
       usuario_id: user.id,
       nome_item: ing.name,
-      ultimo_preco_informado: 0, // Placeholder
-      unidade_preco: ing.unit
+      quantidade: parseFloat(ing.quantity) || 1,
+      ultimo_preco_informado: 0,
+      unidade_preco: ing.unit,
+      grupo_nome: finalGroupName === 'Sem Grupo' ? null : finalGroupName,
+      comprado: false,
+      concluido: false
     }));
 
-    const { error } = await supabase.from('lista_precos_mercado').upsert(items, { onConflict: 'usuario_id,nome_item' });
+    const { error } = await supabase.from('lista_precos_mercado').insert(items);
 
-    if (!error) {
-      showNotification(`${selectedIngredients.length} ingredientes adicionados ao carrinho!`);
+    if (error) {
+      console.error('Error adding ingredients to shopping list:', error);
+      showNotification('Erro ao adicionar ingredientes: ' + error.message);
+    } else {
+      showNotification(`${ingredientsToAdd.length} ingredientes adicionados ao grupo "${finalGroupName?.split(' ::: ')[0] || 'Sem Grupo'}"!`);
       setSelectedIngredients([]);
+      setShowGroupSelector(false);
+      setNewGroupName('');
+      setIsCreatingNewGroup(false);
     }
+    setIsAddingToCart(false);
   };
 
   const handleAddToPlanner = async () => {
@@ -346,7 +409,7 @@ const RecipeDetails: React.FC = () => {
             <section>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold">Para a Receita</h3>
-                <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-1 rounded">Marque o que já tem em casa</span>
+                <span className="text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg shadow-sm">Marque o que já tem em casa</span>
               </div>
               <div className="flex flex-col gap-3">
                 {recipe.ingredients.map((ing) => (
@@ -368,12 +431,12 @@ const RecipeDetails: React.FC = () => {
                   </label>
                 ))}
                 <button
-                  onClick={handleAddToCart}
-                  disabled={selectedIngredients.length === 0}
-                  className={`mt-2 w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl transition-all ${selectedIngredients.length > 0 ? 'text-primary bg-primary/10' : 'text-gray-400 bg-gray-100 dark:bg-white/5 cursor-not-allowed'}`}
+                  onClick={handleAddToCartClick}
+                  disabled={recipe.ingredients.length === selectedIngredients.length}
+                  className={`mt-2 w-full flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl transition-all ${recipe.ingredients.length > selectedIngredients.length ? 'text-primary bg-primary/10' : 'text-gray-400 bg-gray-100 dark:bg-white/5 cursor-not-allowed'}`}
                 >
                   <ShoppingCart size={20} />
-                  Adicionar {selectedIngredients.length > 0 ? selectedIngredients.length : ''} Ingredientes à Lista de Compras
+                  Adicionar {recipe.ingredients.length - selectedIngredients.length > 0 ? recipe.ingredients.length - selectedIngredients.length : ''} Ingredientes à Lista de Compras
                 </button>
               </div>
             </section>
@@ -488,6 +551,80 @@ const RecipeDetails: React.FC = () => {
               >
                 Confirmar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showGroupSelector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-xl bg-white dark:bg-surface-dark rounded-3xl p-8 animate-in zoom-in-95 duration-300 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <h3 className="text-2xl font-bold mb-6 text-center text-slate-900 dark:text-white">Escolha a Lista</h3>
+            <p className="text-sm text-center text-slate-500 mb-8">Onde você deseja adicionar os {recipe.ingredients.length - selectedIngredients.length} ingredientes faltantes?</p>
+
+            <div className="flex-1 overflow-y-auto pr-2 space-y-3 mb-8 no-scrollbar">
+              {existingGroups.length > 0 ? (
+                existingGroups.map(group => (
+                  <button
+                    key={group.id}
+                    onClick={() => handleAddToCart(group.id)}
+                    className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border-2 border-transparent hover:border-primary hover:bg-primary/5 transition-all text-left flex items-center justify-between"
+                  >
+                    <span className="font-bold">{group.name}</span>
+                    <span className="material-symbols-rounded text-primary">chevron_right</span>
+                  </button>
+                ))
+              ) : (
+                <div className="text-center py-6 text-slate-400">
+                  <span className="material-symbols-rounded text-[48px] mb-2 block opacity-30">shopping_bag</span>
+                  <p className="text-sm">Você ainda não possui grupos de lista.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              {isCreatingNewGroup ? (
+                <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-200">
+                  <input
+                    type="text"
+                    value={newGroupName}
+                    onChange={(e) => setNewGroupName(e.target.value)}
+                    placeholder="Nome do novo grupo (ex: Mercado Mensal)"
+                    className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border-2 border-slate-100 dark:border-white/10 focus:border-primary outline-none font-bold"
+                    autoFocus
+                  />
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => setIsCreatingNewGroup(false)}
+                      className="flex-1 h-12 rounded-xl font-bold text-slate-500"
+                    >
+                      Voltar
+                    </button>
+                    <button
+                      onClick={() => handleAddToCart('NEW')}
+                      disabled={isAddingToCart || !newGroupName.trim()}
+                      className="flex-1 h-12 rounded-xl bg-primary text-black font-bold shadow-lg shadow-primary/20"
+                    >
+                      {isAddingToCart ? 'Adicionando...' : 'Criar e Adicionar'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => setIsCreatingNewGroup(true)}
+                    className="w-full h-14 rounded-2xl border-2 border-dashed border-primary/40 text-primary font-bold hover:bg-primary/5 transition-all"
+                  >
+                    + Criar Novo Grupo de Lista
+                  </button>
+                  <button
+                    onClick={() => setShowGroupSelector(false)}
+                    className="w-full h-12 rounded-xl text-slate-400 font-medium"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
