@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
             ? `. Description: ${recipeDescription.substring(0, 300)}...`
             : "";
 
-        const prompt = `Hand-drawn food illustration of ${recipeName}${promptDescription}. Flat 2D vector art style, thick bold outlines, vibrant colors, clean lines, minimalist, isolated on a clean white background. NO text, NO titles, NO labels, purely visual illustration.`;
+        const prompt = `Professional food illustration of ${recipeName}${promptDescription}. Delicate watercolor style, soft hand-painted textures, artistic brush strokes, vibrant colors, isolated on a clean white background. NO text, NO titles, NO labels, purely visual illustration.`;
 
         // Using the new gpt-image-1 model as per documentation
         const response = await openai.images.generate({

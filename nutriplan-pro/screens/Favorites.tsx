@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import Navigation from '../../components/Navigation';
-import { ArrowLeft, HeartOff, Utensils, Flame } from 'lucide-react';
+import { ArrowLeft, HeartOff, Flame } from 'lucide-react';
 
 interface FavoriteRecipe {
     id: string;
     nome: string;
     categoria: string;
     calorias_por_porcao: number;
+    imagem_url?: string;
 }
 
 const Favorites: React.FC = () => {
@@ -34,7 +35,8 @@ const Favorites: React.FC = () => {
             id,
             nome,
             categoria,
-            calorias_por_porcao
+            calorias_por_porcao,
+            imagem_url
           )
         `)
                 .eq('usuario_id', user?.id);
@@ -84,8 +86,16 @@ const Favorites: React.FC = () => {
                                 onClick={() => navigate(`/recipe/${recipe.id}`)}
                                 className="group flex gap-4 p-4 rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-white/5 active:scale-[0.98] transition cursor-pointer"
                             >
-                                <div className="size-20 shrink-0 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center">
-                                    <Utensils className="text-primary" size={32} />
+                                <div className="size-20 shrink-0 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center overflow-hidden">
+                                    {recipe.imagem_url ? (
+                                        <img
+                                            src={recipe.imagem_url}
+                                            alt={recipe.nome}
+                                            className="size-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="material-symbols-outlined text-slate-300 dark:text-gray-700/50 text-[32px]">local_dining</span>
+                                    )}
                                 </div>
                                 <div className="flex flex-col justify-center flex-1">
                                     <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{recipe.nome}</h3>
