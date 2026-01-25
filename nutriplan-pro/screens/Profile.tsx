@@ -412,7 +412,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
       <div className="mt-8">
         <h3 className="px-4 text-lg font-bold mb-3 flex items-center gap-2">
           <span className="material-symbols-rounded text-primary text-[20px]">monitor_heart</span>
-          Informações Físicas
+          Minhas Informações
         </h3>
         <div className="mx-4 overflow-hidden rounded-xl bg-white dark:bg-surface-dark shadow-sm border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-700/50">
           {[
