@@ -58,6 +58,14 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
   } | null>(null);
   const objectiveRef = useRef<HTMLDivElement>(null);
   const modalScrollRef = useRef<HTMLDivElement>(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  // Efeito para verificar permissão de notificação ao carregar
+  useEffect(() => {
+    if ('Notification' in window) {
+      setNotificationsEnabled(Notification.permission === 'granted');
+    }
+  }, []);
 
   // Função auxiliar para calcular idade
   const calculateAge = (birthDate: string | undefined) => {
@@ -159,6 +167,38 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
       .getPublicUrl(filePath);
 
     return data.publicUrl;
+  };
+
+  const handleToggleNotifications = async () => {
+    if (!('Notification' in window)) {
+      showNotification('Seu navegador não suporta notificações.', { iconType: 'error' });
+      return;
+    }
+
+    if (Notification.permission === 'denied') {
+      showNotification('As notificações foram bloqueadas. Você precisa habilitá-las nas configurações do seu navegador.', { iconType: 'warning' });
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      // In a real app, we might update a preference in DB here
+      setNotificationsEnabled(false);
+      // Logic for disabling (unsubscribing from push) would go here
+      return;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        setNotificationsEnabled(true);
+        showNotification('Notificações habilitadas com sucesso!', {
+          title: 'Sucesso',
+          iconType: 'success'
+        });
+      }
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+    }
   };
 
   const handleDirectAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -404,7 +444,12 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
               <span className="text-base font-medium">{t('profile.notifications')}</span>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input checked readOnly className="sr-only peer" type="checkbox" />
+              <input
+                checked={notificationsEnabled}
+                onChange={handleToggleNotifications}
+                className="sr-only peer"
+                type="checkbox"
+              />
               <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
             </label>
           </div>
