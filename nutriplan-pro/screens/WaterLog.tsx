@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWaterNotifications } from '../../hooks/useWaterNotifications';
-import { ArrowLeft, GlassWater, Bell, BarChart2 } from 'lucide-react';
+import { ArrowLeft, Bell, BarChart2 } from 'lucide-react';
 
 const WaterLog: React.FC = () => {
     const navigate = useNavigate();
@@ -272,10 +272,15 @@ const WaterLog: React.FC = () => {
                             className="flex flex-col items-center justify-between gap-2 p-4 rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800 active:scale-95 transition min-h-[100px]"
                         >
                             <div className="flex-1 flex items-center justify-center">
-                                <GlassWater
-                                    className="text-blue-500"
-                                    size={amount === 200 ? 20 : amount === 300 ? 28 : 36}
-                                />
+                                <span
+                                    className="material-symbols-outlined text-blue-500"
+                                    style={{
+                                        fontSize: amount === 200 ? '24px' : amount === 300 ? '32px' : '40px',
+                                        fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24"
+                                    }}
+                                >
+                                    water_full
+                                </span>
                             </div>
                             <span className="font-bold shrink-0">{amount}ml</span>
                         </button>

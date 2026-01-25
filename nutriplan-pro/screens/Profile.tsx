@@ -315,8 +315,8 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
         <div className="grid grid-cols-3 gap-3">
           {[
             { icon: 'favorite', label: 'Receitas', color: 'red', path: '/favorites' },
-            { icon: 'history', label: 'Histórico', color: 'blue', path: '/history' },
-            { icon: 'receipt_long', label: 'Listas', color: 'orange', path: '/saved-lists' }
+            { icon: 'history', label: 'Histórico', color: 'orange', path: '/history' },
+            { icon: 'water_drop', label: 'Hidratação', color: 'blue', path: '/water-history' }
           ].map((item) => (
             <button
               key={item.label}
