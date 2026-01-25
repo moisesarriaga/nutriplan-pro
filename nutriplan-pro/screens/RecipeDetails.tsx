@@ -66,7 +66,7 @@ const RecipeDetails: React.FC = () => {
         const transformedRecipe = {
           id: data.id,
           name: data.nome,
-          image: data.imagem_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+          image: data.imagem_url || null,
           category: 'Personalizada',
           description: data.modo_preparo?.substring(0, 100) || 'Receita personalizada',
           calories: data.total_calories || 0,
@@ -314,12 +314,12 @@ const RecipeDetails: React.FC = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen pb-72">
-      <header className="relative w-full h-[320px]">
+      <header className={`relative w-full ${recipe.image ? 'h-[320px]' : 'h-[240px]'}`}>
         <div
-          className="absolute inset-0 w-full h-full bg-cover bg-center"
-          style={{ backgroundImage: `url(${recipe.image})` }}
+          className={`absolute inset-0 w-full h-full ${recipe.image ? 'bg-cover bg-center' : 'bg-surface-dark'}`}
+          style={recipe.image ? { backgroundImage: `url(${recipe.image})` } : {}}
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/40 to-black/30"></div>
+          <div className={`absolute inset-0 ${recipe.image ? 'bg-gradient-to-t from-background-dark via-background-dark/40 to-black/30' : 'bg-gradient-to-t from-background-dark/95 to-background-dark/40'}`}></div>
         </div>
 
         <div className="absolute top-0 left-0 w-full p-4 pt-6 flex items-center justify-between">

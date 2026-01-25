@@ -95,7 +95,7 @@ const MealPlanner: React.FC = () => {
             receita: {
               id: dbRecipe.id,
               name: dbRecipe.nome,
-              image: dbRecipe.imagem_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+              image: dbRecipe.imagem_url || null,
               calories: dbRecipe.total_calories || 0,
               description: 'Receita personalizada',
               time: '30 min',
@@ -138,7 +138,7 @@ const MealPlanner: React.FC = () => {
       const formattedDb = (dbRecipes || []).map(r => ({
         id: r.id,
         name: r.nome,
-        image: r.imagem_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+        image: r.imagem_url || null,
         calories: r.total_calories || 0,
         isCustom: true,
         ingredients: r.nutritional_data?.ingredients || []
@@ -390,12 +390,18 @@ const MealPlanner: React.FC = () => {
                   {meals.length > 0 ? (
                     meals.map((entry) => (
                       <div key={entry.id} className="group relative flex items-stretch justify-between gap-4 rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm border border-transparent hover:border-primary/30 transition-all cursor-pointer" onClick={() => navigate(`/recipe/${entry.receita_id}`)}>
-                        <img
-                          src={entry.receita?.image || 'https://picsum.photos/200'}
-                          alt={entry.receita?.name || 'Receita'}
-                          className="w-20 h-20 shrink-0 object-cover rounded-lg"
-                          loading="lazy"
-                        />
+                        <div className="w-20 h-20 shrink-0 bg-slate-100 dark:bg-white/5 rounded-lg overflow-hidden flex items-center justify-center">
+                          {entry.receita?.image ? (
+                            <img
+                              src={entry.receita.image}
+                              alt={entry.receita.name || 'Receita'}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[32px]">restaurant_menu</span>
+                          )}
+                        </div>
                         <div className="flex flex-col justify-center flex-1 min-w-0 py-1">
                           <p className="text-base font-bold leading-tight truncate">{entry.receita?.name || 'Receita Desconhecida'}</p>
                           <div className="flex items-center gap-2 mt-2">
@@ -685,10 +691,16 @@ const MealPlanner: React.FC = () => {
                           onClick={() => addMealToPlan(recipe)}
                           className="flex items-center gap-4 p-3 rounded-2xl border border-transparent bg-gray-50 dark:bg-white/5 hover:border-primary/30 transition-all cursor-pointer group active:scale-[0.98]"
                         >
-                          <div
-                            className="size-16 rounded-xl bg-center bg-cover bg-no-repeat"
-                            style={{ backgroundImage: `url(${recipe.image})` }}
-                          ></div>
+                          {recipe.image ? (
+                            <div
+                              className="size-16 rounded-xl bg-center bg-cover bg-no-repeat"
+                              style={{ backgroundImage: `url(${recipe.image})` }}
+                            ></div>
+                          ) : (
+                            <div className="size-16 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center">
+                              <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[24px]">restaurant_menu</span>
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
                             <p className="font-bold text-sm truncate">{recipe.name}</p>
                             <div className="flex items-center gap-2 mt-1">
@@ -728,10 +740,16 @@ const MealPlanner: React.FC = () => {
                           onClick={() => addMealToPlan(recipe)}
                           className="flex items-center gap-4 p-3 rounded-2xl border border-transparent bg-gray-50 dark:bg-white/5 hover:border-primary/30 transition-all cursor-pointer group active:scale-[0.98]"
                         >
-                          <div
-                            className="size-16 rounded-xl bg-center bg-cover bg-no-repeat"
-                            style={{ backgroundImage: `url(${recipe.image})` }}
-                          ></div>
+                          {recipe.image ? (
+                            <div
+                              className="size-16 rounded-xl bg-center bg-cover bg-no-repeat"
+                              style={{ backgroundImage: `url(${recipe.image})` }}
+                            ></div>
+                          ) : (
+                            <div className="size-16 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center">
+                              <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[24px]">restaurant_menu</span>
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
                             <p className="font-bold text-sm truncate">{recipe.name}</p>
                             <div className="flex items-center gap-2 mt-1">
@@ -773,8 +791,8 @@ const MealPlanner: React.FC = () => {
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm bg-white dark:bg-surface-dark rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 border border-white/10">
             <div
-              className="h-48 w-full bg-center bg-cover relative"
-              style={{ backgroundImage: `url(${previewRecipe.image})` }}
+              className={`h-48 w-full bg-center bg-cover relative ${!previewRecipe.image && 'bg-surface-dark'}`}
+              style={previewRecipe.image ? { backgroundImage: `url(${previewRecipe.image})` } : {}}
             >
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
               <button

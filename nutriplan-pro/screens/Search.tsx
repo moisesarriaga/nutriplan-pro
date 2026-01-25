@@ -127,11 +127,15 @@ const Search: React.FC = () => {
                   onClick={() => navigate(`/recipe/${recipe.id}`)}
                   className="group relative flex flex-col rounded-2xl bg-white dark:bg-surface-dark overflow-hidden shadow-sm border border-transparent hover:border-primary/30 transition-all"
                 >
-                  <div className="relative aspect-[4/3] w-full bg-gray-100 overflow-hidden">
-                    <div
-                      className="h-full w-full bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                      style={{ backgroundImage: `url(${recipe.imagem_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800'})` }}
-                    ></div>
+                  <div className="relative aspect-[4/3] w-full bg-slate-100 dark:bg-white/5 overflow-hidden flex items-center justify-center">
+                    {recipe.imagem_url ? (
+                      <div
+                        className="h-full w-full bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                        style={{ backgroundImage: `url(${recipe.imagem_url})` }}
+                      ></div>
+                    ) : (
+                      <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[40px]">restaurant_menu</span>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100"></div>
                     <button className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 dark:bg-black/80 text-primary shadow-md">
                       <Plus size={20} />

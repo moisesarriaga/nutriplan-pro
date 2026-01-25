@@ -408,7 +408,7 @@ const Dashboard: React.FC = () => {
               onClick={() => navigate(`/recipe/${recipe.id}`)}
               className="group flex gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-[#23482f]/50 transition cursor-pointer border border-slate-100 dark:border-white/5 shadow-sm"
             >
-              <div className="size-20 shrink-0 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/10 dark:to-primary/5 overflow-hidden flex items-center justify-center">
+              <div className="size-20 shrink-0 rounded-lg bg-slate-100 dark:bg-white/5 overflow-hidden flex items-center justify-center">
                 {recipe.imagem_url ? (
                   <img
                     src={recipe.imagem_url}
@@ -417,7 +417,7 @@ const Dashboard: React.FC = () => {
                     loading="lazy"
                   />
                 ) : (
-                  <span className="material-symbols-rounded text-primary text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>
+                  <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[40px]">restaurant_menu</span>
                 )}
               </div>
               <div className="flex flex-col justify-center flex-1 min-w-0">
