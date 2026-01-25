@@ -24,6 +24,7 @@ const MealHistory = lazy(() => import('./nutriplan-pro/screens/MealHistory'));
 const SavedLists = lazy(() => import('./nutriplan-pro/screens/SavedLists'));
 const WaterLog = lazy(() => import('./nutriplan-pro/screens/WaterLog'));
 const WaterHistory = lazy(() => import('./nutriplan-pro/screens/WaterHistory'));
+const CalorieHistory = lazy(() => import('./nutriplan-pro/screens/CalorieHistory'));
 const Notifications = lazy(() => import('./nutriplan-pro/screens/Notifications'));
 const Scan = lazy(() => import('./nutriplan-pro/screens/Scan'));
 const LandingPage = lazy(() => import('./nutriplan-pro/screens/LandingPage'));
@@ -81,6 +82,7 @@ const AppContent: React.FC = () => {
                     <Route path="/saved-lists" element={<SavedLists />} />
                     <Route path="/water-log" element={<WaterLog />} />
                     <Route path="/water-history" element={<WaterHistory />} />
+                    <Route path="/calorie-history" element={<CalorieHistory />} />
                     <Route path="/notifications" element={<Notifications />} />
                     <Route path="/scan" element={<Scan />} />
                     <Route path="/checkout/:plan" element={<Checkout />} />

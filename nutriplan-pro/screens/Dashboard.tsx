@@ -271,7 +271,10 @@ const Dashboard: React.FC = () => {
       </header>
 
       <div className="px-4 py-4 grid grid-cols-2 gap-3">
-        <div className="rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm flex flex-col gap-2">
+        <div
+          onClick={() => navigate('/calorie-history')}
+          className="rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm flex flex-col gap-2 cursor-pointer active:scale-95 transition-all hover:border-primary/30 border border-transparent"
+        >
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-500">
               <span className="material-symbols-rounded text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>

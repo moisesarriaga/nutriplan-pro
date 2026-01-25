@@ -21,8 +21,11 @@ interface UserProfile {
   objetivo: string;
   peso_kg: number;
   altura_cm: number;
-  idade: number;
+  idade?: number;
+  data_nascimento?: string;
   avatar_url?: string;
+  meta_calorica_diaria?: number;
+  meta_agua_ml?: number;
 }
 
 const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
@@ -45,7 +48,9 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
     peso_kg: 70,
     altura_cm: 170,
     idade: 25,
-    avatar_url: ''
+    avatar_url: '',
+    meta_calorica_diaria: 1800,
+    meta_agua_ml: 2000
   });
   const [cropper, setCropper] = useState<{
     image: string;
@@ -53,6 +58,19 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
   } | null>(null);
   const objectiveRef = useRef<HTMLDivElement>(null);
   const modalScrollRef = useRef<HTMLDivElement>(null);
+
+  // Função auxiliar para calcular idade
+  const calculateAge = (birthDate: string | undefined) => {
+    if (!birthDate) return profile?.idade || 0;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
   // Efeito para scrollar automaticamente quando abrir o dropdown de objetivo
   useEffect(() => {
@@ -223,8 +241,11 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
         objetivo: editForm.objetivo,
         peso_kg: editForm.peso_kg,
         altura_cm: editForm.altura_cm,
-        idade: editForm.idade,
-        avatar_url: editForm.avatar_url
+        idade: calculateAge(editForm.data_nascimento),
+        data_nascimento: editForm.data_nascimento,
+        avatar_url: editForm.avatar_url,
+        meta_calorica_diaria: editForm.meta_calorica_diaria,
+        meta_agua_ml: editForm.meta_agua_ml
       };
 
       const { error } = await supabase
@@ -354,15 +375,16 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
           {[
             { label: 'Peso', value: `${profile?.peso_kg || '--'} kg` },
             { label: 'Altura', value: `${profile?.altura_cm || '--'} cm` },
-            { label: 'Idade', value: `${profile?.idade || '--'} anos` },
-            { label: 'Objetivo', value: profile?.objetivo === 'emagrecer' ? 'Emagrecer' : profile?.objetivo === 'ganhar_massa' ? 'Ganhar Massa' : 'Manter' }
+            { label: 'Idade', value: `${calculateAge(profile?.data_nascimento) || '--'} anos` },
+            { label: 'Objetivo', value: profile?.objetivo === 'emagrecer' ? 'Emagrecer' : profile?.objetivo === 'ganhar_massa' ? 'Ganhar Massa' : 'Manter' },
+            { label: 'Meta Calórica', value: `${profile?.meta_calorica_diaria || '1800'} kcal` },
+            { label: 'Meta de Água', value: `${profile?.meta_agua_ml || '2000'} ml` }
           ].map((pref) => (
-            <div key={pref.label} className="flex items-center justify-between p-4 active:bg-slate-50 cursor-pointer transition-colors">
+            <div key={pref.label} className="flex items-center justify-between p-4 transition-colors">
               <div className="flex flex-col">
                 <span className="text-base font-medium">{pref.label}</span>
                 <span className="text-xs text-slate-500">{pref.value}</span>
               </div>
-              <span className="material-symbols-rounded text-slate-400 text-[20px]">chevron_right</span>
             </div>
           ))}
         </div>
@@ -581,14 +603,42 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Idade</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Data de Nascimento</label>
                   <input
-                    type="number"
-                    value={editForm.idade}
+                    type="date"
+                    value={editForm.data_nascimento || ''}
                     onFocus={() => setIsObjectiveOpen(false)}
-                    onChange={(e) => setEditForm({ ...editForm, idade: Number(e.target.value) })}
-                    className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-background-dark/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-center font-bold"
+                    onChange={(e) => setEditForm({ ...editForm, data_nascimento: e.target.value })}
+                    className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-background-dark/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all font-bold"
                   />
+                  {editForm.data_nascimento && (
+                    <p className="text-[10px] font-bold text-primary mt-1.5 ml-1 uppercase">
+                      Idade calculada: {calculateAge(editForm.data_nascimento)} anos
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Meta Calórica (kcal)</label>
+                    <input
+                      type="number"
+                      value={editForm.meta_calorica_diaria}
+                      onFocus={() => setIsObjectiveOpen(false)}
+                      onChange={(e) => setEditForm({ ...editForm, meta_calorica_diaria: Number(e.target.value) })}
+                      className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-background-dark/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-center font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Meta de Água (ml)</label>
+                    <input
+                      type="number"
+                      value={editForm.meta_agua_ml}
+                      onFocus={() => setIsObjectiveOpen(false)}
+                      onChange={(e) => setEditForm({ ...editForm, meta_agua_ml: Number(e.target.value) })}
+                      className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-background-dark/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-center font-bold"
+                    />
+                  </div>
                 </div>
 
                 <div className="relative" ref={objectiveRef}>
