@@ -13,6 +13,7 @@ const Search: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('Todas');
   const [userRecipes, setUserRecipes] = useState<any[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   const categories = ['Todas', 'Café da Manhã', 'Almoço', 'Jantar', 'Vegano', 'Low Carb'];
 
@@ -47,7 +48,7 @@ const Search: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col min-h-screen pb-24">
+    <div className="flex flex-col min-h-screen pb-44 md:pb-24">
       <header className="sticky top-0 z-30 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 pb-2 flex items-center justify-between">
         <button onClick={() => navigate(-1)} className="flex items-center justify-center p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10">
           <ArrowLeft size={20} />
@@ -56,8 +57,9 @@ const Search: React.FC = () => {
         <div className="w-10"></div>
       </header>
 
-      <div className="sticky top-[60px] z-20 bg-background-light dark:bg-background-dark pt-1 pb-4 shadow-sm">
-        <div className="px-4 mb-4">
+      <div className="sticky top-[60px] z-20 bg-background-light dark:bg-background-dark pt-1 pb-4 shadow-sm transition-all duration-300">
+        {/* Desktop Search Bar */}
+        <div className="hidden md:block px-4 mb-4">
           <div className="relative group">
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
               <SearchIcon size={20} />
@@ -69,27 +71,33 @@ const Search: React.FC = () => {
               placeholder="Receitas, ingredientes, tags..."
               type="text"
             />
-            <button className="absolute inset-y-0 right-0 flex items-center pr-2">
-              <span className="p-1.5 rounded-lg text-gray-400">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`absolute inset-y-0 right-0 flex items-center pr-2 transition-colors ${showFilters ? 'text-primary' : 'text-gray-400'}`}
+            >
+              <span className={`p-1.5 rounded-lg ${showFilters ? 'bg-primary/10' : ''}`}>
                 <Sliders size={20} />
               </span>
             </button>
           </div>
         </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-1">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`flex h-9 shrink-0 items-center justify-center rounded-full px-4 transition-all ${activeCategory === cat
-                ? 'bg-primary text-black shadow-lg shadow-primary/20 ring-1 ring-primary font-semibold'
-                : 'bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
-                }`}
-            >
-              <span className="text-sm">{cat}</span>
-            </button>
-          ))}
-        </div>
+
+        {showFilters && (
+          <div className="hidden md:flex gap-2 overflow-x-auto no-scrollbar px-4 pb-1 animate-in slide-in-from-top-2 duration-200">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`flex h-9 shrink-0 items-center justify-center rounded-full px-4 transition-all ${activeCategory === cat
+                  ? 'bg-primary text-black shadow-lg shadow-primary/20 ring-1 ring-primary font-semibold'
+                  : 'bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
+                  }`}
+              >
+                <span className="text-sm">{cat}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col flex-1 p-4">
@@ -170,6 +178,56 @@ const Search: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Mobile Search Bar & Filters */}
+      <div className="md:hidden fixed bottom-[80px] left-0 right-0 z-30 px-4 transition-all duration-300 pointer-events-none">
+        {/* Background Gradient Effect - Appears with delay, slower and smoother */}
+        <div
+          className={`absolute bottom-[-80px] left-0 right-0 h-[340px] bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark to-transparent transition-opacity duration-1000 ease-in-out -z-10 ${showFilters ? 'opacity-100 delay-500' : 'opacity-0 delay-0'}`}
+        ></div>
+
+        <div className="max-w-md mx-auto flex flex-col items-end relative z-10">
+          {/* Filters Container with "Slide out" effect */}
+          <div className={`w-full overflow-hidden transition-all duration-500 ease-out pointer-events-auto ${showFilters ? 'max-h-20 opacity-100 translate-y-0' : 'max-h-0 opacity-0 translate-y-full'}`}>
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-4 pt-2">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`flex h-9 shrink-0 items-center justify-center rounded-full px-4 transition-all ${activeCategory === cat
+                    ? 'bg-primary text-black shadow-lg shadow-primary/20 ring-1 ring-primary font-semibold'
+                    : 'bg-white/80 dark:bg-surface-dark/80 border border-slate-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 backdrop-blur-md'
+                    }`}
+                >
+                  <span className="text-sm">{cat}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Search Bar with Higher Z-Index */}
+          <div className="relative group w-full z-10 pointer-events-auto shadow-2xl rounded-xl">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+              <SearchIcon size={20} />
+            </span>
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-xl border-none bg-white dark:bg-surface-dark py-3.5 pl-10 pr-12 text-sm ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-2 focus:ring-primary transition-all backdrop-blur-md"
+              placeholder="Receitas, ingredientes, tags..."
+              type="text"
+            />
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`absolute inset-y-0 right-0 flex items-center pr-2 transition-colors ${showFilters ? 'text-primary' : 'text-gray-400'}`}
+            >
+              <span className={`p-1.5 rounded-lg ${showFilters ? 'bg-primary/10' : ''}`}>
+                <Sliders size={20} />
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
