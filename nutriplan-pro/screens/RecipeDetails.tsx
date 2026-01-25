@@ -39,6 +39,88 @@ const RecipeDetails: React.FC = () => {
     fetchRecipe();
   }, [id]);
 
+  const calculatePrepTime = (instructions: string): string => {
+    if (!instructions) return '30 min';
+
+    // Regex to find time indications
+    const minuteRegex = /(\d+)\s*(?:minutos?|min|m\b)/gi;
+    const hourRegex = /(\d+)\s*(?:horas?|h\b)/gi;
+
+    let totalMinutes = 0;
+    let match;
+
+    // Sum all minutes found
+    while ((match = minuteRegex.exec(instructions)) !== null) {
+      totalMinutes += parseInt(match[1], 10);
+    }
+
+    // Sum all hours found
+    while ((match = hourRegex.exec(instructions)) !== null) {
+      totalMinutes += parseInt(match[1], 10) * 60;
+    }
+
+    if (totalMinutes === 0) {
+      // If no time is explicitly mentioned, estimate based on step count (approx 10 min per step)
+      const stepCount = instructions.split('\n').filter(s => s.trim().length > 0).length;
+      return stepCount > 0 ? `${stepCount * 10} min` : '30 min';
+    }
+
+    if (totalMinutes < 60) {
+      return `${totalMinutes} min`;
+    }
+
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+
+    if (mins === 0) return `${hours}h`;
+    return `${hours}h ${mins}min`;
+  };
+
+  const calculateDifficulty = (timeString: string): string => {
+    // Extract total minutes from the time string
+    const minRegex = /(\d+)\s*min/;
+    const hourRegex = /(\d+)\s*h/;
+
+    let totalMinutes = 0;
+
+    // Check for hours
+    const hourMatch = timeString.match(hourRegex);
+    if (hourMatch) {
+      totalMinutes += parseInt(hourMatch[1], 10) * 60;
+    }
+
+    // Check for independent minutes (e.g., "30 min") or remaining minutes (e.g., "1h 30min")
+    const minMatch = timeString.match(minRegex);
+    if (minMatch) {
+      totalMinutes += parseInt(minMatch[1], 10);
+    }
+
+    if (totalMinutes === 0) return 'Médio'; // Fallback
+
+    if (totalMinutes <= 20) return 'Fácil';
+    if (totalMinutes <= 60) return 'Médio';
+    return 'Difícil';
+  };
+
+  const calculateServings = (instructions: string, totalCalories: number): number => {
+    // 1. Try to find explicit mentions in text (e.g., "Rende 4 porções", "Serve 2 pessoas")
+    const servingRegex = /(?:rende|serve|rendimento|porções)\s*[:]?\s*(\d+)/i;
+    const match = instructions.match(servingRegex);
+    if (match) {
+      return parseInt(match[1], 10);
+    }
+
+    // 2. Estimate based on calories (assuming ~600kcal per main meal portion)
+    // This is a heuristic: standard meals overlap around 500-800kcal
+    if (totalCalories > 0) {
+      const estimated = Math.round(totalCalories / 600);
+      return Math.max(1, estimated);
+    }
+
+    // 3. Fallback
+    return 2;
+  };
+
   const fetchRecipe = async () => {
     if (!id) return;
 
@@ -63,16 +145,20 @@ const RecipeDetails: React.FC = () => {
 
       if (data) {
         // Transform database recipe to match expected format
+        const prepInstructions = data.modo_preparo || '';
+        const calculatedTime = calculatePrepTime(prepInstructions);
+        const totalCalories = data.total_calories || 0;
+
         const transformedRecipe = {
           id: data.id,
           name: data.nome,
           image: data.imagem_url || null,
           category: 'Personalizada',
-          description: data.modo_preparo?.substring(0, 100) || 'Receita personalizada',
-          calories: data.total_calories || 0,
-          time: '30 min', // Default value
-          difficulty: 'Médio', // Default value
-          servings: 2, // Default value
+          description: prepInstructions.substring(0, 100) || 'Receita personalizada',
+          calories: totalCalories,
+          time: calculatedTime,
+          difficulty: calculateDifficulty(calculatedTime),
+          servings: calculateServings(prepInstructions, totalCalories),
           ingredients: (data.ingredientes || []).map((ing: any) => ({
             id: ing.id,
             name: ing.nome,
@@ -316,23 +402,26 @@ const RecipeDetails: React.FC = () => {
     <div className="bg-background-light dark:bg-background-dark min-h-screen pb-72">
       <header className={`relative w-full ${recipe.image ? 'h-[320px]' : 'h-[240px]'}`}>
         <div
-          className={`absolute inset-0 w-full h-full ${recipe.image ? 'bg-cover bg-center' : 'bg-surface-dark'}`}
+          className={`absolute inset-0 w-full h-full ${recipe.image ? 'bg-cover bg-center' : 'bg-slate-100 dark:bg-surface-dark flex items-center justify-center'}`}
           style={recipe.image ? { backgroundImage: `url(${recipe.image})` } : {}}
         >
-          <div className={`absolute inset-0 ${recipe.image ? 'bg-gradient-to-t from-background-dark via-background-dark/40 to-black/30' : 'bg-gradient-to-t from-background-dark/95 to-background-dark/40'}`}></div>
+          {!recipe.image && (
+            <span className="material-symbols-outlined text-slate-300 dark:text-gray-700/50 text-[120px] absolute transition-opacity duration-700">local_dining</span>
+          )}
+          <div className={`absolute inset-0 ${recipe.image ? 'bg-gradient-to-t from-background-dark via-background-dark/40 to-black/30' : 'bg-gradient-to-t from-background-light/80 dark:from-background-dark/95 to-transparent'}`}></div>
         </div>
 
-        <div className="absolute top-0 left-0 w-full p-4 pt-6 flex items-center justify-between">
+        <div className="absolute top-0 left-0 w-full p-4 pt-6 flex items-center justify-between z-10">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center justify-center size-10 rounded-full bg-background-dark/20 backdrop-blur-md border border-white/10 text-white"
+            className={`flex items-center justify-center size-10 rounded-full backdrop-blur-md border transition-colors ${recipe.image ? 'bg-background-dark/20 border-white/10 text-white' : 'bg-white/60 dark:bg-background-dark/20 border-slate-200 dark:border-white/10 text-slate-700 dark:text-white'}`}
           >
             <ArrowLeft size={20} />
           </button>
           <div className="flex items-center gap-3">
             <button
               onClick={toggleFavorite}
-              className={`flex items-center justify-center size-10 rounded-full backdrop-blur-md border border-white/10 ${isFavorited ? 'bg-primary text-background-dark' : 'bg-background-dark/20 text-white'}`}
+              className={`flex items-center justify-center size-10 rounded-full backdrop-blur-md border transition-colors ${isFavorited ? 'bg-primary text-background-dark border-transparent' : (recipe.image ? 'bg-background-dark/20 border-white/10 text-white' : 'bg-white/60 dark:bg-background-dark/20 border-slate-200 dark:border-white/10 text-slate-700 dark:text-white')}`}
             >
               <Heart size={20} className={`${isFavorited ? 'fill-current' : ''}`} />
             </button>
@@ -340,13 +429,13 @@ const RecipeDetails: React.FC = () => {
               <>
                 <button
                   onClick={() => navigate(`/create-recipe?id=${recipe.id}`)}
-                  className="flex items-center justify-center size-10 rounded-full bg-background-dark/20 backdrop-blur-md border border-white/10 text-white hover:bg-white/10 transition-colors"
+                  className={`flex items-center justify-center size-10 rounded-full backdrop-blur-md border transition-colors hover:bg-white/10 ${recipe.image ? 'bg-background-dark/20 border-white/10 text-white' : 'bg-white/60 dark:bg-background-dark/20 border-slate-200 dark:border-white/10 text-slate-700 dark:text-white'}`}
                 >
                   <Pencil size={20} />
                 </button>
                 <button
                   onClick={handleDeleteRecipe}
-                  className="flex items-center justify-center size-10 rounded-full bg-background-dark/20 backdrop-blur-md border border-white/10 text-white hover:bg-red-500/80 hover:border-red-500/50 transition-colors"
+                  className={`flex items-center justify-center size-10 rounded-full backdrop-blur-md border transition-colors hover:bg-red-500/80 hover:border-red-500/50 hover:text-white ${recipe.image ? 'bg-background-dark/20 border-white/10 text-white' : 'bg-white/60 dark:bg-background-dark/20 border-slate-200 dark:border-white/10 text-slate-700 dark:text-white'}`}
                 >
                   <Trash2 size={20} />
                 </button>
@@ -355,8 +444,8 @@ const RecipeDetails: React.FC = () => {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 w-full p-5 pb-6">
-          <h1 className="text-3xl font-bold text-white leading-tight mb-4 drop-shadow-sm">
+        <div className="absolute bottom-0 left-0 w-full p-5 pb-6 z-10">
+          <h1 className={`text-3xl font-bold leading-tight mb-4 ${recipe.image ? 'text-white drop-shadow-sm' : 'text-slate-900 dark:text-white'}`}>
             {recipe.name}
           </h1>
           <div className="flex flex-wrap gap-3">
@@ -368,11 +457,11 @@ const RecipeDetails: React.FC = () => {
             ].map((stat, idx) => (
               <div
                 key={idx}
-                className={`flex items-center gap-1.5 bg-surface-dark/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 ${stat.icon === Flame && !canTrackCalories ? 'cursor-pointer hover:bg-surface-dark transition-colors' : ''}`}
+                className={`flex items-center gap-1.5 backdrop-blur-md px-3 py-1.5 rounded-lg border ${stat.icon === Flame && !canTrackCalories ? 'cursor-pointer hover:bg-surface-dark transition-colors' : ''} bg-background-light dark:bg-white/5 border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none`}
                 onClick={stat.icon === Flame && !canTrackCalories ? () => setShowUpgradeModal(true) : undefined}
               >
                 <stat.icon className="text-primary" size={18} />
-                <span className="text-xs font-medium text-white">{stat.label}</span>
+                <span className="text-xs font-medium text-slate-900 dark:text-white">{stat.label}</span>
               </div>
             ))}
           </div>

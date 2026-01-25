@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, User, Droplets, TrendingUp, TrendingDown, BarChart2, Sparkles, Flame, Target } from 'lucide-react';
 import {
     AreaChart,
     Area,
@@ -236,7 +236,7 @@ const WaterHistory: React.FC = () => {
                         className="size-10 rounded-full bg-blue-500/10 flex items-center justify-center hover:bg-blue-500/20 active:scale-95 transition-all outline-none"
                         title="Ver Perfil"
                     >
-                        <span className="material-symbols-outlined text-blue-500 text-[24px]">person</span>
+                        <User className="text-blue-500" size={24} />
                     </button>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
@@ -254,12 +254,12 @@ const WaterHistory: React.FC = () => {
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hoje</span>
                         <div className="size-7 sm:size-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-blue-500 text-[16px] sm:text-[18px]" style={{ fontVariationSettings: "'FILL' 0" }}>water_drop</span>
+                            <Droplets className="text-blue-500 fill-blue-500" size={18} />
                         </div>
                     </div>
                     <p className="text-lg sm:text-xl font-black mb-1">{stats.today.toLocaleString()}ml</p>
                     <div className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-bold ${stats.vsOntem >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        <span className="material-symbols-outlined text-[12px] sm:text-[14px]">{stats.vsOntem >= 0 ? 'trending_up' : 'trending_down'}</span>
+                        {stats.vsOntem >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                         {stats.diffLabel}
                     </div>
                 </div>
@@ -269,12 +269,12 @@ const WaterHistory: React.FC = () => {
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Média</span>
                         <div className="size-7 sm:size-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-blue-500 text-[16px] sm:text-[18px]">show_chart</span>
+                            <BarChart2 className="text-blue-500" size={18} />
                         </div>
                     </div>
                     <p className="text-lg sm:text-xl font-black mb-1">{stats.avgWeekly.toLocaleString()}ml</p>
                     <div className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-bold ${stats.avgWeekly >= goal ? 'text-green-500' : 'text-blue-500'}`}>
-                        <span className="material-symbols-outlined text-[12px] sm:text-[14px]">auto_awesome</span>
+                        <Sparkles size={14} />
                         {stats.avgWeekly >= goal ? 'Bateu' : 'Meta'}
                     </div>
                 </div>
@@ -284,7 +284,7 @@ const WaterHistory: React.FC = () => {
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Dias</span>
                         <div className="size-7 sm:size-8 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-orange-500 text-[16px] sm:text-[18px]">emoji_events</span>
+                            <Flame className="text-orange-500 fill-orange-500" size={18} />
                         </div>
                     </div>
                     <p className="text-lg sm:text-xl font-black mb-1">{stats.streak}</p>
@@ -298,7 +298,7 @@ const WaterHistory: React.FC = () => {
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Meta</span>
                         <div className="size-7 sm:size-8 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-green-500 text-[16px] sm:text-[18px]">flag</span>
+                            <Target className="text-green-500" size={18} />
                         </div>
                     </div>
                     <p className="text-lg sm:text-xl font-black mb-1">{stats.goal}ml</p>

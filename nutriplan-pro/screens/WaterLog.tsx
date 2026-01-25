@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWaterNotifications } from '../../hooks/useWaterNotifications';
-import { ArrowLeft, Bell } from 'lucide-react';
+import { ArrowLeft, Bell, BarChart2, Droplets, GlassWater, Settings, X, Plus } from 'lucide-react';
 
 const WaterLog: React.FC = () => {
     const navigate = useNavigate();
@@ -225,13 +225,14 @@ const WaterLog: React.FC = () => {
                     className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-blue-500 flex items-center justify-center"
                     title="Histórico de Consumo"
                 >
-                    <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>bar_chart_4_bars</span>
+                    <BarChart2 size={24} />
                 </button>
             </header>
 
             <div className="flex-1 px-4 flex flex-col items-center justify-center py-10">
                 <div className="relative size-64 mb-10">
                     <svg className="size-full -rotate-90 transform">
+                        {/* ... (keep SVG circles) ... */}
                         <circle
                             className="text-slate-200 dark:text-slate-800"
                             strokeWidth="16"
@@ -256,8 +257,7 @@ const WaterLog: React.FC = () => {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <div className="relative flex items-center justify-center w-12 h-12">
-                            <span className="material-symbols-outlined text-blue-500 absolute -translate-x-3 -translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 0" }}>water_drop</span>
-                            <span className="material-symbols-outlined text-blue-500 relative z-10 translate-x-1 translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 1" }}>water_drop</span>
+                            <Droplets className="text-blue-500 fill-blue-500" size={48} />
                         </div>
                         <span className="text-4xl font-black mt-2">{(Math.max(0, currentWater) / 1000).toFixed(1)}L</span>
                         <span className="text-slate-500 text-sm">da meta de {(goal / 1000).toFixed(1)}L</span>
@@ -272,15 +272,11 @@ const WaterLog: React.FC = () => {
                             className="flex flex-col items-center justify-between gap-2 p-4 rounded-2xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800 active:scale-95 transition min-h-[100px]"
                         >
                             <div className="flex-1 flex items-center justify-center">
-                                <span
-                                    className="material-symbols-outlined text-blue-500"
-                                    style={{
-                                        fontSize: amount === 200 ? '24px' : amount === 300 ? '32px' : '40px',
-                                        fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24"
-                                    }}
-                                >
-                                    water_full
-                                </span>
+                                <GlassWater
+                                    className="text-blue-500"
+                                    size={amount === 200 ? 24 : amount === 300 ? 32 : 40}
+                                    strokeWidth={1.5}
+                                />
                             </div>
                             <span className="font-bold shrink-0">{amount}ml</span>
                         </button>
@@ -332,7 +328,7 @@ const WaterLog: React.FC = () => {
                             onClick={() => setShowSettings(true)}
                             className="flex items-center justify-center px-4 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                         >
-                            <span className="material-symbols-outlined text-slate-500" style={{ fontSize: '24px' }}>settings</span>
+                            <Settings className="text-slate-500" size={24} />
                         </button>
                     </div>
                 </div>
@@ -345,7 +341,7 @@ const WaterLog: React.FC = () => {
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold">Configurar Lembretes</h2>
                             <button onClick={() => setShowSettings(false)} className="p-2 -mr-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/5">
-                                <span className="material-symbols-outlined">close</span>
+                                <X size={24} />
                             </button>
                         </div>
 
