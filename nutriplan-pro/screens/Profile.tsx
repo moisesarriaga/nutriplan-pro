@@ -9,6 +9,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import ImageCropperModal from '../../components/ImageCropperModal';
 
 interface ProfileProps {
@@ -30,6 +31,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
   const { showNotification } = useNotification();
   const { theme, setTheme } = useTheme();
   const { subscription } = useSubscription();
+  const { t, i18n } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -243,7 +245,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
     <div className="flex flex-col min-h-screen pb-24 overflow-x-hidden">
       <div className="flex items-center px-4 py-4 justify-between sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
         <div className="w-12"></div>
-        <h2 className="text-lg font-bold flex-1 text-center">Meu Perfil</h2>
+        <h2 className="text-lg font-bold flex-1 text-center">{t('profile.title')}</h2>
         <div className="flex w-12 items-center justify-end">
           <button
             onClick={() => setIsEditing(true)}
@@ -365,7 +367,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600">
                 <span className="material-symbols-rounded text-slate-600 text-[20px]">notifications</span>
               </div>
-              <span className="text-base font-medium">Notificações</span>
+              <span className="text-base font-medium">{t('profile.notifications')}</span>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input checked readOnly className="sr-only peer" type="checkbox" />
@@ -381,13 +383,43 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
             </div>
             <span className="material-symbols-rounded text-slate-400 text-[20px]">chevron_right</span>
           </div>
+          <div className="p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600">
+                <span className="material-symbols-rounded text-slate-600 text-[20px]">language</span>
+              </div>
+              <span className="text-base font-medium">{t('profile.language')}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { code: 'pt', name: 'Português', flag: '🇧🇷' },
+                { code: 'en', name: 'English', flag: '🇺🇸' },
+                { code: 'es', name: 'Español', flag: '🇪🇸' },
+                { code: 'fr', name: 'Français', flag: '🇫🇷' },
+                { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+                { code: 'nl', name: 'Nederlands', flag: '🇳🇱' }
+              ].map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => i18n.changeLanguage(lang.code)}
+                  className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl border text-[10px] font-bold transition-all ${i18n.language === lang.code
+                    ? 'bg-primary/20 border-primary text-primary shadow-sm'
+                    : 'bg-white dark:bg-surface-dark border-slate-200 dark:border-slate-800 text-slate-500'
+                    }`}
+                >
+                  <span className="text-lg mb-1">{lang.flag}</span>
+                  {lang.name}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="mt-6">
         <h3 className="px-4 text-lg font-bold mb-3 flex items-center gap-2">
           <span className="material-symbols-rounded text-primary text-[20px]">dark_mode</span>
-          Aparência
+          {t('profile.appearance')}
         </h3>
         <div className="mx-4 p-1 rounded-2xl bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-slate-800 flex items-center relative h-12">
           {[
@@ -424,7 +456,7 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
           className="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold bg-white dark:bg-surface-dark text-red-500 border border-slate-200 dark:border-slate-800 shadow-sm active:scale-[0.98] transition-all"
         >
           <span className="material-symbols-rounded text-[20px]">logout</span>
-          Sair da Conta
+          {t('profile.logout')}
         </button>
         <p className="text-center text-xs text-slate-400 mt-4">Versão 2.4.0</p>
       </div>

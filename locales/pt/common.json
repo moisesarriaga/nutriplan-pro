@@ -1,0 +1,22 @@
+{
+    "nav": {
+        "dashboard": "Início",
+        "search": "Buscar",
+        "cart": "Lista",
+        "planner": "Plano",
+        "profile": "Perfil"
+    },
+    "dashboard": {
+        "welcome": "Bem vindo",
+        "welcomeBack": "Bem vindo de volta",
+        "hello": "Olá"
+    },
+    "profile": {
+        "title": "Meu Perfil",
+        "edit": "Editar Perfil",
+        "language": "Idioma",
+        "appearance": "Aparência",
+        "notifications": "Notificações",
+        "logout": "Sair da Conta"
+    }
+}

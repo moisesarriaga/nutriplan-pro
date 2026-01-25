@@ -1,19 +1,21 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const Navigation: React.FC = React.memo(() => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const isActive = (path: string) => location.pathname === path;
 
   const navItems = [
-    { label: 'Início', path: '/dashboard', icon: 'home' },
-    { label: 'Buscar', path: '/search', icon: 'search' },
-    { label: 'Lista', path: '/cart', icon: 'receipt_long' },
-    { label: 'Plano', path: '/planner', icon: 'calendar_month' },
-    { label: 'Perfil', path: '/profile', icon: 'person' },
+    { label: t('nav.dashboard'), path: '/dashboard', icon: 'home' },
+    { label: t('nav.search'), path: '/search', icon: 'search' },
+    { label: t('nav.cart'), path: '/cart', icon: 'receipt_long' },
+    { label: t('nav.planner'), path: '/planner', icon: 'calendar_month' },
+    { label: t('nav.profile'), path: '/profile', icon: 'person' },
   ];
 
   return (

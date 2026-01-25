@@ -1,0 +1,22 @@
+{
+    "nav": {
+        "dashboard": "Home",
+        "search": "Zoeken",
+        "cart": "Lijst",
+        "planner": "Plan",
+        "profile": "Profiel"
+    },
+    "dashboard": {
+        "welcome": "Welkom",
+        "welcomeBack": "Welkom terug",
+        "hello": "Hallo"
+    },
+    "profile": {
+        "title": "Mijn Profiel",
+        "edit": "Profiel Bewerken",
+        "language": "Taal",
+        "appearance": "Uiterlijk",
+        "notifications": "Meldingen",
+        "logout": "Uitloggen"
+    }
+}

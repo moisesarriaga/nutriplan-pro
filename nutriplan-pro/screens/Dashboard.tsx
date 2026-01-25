@@ -7,10 +7,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { supabase } from '../../lib/supabaseClient';
 import { Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { showConfirmation, showNotification } = useNotification();
   const [profile, setProfile] = useState<{
     nome: string;
@@ -37,10 +39,10 @@ const Dashboard: React.FC = () => {
       const hasBeenWelcomed = localStorage.getItem(storageKey);
 
       if (!hasBeenWelcomed) {
-        setWelcomeMessage('Bem vindo');
+        setWelcomeMessage(t('dashboard.welcome'));
         localStorage.setItem(storageKey, 'true');
       } else {
-        setWelcomeMessage('Bem vindo de volta');
+        setWelcomeMessage(t('dashboard.welcomeBack'));
       }
 
       const timer = setTimeout(() => {
@@ -49,7 +51,7 @@ const Dashboard: React.FC = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [user]);
+  }, [user, t]);
 
   const fetchTodayCalories = async () => {
     if (!user) return;
