@@ -37,11 +37,18 @@ Deno.serve(async (req) => {
 
         console.log(`Iniciando geração de imagem no gpt-image-1...`);
 
-        const promptDescription = recipeDescription
-            ? `. Description: ${recipeDescription.substring(0, 300)}...`
-            : "";
 
-        const prompt = `Professional food illustration of a single plate of ready-to-eat ${recipeName}${promptDescription}. Delicate watercolor style, soft hand-painted textures, artistic brush strokes, vibrant colors, isolated on a clean white background. NO pots, NO pans, NO raw ingredients, NO text, NO titles, NO labels, purely visual illustration.`;
+        const prompt = `
+Professional watercolor food illustration of a single plate of ready-to-eat ${recipeName}.
+${recipeDescription ? recipeDescription.substring(0, 400) : 'Plated dish presentation only, finished meal, viewed at a slight angle.'}
+Delicate hand-painted watercolor style, soft organic brush strokes, visible paper texture, artistic and expressive.
+Vibrant yet natural colors, subtle shading, painterly details.
+Isolated on a clean white background.
+NO photography, NO realism, NO 3D render.
+NO pots, NO pans, NO raw ingredients.
+NO text, NO titles, NO labels.
+Purely visual illustration, classic watercolor painting style.
+`;
 
         // Using the new gpt-image-1 model as per documentation
         const response = await openai.images.generate({
