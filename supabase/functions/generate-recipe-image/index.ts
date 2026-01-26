@@ -39,13 +39,13 @@ Deno.serve(async (req) => {
 
 
         const prompt = `
-Professional watercolor food illustration of a single plate of ready-to-eat ${recipeName}.
-${recipeDescription ? recipeDescription.substring(0, 400) : 'Plated dish presentation only, finished meal, viewed at a slight angle.'}
+Professional watercolor food illustration of A SINGLE PLATE of ready-to-eat ${recipeName}.
+ONLY ONE PLATED DISH presentation, finished meal, viewed at a slight angle.
 Delicate hand-painted watercolor style, soft organic brush strokes, visible paper texture, artistic and expressive.
 Vibrant yet natural colors, subtle shading, painterly details.
 Isolated on a clean white background.
 NO photography, NO realism, NO 3D render.
-NO pots, NO pans, NO raw ingredients.
+NO pots, NO pans, NO raw ingredients, NO multiple dishes, NO multiple plates.
 NO text, NO titles, NO labels.
 Purely visual illustration, classic watercolor painting style.
 `;

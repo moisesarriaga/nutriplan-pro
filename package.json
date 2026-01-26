@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@mercadopago/sdk-js": "^0.0.3",
-    "@supabase/supabase-js": "^2.89.0",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.91.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "cors": "^2.8.5",
