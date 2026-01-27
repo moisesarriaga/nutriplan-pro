@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
 import { supabase } from '../../lib/supabaseClient';
@@ -12,7 +12,9 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    ReferenceLine
+    ReferenceLine,
+    BarChart,
+    Bar
 } from 'recharts';
 
 type Period = 'dia' | 'semana' | 'mês' | 'ano';
@@ -31,48 +33,9 @@ const WaterHistory: React.FC = () => {
     const [todayConsumption, setTodayConsumption] = useState(0);
     const [userName, setUserName] = useState('');
     const [loading, setLoading] = useState(true);
+    const [logsVersion, setLogsVersion] = useState(0);
 
-    useEffect(() => {
-        if (user) {
-            fetchData();
-
-            // Set up real-time subscriptions
-            const profileSubscription = supabase
-                .channel('profile_changes')
-                .on('postgres_changes', {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'perfis_usuario',
-                    filter: `id=eq.${user.id}`
-                }, (payload) => {
-                    const updatedProfile = payload.new;
-                    setGoal(updatedProfile.meta_agua_ml);
-                    setTodayConsumption(updatedProfile.consumo_agua_hoje || 0);
-                    setUserName(updatedProfile.nome || '');
-                })
-                .subscribe();
-
-            const historySubscription = supabase
-                .channel('history_changes')
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'historico_consumo_agua',
-                    filter: `usuario_id=eq.${user.id}`
-                }, () => {
-                    // Refetch history when anything changes in the history table
-                    fetchData();
-                })
-                .subscribe();
-
-            return () => {
-                supabase.removeChannel(profileSubscription);
-                supabase.removeChannel(historySubscription);
-            };
-        }
-    }, [user]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             // Fetch goal and real-time today consumption
@@ -107,7 +70,69 @@ const WaterHistory: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user]);
+
+    useEffect(() => {
+        if (user) {
+            fetchData();
+
+            // Set up real-time subscriptions
+            const profileSubscription = supabase
+                .channel('profile_changes')
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'perfis_usuario',
+                    filter: `id=eq.${user.id}`
+                }, (payload) => {
+                    const updatedProfile = payload.new;
+                    setGoal(updatedProfile.meta_agua_ml);
+                    setTodayConsumption(updatedProfile.consumo_agua_hoje || 0);
+                    setUserName(updatedProfile.nome || '');
+                })
+                .subscribe();
+
+            const logsSubscription = supabase
+                .channel('logs_changes')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'water_logs',
+                    filter: `usuario_id=eq.${user.id}`
+                }, () => {
+                    setLogsVersion(v => v + 1);
+                    fetchData(); // Sync profile/history on log change
+                })
+                .on('postgres_changes', {
+                    event: 'DELETE',
+                    schema: 'public',
+                    table: 'water_logs',
+                    filter: `usuario_id=eq.${user.id}`
+                }, () => {
+                    setLogsVersion(v => v + 1);
+                    fetchData(); // Sync profile/history on log change
+                })
+                .subscribe();
+
+            const historySubscription = supabase
+                .channel('history_changes')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'historico_consumo_agua',
+                    filter: `usuario_id=eq.${user.id}`
+                }, () => {
+                    fetchData();
+                })
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(profileSubscription);
+                supabase.removeChannel(logsSubscription);
+                supabase.removeChannel(historySubscription);
+            };
+        }
+    }, [user, fetchData]);
 
     // Calculate Statistics
     const stats = useMemo(() => {
@@ -188,25 +213,209 @@ const WaterHistory: React.FC = () => {
         };
     }, [history, todayConsumption, goal]);
 
-    const chartData = useMemo(() => {
-        // Map history to chart format
-        // For the "Daily" view, we'll show the last 7 entries with time-like labels or just days
-        // The mock image shows hours (8:00, 9:00...), but our DB stores daily aggregations.
-        // I will use days for better accuracy, or split today's data if I had hourly logs.
-        // Since we only have daily logs, I'll show the last 10 days for 'dia' view.
+    const [graphData, setGraphData] = useState<any[]>([]);
 
-        let sliceCount = 7;
-        if (period === 'dia') sliceCount = 7;
-        else if (period === 'semana') sliceCount = 14;
-        else sliceCount = 30;
+    useEffect(() => {
+        const fetchGraphData = async () => {
+            if (!user) return;
 
-        return history.slice(-sliceCount).map(item => ({
-            name: new Date(item.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-            fullDate: new Date(item.data).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' }),
-            ml: item.quantidade_ml,
-            rawDate: item.data
-        }));
-    }, [history, period]);
+            if (period === 'dia') {
+                // Fetch detailed logs for today
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+
+                const { data: logs } = await supabase
+                    .from('water_logs')
+                    .select('created_at, quantidade_ml')
+                    .eq('usuario_id', user.id)
+                    .gte('created_at', todayStart.toISOString())
+                    .order('created_at', { ascending: true });
+
+                if (logs) {
+                    // Create hourly buckets (cumulative)
+                    const hourlyData: any[] = [];
+                    let currentTotal = 0;
+
+                    // Initialize hours 0-23
+                    const hoursMap = new Map();
+                    for (let i = 0; i <= 23; i++) {
+                        hoursMap.set(i, 0);
+                    }
+
+                    // Fill map
+                    logs.forEach(log => {
+                        const date = new Date(log.created_at);
+                        const hour = date.getHours();
+                        if (hoursMap.has(hour)) {
+                            hoursMap.set(hour, hoursMap.get(hour) + log.quantidade_ml);
+                        }
+                    });
+
+                    // Generate hourly data for graph (NON-CUMULATIVE)
+                    const now = new Date();
+                    const currentHour = now.getHours();
+
+                    for (let i = 0; i <= 23; i++) {
+                        // Only process if in valid display range (e.g. up to current hour)
+                        const amount = hoursMap.get(i);
+
+                        if (i <= currentHour) {
+                            hourlyData.push({
+                                name: `${i}:00`,
+                                fullDate: `Hoje às ${i}:00`,
+                                ml: amount, // Discrete amount
+                                rawDate: new Date().setHours(i, 0, 0, 0)
+                            });
+                        } else {
+                            // Future hours: add placeholder for Axis but no data
+                            hourlyData.push({
+                                name: `${i}:00`,
+                                fullDate: `Hoje às ${i}:00`,
+                                ml: null,
+                                rawDate: new Date().setHours(i, 0, 0, 0)
+                            });
+                        }
+                    }
+
+                    setGraphData(hourlyData);
+                }
+            } else if (period === 'semana') {
+                // Last 7 days from History
+                const slice = history.slice(-7);
+                setGraphData(slice.map(item => ({
+                    name: new Date(item.data).toLocaleDateString('pt-BR', { weekday: 'short' }),
+                    fullDate: new Date(item.data).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }),
+                    ml: item.quantidade_ml,
+                    rawDate: item.data
+                })));
+            } else if (period === 'mês') {
+                // Fetch current month aggregation (1st to last day)
+                const now = new Date();
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
+
+                const firstDay = new Date(currentYear, currentMonth, 1);
+                const lastDay = new Date(currentYear, currentMonth + 1, 0); // Last day of month
+
+                const { data: monthLogs } = await supabase
+                    .from('historico_consumo_agua')
+                    .select('data, quantidade_ml')
+                    .eq('usuario_id', user.id)
+                    .gte('data', firstDay.toISOString().split('T')[0])
+                    .lte('data', lastDay.toISOString().split('T')[0])
+                    .order('data', { ascending: true });
+
+                const daysInMonth = lastDay.getDate();
+                const monthlyChartData: any[] = [];
+                const logsMap = new Map();
+
+                if (monthLogs) {
+                    monthLogs.forEach(log => {
+                        logsMap.set(log.data, log.quantidade_ml);
+                    });
+                }
+
+                // If today is in this month, add real-time data if not in history
+                const todayStr = now.toISOString().split('T')[0];
+                if (todayConsumption > 0) {
+                    // Check if today is already in logsMap with same value, if not update/set
+                    // Actually history table might lack today if it's only updated at end of day or something?
+                    // But we have todayConsumption from profile. Let's start with logsMap and override today if needed.
+                    // The logic in stats calculation does: max(existing, todayConsumption).
+                    logsMap.set(todayStr, Math.max(logsMap.get(todayStr) || 0, todayConsumption));
+                }
+
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const date = new Date(currentYear, currentMonth, i);
+                    const dateStr = date.toISOString().split('T')[0];
+
+                    const amount = logsMap.get(dateStr) || 0;
+
+                    // Future days: maybe null to not draw line? Or 0?
+                    // User asked for "all markings of the month", implying structure.
+                    // If we use 0, the line drops to 0. If null, line breaks.
+                    // Let's use 0 for past/today, and maybe null for future?
+                    // "Dias" filter uses null for future hours.
+
+                    let mlValue: number | null = amount;
+
+                    // If date is in future, set to null?
+                    const todayChecker = new Date();
+                    todayChecker.setHours(0, 0, 0, 0);
+                    if (date > todayChecker) {
+                        mlValue = null;
+                    } else {
+                        // Ensure we show 0 for past days with no water
+                        mlValue = amount;
+                    }
+
+                    monthlyChartData.push({
+                        name: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                        fullDate: date.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }),
+                        ml: mlValue,
+                        rawDate: dateStr
+                    });
+                }
+
+                setGraphData(monthlyChartData);
+            } else if (period === 'ano') {
+                // Fetch current year aggregation (Jan-Dec)
+                const currentYear = new Date().getFullYear();
+                const startDate = new Date(currentYear, 0, 1); // Jan 1st
+                const endDate = new Date(currentYear, 11, 31); // Dec 31st
+
+                const { data } = await supabase
+                    .from('historico_consumo_agua')
+                    .select('data, quantidade_ml')
+                    .eq('usuario_id', user.id)
+                    .gte('data', startDate.toISOString().split('T')[0])
+                    .lte('data', endDate.toISOString().split('T')[0])
+                    .order('data', { ascending: true });
+
+                // Initialize all 12 months for current year
+                const monthlyData = new Map();
+                for (let i = 0; i < 12; i++) {
+                    const d = new Date(currentYear, i, 1);
+                    const key = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+                    monthlyData.set(key, { total: 0, count: 0, rawDate: d.getTime(), monthIndex: i });
+                }
+
+                if (data) {
+                    data.forEach(item => {
+                        const date = new Date(item.data + 'T00:00:00');
+                        const key = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+
+                        if (monthlyData.has(key)) {
+                            const entry = monthlyData.get(key);
+                            entry.total += item.quantidade_ml;
+                            entry.count += 1;
+                        }
+                    });
+                }
+
+                const chartData: any[] = [];
+                // Sort by month index to ensure Jan-Dec order
+                const sortedKeys = Array.from(monthlyData.keys()).sort((a, b) => {
+                    return monthlyData.get(a).monthIndex - monthlyData.get(b).monthIndex;
+                });
+
+                sortedKeys.forEach(key => {
+                    const val = monthlyData.get(key);
+                    const avg = val.count > 0 ? Math.round(val.total / val.count) : 0;
+
+                    chartData.push({
+                        name: key,
+                        fullDate: `Média diária em ${key}`,
+                        ml: avg,
+                        rawDate: val.rawDate
+                    });
+                });
+                setGraphData(chartData);
+            }
+        };
+
+        fetchGraphData();
+    }, [period, history, todayConsumption, user, logsVersion]);
 
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
@@ -225,7 +434,7 @@ const WaterHistory: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#F0F7FA] dark:bg-background-dark text-slate-900 dark:text-white pb-32 transition-colors duration-500 overflow-x-hidden">
+        <div className="flex flex-col min-h-screen bg-[#F0F7FA] dark:bg-background-dark text-slate-900 dark:text-white pb-32 transition-colors duration-500 overflow-x-hidden" >
             <header className="px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-2">
                     <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
@@ -248,24 +457,31 @@ const WaterHistory: React.FC = () => {
             </header>
 
             {/* Stat Cards Row */}
-            <div className="flex overflow-x-auto no-scrollbar gap-4 px-6 pb-4 cursor-grab active:cursor-grabbing">
+            <div className="flex overflow-x-auto no-scrollbar gap-4 px-6 pb-4 cursor-grab active:cursor-grabbing" >
                 {/* Card Hoje */}
-                <div className="min-w-[140px] sm:min-w-[160px] flex-1 bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5">
+                < div className="min-w-[140px] sm:min-w-[160px] flex-1 bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5 flex flex-col justify-between" >
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hoje</span>
-                        <div className="size-7 sm:size-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                        <div className="size-7 sm:size-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                             <Droplets className="text-blue-500" size={18} strokeWidth={2.5} />
                         </div>
                     </div>
-                    <p className="text-lg sm:text-xl font-black mb-1">{stats.today.toLocaleString()}ml</p>
-                    <div className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-bold ${stats.vsOntem >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        {stats.vsOntem >= 0 ? <TrendingUp size={14} strokeWidth={2.5} /> : <TrendingDown size={14} strokeWidth={2.5} />}
-                        {stats.diffLabel}
+                    <div>
+                        <p className="text-lg sm:text-xl font-black mb-1">
+                            {(stats.today / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}L
+                            <span className="text-xs font-normal text-slate-400 ml-1">/ {(goal / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}L</span>
+                        </p>
+                        <div className="w-full bg-slate-100 dark:bg-white/5 h-1.5 rounded-full overflow-hidden mt-1">
+                            <div
+                                className="bg-blue-500 h-full rounded-full transition-all duration-500"
+                                style={{ width: `${Math.min((stats.today / goal) * 100, 100)}%` }}
+                            ></div>
+                        </div>
                     </div>
-                </div>
+                </div >
 
                 {/* Card Média */}
-                <div className="min-w-[140px] sm:min-w-[160px] flex-1 bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5">
+                < div className="min-w-[140px] sm:min-w-[160px] flex-1 bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5" >
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Média</span>
                         <div className="size-7 sm:size-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
@@ -277,10 +493,10 @@ const WaterHistory: React.FC = () => {
                         <Sparkles size={14} strokeWidth={2.5} />
                         {stats.avgWeekly >= goal ? 'Bateu' : 'Meta'}
                     </div>
-                </div>
+                </div >
 
                 {/* Card Sequência */}
-                <div className="min-w-[140px] sm:min-w-[160px] flex-1 bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5">
+                < div className="min-w-[140px] sm:min-w-[160px] flex-1 bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5" >
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Dias</span>
                         <div className="size-7 sm:size-8 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
@@ -291,10 +507,10 @@ const WaterHistory: React.FC = () => {
                     <div className="flex items-center gap-1 text-orange-500 text-[9px] sm:text-[10px] font-bold">
                         🔥 Fogo!
                     </div>
-                </div>
+                </div >
 
                 {/* Card Meta */}
-                <div className="min-w-[140px] sm:min-w-[160px] flex-1 bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5">
+                < div className="min-w-[140px] sm:min-w-[160px] flex-1 bg-white dark:bg-surface-dark p-4 rounded-[24px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-50 dark:border-white/5" >
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Meta</span>
                         <div className="size-7 sm:size-8 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
@@ -305,11 +521,11 @@ const WaterHistory: React.FC = () => {
                     <div className="flex items-center gap-1 text-slate-400 text-[9px] sm:text-[10px] font-bold">
                         🎯 Alvo
                     </div>
-                </div>
-            </div>
+                </div >
+            </div >
 
             {/* Graph Card */}
-            <div className="px-4 sm:px-6 mt-6">
+            < div className="px-4 sm:px-6 mt-6" >
                 <div className="bg-white dark:bg-surface-dark rounded-[32px] p-4 sm:p-6 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.08)] border border-slate-50 dark:border-white/5">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                         <h3 className="font-black text-lg tracking-tight">Histórico de Hidratação</h3>
@@ -331,39 +547,69 @@ const WaterHistory: React.FC = () => {
 
                     <div className="h-[300px] w-full -ml-4">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorMl" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.4} />
-                                <XAxis
-                                    dataKey="name"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10, fontWeight: 700, fill: '#94A3B8' }}
-                                    dy={10}
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10, fontWeight: 700, fill: '#94A3B8' }}
-                                    tickFormatter={(value) => `${value}ml`}
-                                />
-                                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#3B82F6', strokeWidth: 1, strokeDasharray: '4 4' }} />
-                                <ReferenceLine y={goal} stroke="#3B82F6" strokeDasharray="10 10" opacity={0.2} label={{ position: 'right', value: 'Meta', fill: '#3B82F6', fontSize: 10, fontWeight: 700 }} />
-                                <Area
-                                    type="monotone"
-                                    dataKey="ml"
-                                    stroke="#3B82F6"
-                                    strokeWidth={6}
-                                    fillOpacity={1}
-                                    fill="url(#colorMl)"
-                                    animationDuration={1500}
-                                />
-                            </AreaChart>
+                            {period === 'dia' ? (
+                                <BarChart data={graphData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.4} />
+                                    <XAxis
+                                        dataKey="name"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 10, fontWeight: 700, fill: '#94A3B8' }}
+                                        dy={10}
+                                        interval={2} // Show every 2nd hour label to avoid crowding
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 10, fontWeight: 700, fill: '#94A3B8' }}
+                                        tickFormatter={(value) => `${Math.abs(value)}ml`}
+                                        domain={[0, (dataMax: number) => Math.max(dataMax, 1000)]}
+                                    />
+                                    <Tooltip content={<CustomTooltip />} cursor={{ fill: '#3B82F6', opacity: 0.1 }} />
+                                    {/* No ReferenceLine for daily discrete view because range is small */}
+                                    <Bar
+                                        dataKey="ml"
+                                        fill="#3B82F6"
+                                        radius={[4, 4, 0, 0]}
+                                        barSize={20}
+                                        animationDuration={1500}
+                                    />
+                                </BarChart>
+                            ) : (
+                                <AreaChart data={graphData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorMl" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.4} />
+                                    <XAxis
+                                        dataKey="name"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 10, fontWeight: 700, fill: '#94A3B8' }}
+                                        dy={10}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 10, fontWeight: 700, fill: '#94A3B8' }}
+                                        tickFormatter={(value) => `${Math.abs(value)}ml`}
+                                    />
+                                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#3B82F6', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                                    <ReferenceLine y={goal} stroke="#3B82F6" strokeDasharray="10 10" opacity={0.2} label={{ position: 'right', value: 'Meta', fill: '#3B82F6', fontSize: 10, fontWeight: 700 }} />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="ml"
+                                        stroke="#3B82F6"
+                                        strokeWidth={4}
+                                        fillOpacity={1}
+                                        fill="url(#colorMl)"
+                                        animationDuration={1500}
+                                    />
+                                </AreaChart>
+                            )}
                         </ResponsiveContainer>
                     </div>
 
@@ -375,20 +621,20 @@ const WaterHistory: React.FC = () => {
                         <p className="text-[10px] font-bold text-slate-400">Dados baseados nos últimos registros</p>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Quote of the day */}
-            <div className="mx-6 mt-8 p-6 rounded-[24px] bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl shadow-blue-500/20">
+            < div className="mx-6 mt-8 p-6 rounded-[24px] bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl shadow-blue-500/20" >
                 <p className="font-bold text-sm leading-relaxed italic">
                     "A água é o combustível da vida. Mantenha seu motor rodando suavemente!"
                 </p>
                 <div className="mt-4 flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-widest opacity-60">💡 Dica do dia</span>
                 </div>
-            </div>
+            </div >
 
             <Navigation />
-        </div>
+        </div >
     );
 };
 

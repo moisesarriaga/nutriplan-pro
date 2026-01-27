@@ -170,6 +170,19 @@ const WaterLog: React.FC = () => {
                 console.warn('Silent error updating history:', hError);
             }
 
+            // 3. Log detailed timestamped entry
+            try {
+                await supabase
+                    .from('water_logs')
+                    .insert({
+                        usuario_id: user.id,
+                        quantidade_ml: amount,
+                        created_at: new Date().toISOString()
+                    });
+            } catch (logError) {
+                console.warn('Silent error logging water timestamp:', logError);
+            }
+
         } catch (error) {
             console.error('Final addWater catch:', error);
             // Revert on error only if the primary update failed
@@ -214,6 +227,20 @@ const WaterLog: React.FC = () => {
                 console.warn('Silent error during reset history:', hError);
             }
 
+            // 3. Delete detailed logs for today
+            try {
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+
+                await supabase
+                    .from('water_logs')
+                    .delete()
+                    .eq('usuario_id', user.id)
+                    .gte('created_at', todayStart.toISOString());
+            } catch (logError) {
+                console.warn('Silent error resetting water logs:', logError);
+            }
+
         } catch (error) {
             console.error('Reset water error:', error);
             setCurrentWater(previousWater);
@@ -255,6 +282,19 @@ const WaterLog: React.FC = () => {
                     });
             } catch (hError) {
                 console.warn('Silent error during subtract history:', hError);
+            }
+
+            // 3. Log detailed timestamped entry (negative amount)
+            try {
+                await supabase
+                    .from('water_logs')
+                    .insert({
+                        usuario_id: user.id,
+                        quantidade_ml: -amount,
+                        created_at: new Date().toISOString()
+                    });
+            } catch (logError) {
+                console.warn('Silent error logging water subtract timestamp:', logError);
             }
 
             setHasSubtracted(true);
