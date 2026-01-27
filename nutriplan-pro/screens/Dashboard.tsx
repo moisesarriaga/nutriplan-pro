@@ -54,7 +54,29 @@ const Dashboard: React.FC = () => {
         setShowWelcome(false);
       }, 7000);
 
-      return () => clearTimeout(timer);
+      // Real-time subscription for profile updates (water consumption)
+      const profileSubscription = supabase
+        .channel('dashboard_profile_changes')
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'perfis_usuario',
+          filter: `id=eq.${user.id}`
+        }, (payload) => {
+          const updatedProfile = payload.new;
+          setProfile(prev => prev ? {
+            ...prev,
+            consumo_agua_hoje: updatedProfile.consumo_agua_hoje || 0,
+            meta_agua_ml: updatedProfile.meta_agua_ml || prev.meta_agua_ml,
+            meta_calorica_diaria: updatedProfile.meta_calorica_diaria || prev.meta_calorica_diaria
+          } : null);
+        })
+        .subscribe();
+
+      return () => {
+        clearTimeout(timer);
+        supabase.removeChannel(profileSubscription);
+      };
     }
   }, [user, t]);
 
