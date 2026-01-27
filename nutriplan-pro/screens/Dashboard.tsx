@@ -64,6 +64,7 @@ const Dashboard: React.FC = () => {
           filter: `id=eq.${user.id}`
         }, (payload) => {
           const updatedProfile = payload.new;
+          console.log('[Dashboard] Real-time profile update:', { consumo_agua_hoje: updatedProfile.consumo_agua_hoje });
           setProfile(prev => prev ? {
             ...prev,
             consumo_agua_hoje: updatedProfile.consumo_agua_hoje || 0,
@@ -181,6 +182,7 @@ const Dashboard: React.FC = () => {
 
       if (error && error.code !== 'PGRST116') throw error;
       if (data) {
+        console.log('[Dashboard] Profile fetched:', { consumo_agua_hoje: data.consumo_agua_hoje, meta_agua_ml: data.meta_agua_ml });
         setProfile(data);
 
         // Auto-trigger tutorial if not seen
