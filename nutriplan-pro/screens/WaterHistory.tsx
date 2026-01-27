@@ -254,12 +254,12 @@ const WaterHistory: React.FC = () => {
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hoje</span>
                         <div className="size-7 sm:size-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                            <Droplets className="text-blue-500 fill-blue-500" size={18} />
+                            <Droplets className="text-blue-500" size={18} strokeWidth={2.5} />
                         </div>
                     </div>
                     <p className="text-lg sm:text-xl font-black mb-1">{stats.today.toLocaleString()}ml</p>
                     <div className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-bold ${stats.vsOntem >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        {stats.vsOntem >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                        {stats.vsOntem >= 0 ? <TrendingUp size={14} strokeWidth={2.5} /> : <TrendingDown size={14} strokeWidth={2.5} />}
                         {stats.diffLabel}
                     </div>
                 </div>
@@ -269,12 +269,12 @@ const WaterHistory: React.FC = () => {
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Média</span>
                         <div className="size-7 sm:size-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                            <BarChart2 className="text-blue-500" size={18} />
+                            <BarChart2 className="text-blue-500" size={18} strokeWidth={2.5} />
                         </div>
                     </div>
                     <p className="text-lg sm:text-xl font-black mb-1">{stats.avgWeekly.toLocaleString()}ml</p>
                     <div className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-bold ${stats.avgWeekly >= goal ? 'text-green-500' : 'text-blue-500'}`}>
-                        <Sparkles size={14} />
+                        <Sparkles size={14} strokeWidth={2.5} />
                         {stats.avgWeekly >= goal ? 'Bateu' : 'Meta'}
                     </div>
                 </div>
@@ -284,7 +284,7 @@ const WaterHistory: React.FC = () => {
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Dias</span>
                         <div className="size-7 sm:size-8 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
-                            <Flame className="text-orange-500 fill-orange-500" size={18} />
+                            <Flame className="text-orange-500" size={18} strokeWidth={2.5} />
                         </div>
                     </div>
                     <p className="text-lg sm:text-xl font-black mb-1">{stats.streak}</p>

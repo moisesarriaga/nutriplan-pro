@@ -18,6 +18,9 @@ const WaterLog: React.FC = () => {
     const [intervalMinutes, setIntervalMinutes] = useState(120);
     const [sleepStart, setSleepStart] = useState('22:00');
     const [sleepEnd, setSleepEnd] = useState('07:00');
+    const [showSubtractMenu, setShowSubtractMenu] = useState(false);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [hasSubtracted, setHasSubtracted] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -111,7 +114,7 @@ const WaterLog: React.FC = () => {
 
             const timeout = setTimeout(() => {
                 setVisualWater(target);
-            }, (visualWater > 0 && visualWater % goal === 0) ? 800 : 50);
+            }, (visualWater > 0 && visualWater % goal === 0) ? 580 : 50);
 
             return () => clearTimeout(timeout);
         } else if (visualWater > currentWater) {
@@ -218,6 +221,50 @@ const WaterLog: React.FC = () => {
         }
     };
 
+    const subtractWater = async (amount: number) => {
+        if (!user) return;
+
+        const previousWater = currentWater;
+        const newAmount = Math.max(0, currentWater - amount);
+
+        setCurrentWater(newAmount);
+
+        try {
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+            const { error: profileError } = await supabase
+                .from('perfis_usuario')
+                .update({
+                    consumo_agua_hoje: newAmount,
+                    data_ultimo_reset_agua: today
+                })
+                .eq('id', user.id);
+
+            if (profileError) throw profileError;
+
+            try {
+                await supabase
+                    .from('historico_consumo_agua')
+                    .upsert({
+                        usuario_id: user.id,
+                        data: today,
+                        quantidade_ml: newAmount
+                    }, {
+                        onConflict: 'usuario_id,data'
+                    });
+            } catch (hError) {
+                console.warn('Silent error during subtract history:', hError);
+            }
+
+            setHasSubtracted(true);
+        } catch (error) {
+            console.error('Subtract water error:', error);
+            setCurrentWater(previousWater);
+            alert('Erro ao subtrair consumo.');
+        }
+    };
+
     const saveSettings = async () => {
         if (!user) return;
 
@@ -259,8 +306,9 @@ const WaterLog: React.FC = () => {
             </header>
 
             <div className="flex-1 px-4 flex flex-col items-center justify-center py-10">
-                <div className="relative size-64 mb-10">
-                    <svg className="size-full -rotate-90 transform">
+                <div className="relative size-64 mb-10 group">
+                    <div className={`absolute inset-0 rounded-full transition-all duration-700 ${currentLapPercentage === 0 && numLaps > 0 ? 'shadow-[0_0_30px_rgba(59,130,246,0.3)] scale-105' : 'shadow-none'}`} />
+                    <svg className={`size-full -rotate-90 transform transition-transform duration-500 ${(currentLapPercentage === 0 && numLaps > 0) ? 'scale-110' : 'scale-100'}`}>
                         {/* Background grey circle - only visible on lap 0 */}
                         <circle
                             className="text-slate-200 dark:text-slate-800"
@@ -284,8 +332,8 @@ const WaterLog: React.FC = () => {
                                 <circle
                                     key={`lap-${lapIndex}`}
                                     style={{ color }}
-                                    className="transition-all duration-700 ease-out"
-                                    strokeWidth="16"
+                                    className="transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1)"
+                                    strokeWidth={lapIndex === numLaps ? 16 : 14}
                                     strokeDasharray={2 * Math.PI * 120}
                                     strokeDashoffset={2 * Math.PI * 120 * (1 - lapPercent / 100)}
                                     strokeLinecap="round"
@@ -300,8 +348,8 @@ const WaterLog: React.FC = () => {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <div className="relative flex items-center justify-center w-12 h-12">
-                            <span className="material-symbols-outlined text-blue-500 absolute -translate-x-3 -translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 0" }}>water_drop</span>
-                            <span className="material-symbols-outlined text-blue-500 relative z-10 translate-x-1 translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 1" }}>water_drop</span>
+                            <span className="material-symbols-outlined text-blue-500 absolute -translate-x-3 -translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 0, 'wght' 600" }}>water_drop</span>
+                            <span className="material-symbols-outlined text-blue-500 relative z-10 translate-x-1 translate-y-1" style={{ fontSize: '42px', fontVariationSettings: "'FILL' 1, 'wght' 600" }}>water_drop</span>
                         </div>
                         <span className="text-4xl font-black mt-2">{(Math.max(0, visualWater) / 1000).toFixed(1)}L</span>
                         <span className="text-slate-500 text-sm">da meta de {(goal / 1000).toFixed(1)}L</span>
@@ -320,7 +368,7 @@ const WaterLog: React.FC = () => {
                                     className="material-symbols-outlined text-blue-500"
                                     style={{
                                         fontSize: amount === 200 ? '24px' : amount === 300 ? '32px' : '40px',
-                                        fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24"
+                                        fontVariationSettings: "'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24"
                                     }}
                                 >
                                     water_full
@@ -331,14 +379,51 @@ const WaterLog: React.FC = () => {
                     ))}
                 </div>
 
-                <div className="mt-10 flex flex-col items-center gap-4">
-                    <button
-                        onClick={resetWater}
-                        className="text-slate-500 text-sm font-medium hover:text-red-500 transition-colors"
-                    >
-                        Zerar consumo de hoje
-                    </button>
+                <div className={`mt-6 relative w-full max-w-sm transition-all duration-300 ${showSubtractMenu ? 'h-[90px]' : 'h-10'}`}>
+                    {!showSubtractMenu ? (
+                        <div className="absolute inset-0 grid grid-cols-2 gap-4 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-500 ease-out fill-mode-forwards">
+                            <button
+                                onClick={() => currentWater > 0 && setShowResetConfirm(true)}
+                                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800 active:scale-95 transition text-slate-500 font-bold text-sm h-10"
+                            >
+                                <span className="material-symbols-outlined" style={{ fontSize: '18px', fontVariationSettings: "'wght' 600" }}>restart_alt</span>
+                                Zerar
+                            </button>
+                            <button
+                                onClick={() => setShowSubtractMenu(true)}
+                                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800 active:scale-95 transition text-slate-500 font-bold text-sm h-10"
+                            >
+                                <span className="material-symbols-outlined" style={{ fontSize: '18px', fontVariationSettings: "'wght' 600" }}>remove</span>
+                                Menos
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="absolute inset-0 flex flex-col items-center gap-3 animate-in fade-in slide-in-from-bottom-8 zoom-in-95 duration-500 ease-out fill-mode-forwards">
+                            <div className="grid grid-cols-3 gap-3 w-full">
+                                {[200, 300, 500].map((amount) => (
+                                    <button
+                                        key={`sub-${amount}`}
+                                        onClick={() => subtractWater(amount)}
+                                        className="flex items-center justify-center p-2 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 active:scale-95 transition text-red-500 font-bold text-sm h-10"
+                                    >
+                                        -{amount}ml
+                                    </button>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setShowSubtractMenu(false);
+                                    setHasSubtracted(false);
+                                }}
+                                className={`text-xs font-bold p-2 transition-colors ${hasSubtracted ? 'text-blue-500 hover:text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                {hasSubtracted ? 'Ok' : 'Cancelar'}
+                            </button>
+                        </div>
+                    )}
+                </div>
 
+                <div className="mt-6 flex flex-col items-center gap-4">
                     <div className="flex items-stretch gap-4">
                         <div className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 min-w-[280px]">
                             <Bell className="text-blue-500" size={24} />
@@ -472,6 +557,40 @@ const WaterLog: React.FC = () => {
                             >
                                 Salvar Configurações
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reset Confirmation Modal */}
+            {showResetConfirm && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-surface-dark w-full max-w-xs p-6 rounded-[24px] shadow-2xl animate-in zoom-in-95 duration-300">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="size-16 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center mb-4">
+                                <span className="material-symbols-outlined text-red-500" style={{ fontSize: '32px' }}>warning</span>
+                            </div>
+                            <h3 className="text-lg font-bold mb-2">Zerar Consumo?</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                                Deseja realmente zerar todo o seu consumo de água de hoje?
+                            </p>
+                            <div className="grid grid-cols-2 gap-3 w-full">
+                                <button
+                                    onClick={() => setShowResetConfirm(false)}
+                                    className="py-3 rounded-xl bg-slate-100 dark:bg-white/5 font-bold text-slate-600 dark:text-slate-300 active:scale-95 transition-all"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        resetWater();
+                                        setShowResetConfirm(false);
+                                    }}
+                                    className="py-3 rounded-xl bg-red-500 text-white font-bold active:scale-95 transition-all shadow-lg shadow-red-500/20"
+                                >
+                                    Zerar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

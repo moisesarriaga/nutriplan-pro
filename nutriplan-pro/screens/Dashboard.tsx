@@ -299,7 +299,7 @@ const Dashboard: React.FC = () => {
         >
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-500">
-              <span className="material-symbols-rounded text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
+              <span className="material-symbols-rounded text-[20px]" style={{ fontVariationSettings: "'wght' 600" }}>local_fire_department</span>
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-[#92c9a4]">Calories</p>
@@ -320,7 +320,7 @@ const Dashboard: React.FC = () => {
         >
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
-              <span className="material-symbols-rounded text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>water_drop</span>
+              <span className="material-symbols-rounded text-[20px]" style={{ fontVariationSettings: "'wght' 600" }}>water_drop</span>
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-[#92c9a4]">Water</p>
