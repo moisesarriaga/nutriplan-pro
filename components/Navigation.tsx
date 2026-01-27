@@ -24,6 +24,7 @@ const Navigation: React.FC = React.memo(() => {
         {navItems.map((item) => (
           <button
             key={item.path}
+            id={`nav-${item.path.replace('/', '')}`}
             onClick={() => navigate(item.path)}
             className={`flex flex-col items-center justify-center gap-1 w-12 transition-all duration-300 ${isActive(item.path) ? 'text-primary scale-110' : 'text-slate-400 dark:text-[#92c9a4]'
               }`}

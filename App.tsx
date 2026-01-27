@@ -103,6 +103,9 @@ const AppContent: React.FC = () => {
   );
 };
 
+import { TutorialProvider } from './contexts/TutorialContext';
+import TutorialOverlay from './components/TutorialOverlay';
+
 const App: React.FC = () => {
   return (
     <HashRouter>
@@ -110,7 +113,10 @@ const App: React.FC = () => {
         <NotificationProvider>
           <AuthProvider>
             <SubscriptionProvider>
-              <AppContent />
+              <TutorialProvider>
+                <AppContent />
+                <TutorialOverlay />
+              </TutorialProvider>
             </SubscriptionProvider>
           </AuthProvider>
         </NotificationProvider>

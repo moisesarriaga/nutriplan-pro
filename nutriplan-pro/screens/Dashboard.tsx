@@ -9,18 +9,23 @@ import { supabase } from '../../lib/supabaseClient';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { useTutorial } from '../../contexts/TutorialContext';
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
   const { showConfirmation, showNotification } = useNotification();
+  const { startTutorial } = useTutorial();
   const [profile, setProfile] = useState<{
     nome: string;
     avatar_url: string;
     consumo_agua_hoje: number;
     meta_agua_ml: number;
     meta_calorica_diaria: number;
+    tutorial_visto?: boolean;
   } | null>(null);
+
   const [todayMeals, setTodayMeals] = useState<any[]>([]);
   const [todayCalories, setTodayCalories] = useState(0);
   const [userRecipes, setUserRecipes] = useState<any[]>([]);
@@ -148,12 +153,22 @@ const Dashboard: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('perfis_usuario')
-        .select('nome, avatar_url, consumo_agua_hoje, meta_agua_ml, meta_calorica_diaria')
+        .select('nome, avatar_url, consumo_agua_hoje, meta_agua_ml, meta_calorica_diaria, tutorial_visto')
         .eq('id', user?.id)
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
-      if (data) setProfile(data);
+      if (data) {
+        setProfile(data);
+
+        // Auto-trigger tutorial if not seen
+        if (data.tutorial_visto === false || data.tutorial_visto === null) {
+          // Delay slightly to allow layout to settle
+          setTimeout(() => {
+            startTutorial();
+          }, 1500);
+        }
+      }
     } catch (err) {
       console.error('Error fetching dashboard profile:', err);
     }
@@ -177,6 +192,7 @@ const Dashboard: React.FC = () => {
       setUserRecipes([]);
     }
   };
+
   const fetchShoppingListGroups = async () => {
     if (!user) return;
     try {
@@ -240,7 +256,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen pb-52 relative w-full">
-      <header className="sticky top-0 z-20 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 pt-6 pb-2">
+      <header id="dashboard-header" className="sticky top-0 z-20 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 pt-6 pb-2">
         <div className="flex items-center gap-3">
           <div className="relative cursor-pointer" onClick={() => navigate('/profile')}>
             <div className="flex items-center justify-center rounded-full size-10 ring-2 ring-primary/20 bg-white dark:bg-surface-dark overflow-hidden">
@@ -276,7 +292,7 @@ const Dashboard: React.FC = () => {
         </button>
       </header>
 
-      <div className="px-4 py-4 grid grid-cols-2 gap-3">
+      <div id="health-summary" className="px-4 py-4 grid grid-cols-2 gap-3">
         <div
           onClick={() => navigate('/calorie-history')}
           className="rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm flex flex-col gap-2 cursor-pointer active:scale-95 transition-all hover:border-primary/30 border border-transparent"

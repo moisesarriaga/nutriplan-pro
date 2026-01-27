@@ -11,6 +11,7 @@ import { useNotification } from '../../contexts/NotificationContext';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import ImageCropperModal from '../../components/ImageCropperModal';
+import { useTutorial } from '../../contexts/TutorialContext';
 
 interface ProfileProps {
   onLogout: () => void;
@@ -30,6 +31,7 @@ interface UserProfile {
 
 const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
   const navigate = useNavigate();
+  const { startTutorial } = useTutorial();
   const { user, signOut } = useAuth();
   const { showNotification } = useNotification();
   const { theme, setTheme } = useTheme();
@@ -455,6 +457,21 @@ const Profile: React.FC<ProfileProps> = ({ onLogout }) => {
               />
               <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
             </label>
+          </div>
+          <div
+            onClick={() => {
+              navigate('/dashboard');
+              setTimeout(startTutorial, 500);
+            }}
+            className="flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-white/5 cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600">
+                <span className="material-symbols-rounded text-slate-600 text-[20px]">info</span>
+              </div>
+              <span className="text-base font-medium">Tutorial do App</span>
+            </div>
+            <span className="material-symbols-rounded text-slate-400 text-[20px]">chevron_right</span>
           </div>
           <div className="flex items-center justify-between p-4 active:bg-slate-50 cursor-pointer">
             <div className="flex items-center gap-3">

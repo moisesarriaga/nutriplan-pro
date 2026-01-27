@@ -25,6 +25,10 @@ const ShoppingCart: React.FC = () => {
   const [groups, setGroups] = useState<ShoppingListGroup[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [error, setError] = useState('');
+
   useEffect(() => {
     if (user) {
       fetchGroups();
@@ -115,9 +119,39 @@ const ShoppingCart: React.FC = () => {
     });
   };
 
-  const createNewList = () => {
-    // Navigate to detail page with "new" as id to create a new list
-    navigate('/cart/new');
+  const handleCreateNewList = () => {
+    if (!newListName.trim()) {
+      setError('Por favor, digite um nome para a lista.');
+      return;
+    }
+
+    const nameToPass = newListName.trim();
+
+    // Check if name already exists
+    const nameExists = groups.some(g => g.name.toLowerCase() === nameToPass.toLowerCase());
+
+    if (nameExists) {
+      showConfirmation(`Já existe uma lista ativa chamada "${nameToPass}". Deseja criar outra lista com o mesmo nome?`, {
+        title: 'Nome já existe',
+        confirmLabel: 'Sim',
+        cancelLabel: 'Não',
+        variant: 'primary',
+        onConfirm: () => {
+          setIsModalVisible(false);
+          setNewListName('');
+          setError('');
+          navigate('/cart/new', { state: { listName: nameToPass } });
+        }
+      });
+      return;
+    }
+
+    setIsModalVisible(false);
+    setNewListName('');
+    setError('');
+
+    // Navigate to detail page with "new" as id and pass the name in state
+    navigate('/cart/new', { state: { listName: nameToPass } });
   };
 
   return (
@@ -143,9 +177,13 @@ const ShoppingCart: React.FC = () => {
               <ShoppingBasket className="text-slate-400" size={32} />
             </div>
             <h3 className="text-lg font-bold mb-2">Nenhuma lista ativa</h3>
-            <p className="text-sm text-slate-500 mb-6 max-w-[200px]">
-              Gere uma nova lista de compras a partir do seu cardápio.
-            </p>
+            <button
+              onClick={() => setIsModalVisible(true)}
+              className="w-full flex items-center justify-center gap-2 p-6 mt-4 rounded-3xl border-2 border-dashed border-primary/40 bg-primary/5 text-primary font-bold hover:bg-primary/10 hover:border-primary/60 transition-all active:scale-[0.99]"
+            >
+              <span className="material-symbols-rounded">add</span>
+              <span>Criar Novo Grupo de Lista</span>
+            </button>
           </div>
         ) : (
           <div className="space-y-3">
@@ -194,12 +232,79 @@ const ShoppingCart: React.FC = () => {
                   </div>
                 </div>
               ))}
+
+            <button
+              onClick={() => setIsModalVisible(true)}
+              className="w-full flex items-center justify-center gap-2 p-6 mt-4 rounded-3xl border-2 border-dashed border-primary/40 bg-primary/5 text-primary font-bold hover:bg-primary/10 hover:border-primary/60 transition-all active:scale-[0.99]"
+            >
+              <span className="material-symbols-rounded">add</span>
+              <span>Criar Novo Grupo de Lista</span>
+            </button>
           </div>
         )}
       </div>
 
+      {/* Naming Modal */}
+      {isModalVisible && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+            onClick={() => {
+              setIsModalVisible(false);
+              setError('');
+              setNewListName('');
+            }}
+          />
+          <div className="relative w-full max-w-sm transform animate-in zoom-in-95 duration-200 bg-white dark:bg-surface-dark rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-gray-800">
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4 text-center">Nome da Lista</h3>
+              <p className="text-sm text-slate-500 mb-6 text-center">
+                Dê um nome para identificar seu novo grupo de compras.
+              </p>
+
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  value={newListName}
+                  onChange={(e) => {
+                    setNewListName(e.target.value);
+                    if (error) setError('');
+                  }}
+                  className={`w-full p-5 rounded-3xl bg-slate-50 dark:bg-white/5 border-2 text-center text-lg font-medium outline-none transition-all ${error ? 'border-red-500' : 'border-transparent focus:border-primary/30'
+                    }`}
+                  autoFocus
+                />
+
+                {error && (
+                  <p className="text-xs text-red-500 px-1">{error}</p>
+                )}
+
+                <div className="flex gap-4 items-center">
+                  <button
+                    onClick={() => {
+                      setIsModalVisible(false);
+                      setError('');
+                      setNewListName('');
+                    }}
+                    className="flex-1 py-4 font-bold text-slate-500 hover:text-slate-700 dark:hover:text-white transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleCreateNewList}
+                    className="flex-1 py-5 bg-primary text-background-dark font-bold rounded-2xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-all hover:brightness-105"
+                  >
+                    Criar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Navigation />
-    </div >
+    </div>
   );
 };
 
