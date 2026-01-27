@@ -11,6 +11,7 @@ interface ConfirmationOptions {
     title?: string;
     confirmLabel?: string;
     cancelLabel?: string;
+    onCancel?: () => void;
     variant?: 'primary' | 'danger';
 }
 
@@ -65,13 +66,12 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }, []);
 
     const showNotification = useCallback((message: string, options?: NotificationOptions) => {
-        if (!isNotificationsEnabled) return;
         setNotification({
             visible: true,
             message,
             options,
         });
-    }, [isNotificationsEnabled]);
+    }, []);
 
     const hideNotification = useCallback(() => {
         if (notification.options?.onConfirm) {
@@ -81,13 +81,12 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }, [notification]);
 
     const showConfirmation = useCallback((message: string, options?: ConfirmationOptions) => {
-        if (!isNotificationsEnabled) return;
         setConfirmation({
             visible: true,
             message,
             options,
         });
-    }, [isNotificationsEnabled]);
+    }, []);
 
     const hideConfirmation = useCallback(() => {
         setConfirmation((prev) => ({ ...prev, visible: false }));

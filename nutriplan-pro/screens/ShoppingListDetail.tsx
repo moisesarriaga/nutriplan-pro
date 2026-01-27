@@ -1,11 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
+import { useNotification } from '../../contexts/NotificationContext';
 import UpgradePrompt from '../../components/UpgradePrompt';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
 interface ShoppingItem {
   usuario_id: string;
@@ -22,7 +24,9 @@ interface ShoppingItem {
 const ShoppingListDetail: React.FC = () => {
   const navigate = useNavigate();
   const { listId } = useParams<{ listId: string }>();
+  const location = useLocation();
   const { user } = useAuth();
+  const { showConfirmation } = useNotification();
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [newItemName, setNewItemName] = useState('');
@@ -85,14 +89,15 @@ const ShoppingListDetail: React.FC = () => {
       // Filter items by listId (grupo_nome)
       const filteredItems = decodedListId === 'new' ? [] : data.filter((item: ShoppingItem) => {
         const itemGroup = item.grupo_nome || 'Sem Grupo';
-        return itemGroup === decodedListId;
+        return itemGroup === decodedListId && item.nome_item !== '_empty_';
       });
 
       setItems(filteredItems);
 
       // Set list name
       if (decodedListId === 'new') {
-        setListName('Nova Lista');
+        const stateName = location.state?.listName;
+        setListName(stateName || 'Nova Lista');
       } else {
         setListName(decodedListId.split(' ::: ')[0]); // Use clean group name
       }
@@ -121,6 +126,13 @@ const ShoppingListDetail: React.FC = () => {
     setIsAdding(true);
 
     const decodedListId = decodeURIComponent(listId);
+    let finalGroupName = decodedListId;
+
+    // If it's a brand new list, use the name from state/context and add a timestamp
+    if (decodedListId === 'new') {
+      const timestamp = Date.now();
+      finalGroupName = `${listName} ::: ${timestamp}`;
+    }
 
     const newItem: Partial<ShoppingItem> = {
       usuario_id: user.id,
@@ -129,7 +141,7 @@ const ShoppingListDetail: React.FC = () => {
       ultimo_preco_informado: 0,
       unidade_preco: 'un',
       comprado: false,
-      grupo_nome: decodedListId,
+      grupo_nome: finalGroupName,
       concluido: false
     };
 
@@ -142,6 +154,11 @@ const ShoppingListDetail: React.FC = () => {
     if (!error && data) {
       setItems(prev => [...prev, data as ShoppingItem]);
       setNewItemName('');
+
+      // If we just created a new list group, navigate to its real ID
+      if (decodedListId === 'new') {
+        navigate(`/cart/${encodeURIComponent(finalGroupName)}`, { replace: true });
+      }
     }
     setIsAdding(false);
   };
@@ -164,6 +181,47 @@ const ShoppingListDetail: React.FC = () => {
       setItems(prev => prev.map(i =>
         i.nome_item === nomeItem ? { ...i, comprado: newCompradoState } : i
       ));
+    }
+  };
+
+  const saveEmptyList = async () => {
+    if (!user || !listId || listId !== 'new') return;
+
+    const timestamp = Date.now();
+    const finalGroupName = `${listName} ::: ${timestamp}`;
+
+    const emptyItem: Partial<ShoppingItem> = {
+      usuario_id: user.id,
+      nome_item: '_empty_',
+      quantidade: 0,
+      ultimo_preco_informado: 0,
+      unidade_preco: '',
+      comprado: false,
+      grupo_nome: finalGroupName,
+      concluido: false
+    };
+
+    const { error } = await supabase
+      .from('lista_precos_mercado')
+      .insert(emptyItem);
+
+    if (!error) {
+      navigate('/cart');
+    }
+  };
+
+  const handleBack = () => {
+    if (listId === 'new' && items.length === 0) {
+      showConfirmation('Você não adicionou nenhum item nesta lista. Deseja sair e salvar a lista vazia mesmo assim?', {
+        title: 'Lista Vazia',
+        confirmLabel: 'Sim, salvar',
+        cancelLabel: 'Não, sair',
+        onConfirm: saveEmptyList,
+        onCancel: () => navigate('/cart'),
+        variant: 'primary'
+      });
+    } else {
+      navigate(-1);
     }
   };
 
@@ -245,7 +303,7 @@ const ShoppingListDetail: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen pb-52">
       <header className="sticky top-0 z-20 flex items-center justify-between bg-background-light/90 dark:bg-background-dark/90 px-4 py-4 backdrop-blur-md">
-        <button onClick={() => navigate(-1)} className="flex size-10 items-center justify-center rounded-full text-slate-900 dark:text-white hover:bg-black/5">
+        <button onClick={handleBack} className="flex size-10 items-center justify-center rounded-full text-slate-900 dark:text-white hover:bg-black/5">
           <span className="material-symbols-rounded text-[20px]">arrow_back</span>
         </button>
         <div className="flex items-center gap-2">
@@ -394,7 +452,7 @@ const ShoppingListDetail: React.FC = () => {
         )}
       </div>
 
-      <div className="fixed bottom-20 left-0 z-50 w-full border-t border-gray-200 bg-white dark:bg-surface-dark p-4 pb-8">
+      <div className="fixed bottom-0 left-0 right-0 z-30 p-4 pb-[96px] bg-gradient-to-t from-background-light via-background-light via-60% to-transparent dark:from-background-dark dark:via-background-dark dark:via-60% pt-32 px-4">
         <div className="mx-auto w-full max-w-md">
           <div className="mb-4 flex items-center justify-between px-1">
             <span className="text-sm text-slate-500">Total a Pagar</span>
@@ -404,10 +462,14 @@ const ShoppingListDetail: React.FC = () => {
           </div>
           <button
             onClick={allChecked && !isHistoryList ? () => setShowFinishConfirm(true) : (!canSumPrices ? () => setShowUpgradeModal(true) : undefined)}
-            className={`flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 font-bold text-black shadow-lg active:scale-[0.98] transition-all ${allChecked && !isHistoryList ? 'bg-primary shadow-primary/30' : 'bg-primary/80 shadow-primary/20'}`}
+            className="flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl h-14 bg-primary text-black text-base font-bold shadow-lg active:scale-[0.98] transition-all"
           >
+            {allChecked && !isHistoryList ? (
+              <CheckCircle2 size={24} />
+            ) : (
+              <ArrowRight size={24} />
+            )}
             <span>{allChecked && !isHistoryList ? 'Finalizar Compra' : 'Confirmar Pedido'}</span>
-            <span className="material-symbols-rounded text-[20px]">{allChecked && !isHistoryList ? 'check_circle' : 'arrow_forward'}</span>
           </button>
         </div>
       </div>

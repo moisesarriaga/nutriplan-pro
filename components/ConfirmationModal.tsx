@@ -18,12 +18,19 @@ const ConfirmationModal: React.FC = () => {
     const confirmLabel = confirmation.options?.confirmLabel || 'Confirmar';
     const cancelLabel = confirmation.options?.cancelLabel || 'Cancelar';
 
+    const handleCancel = () => {
+        if (confirmation.options?.onCancel) {
+            confirmation.options.onCancel();
+        }
+        hideConfirmation();
+    };
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
-                onClick={hideConfirmation}
+                onClick={handleCancel}
             />
 
             {/* Modal Content */}
@@ -45,7 +52,7 @@ const ConfirmationModal: React.FC = () => {
 
                     <div className="flex gap-4 w-full">
                         <button
-                            onClick={hideConfirmation}
+                            onClick={handleCancel}
                             className="flex-1 h-14 rounded-2xl font-bold text-slate-500 border border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-all active:scale-[0.98]"
                         >
                             {cancelLabel}
@@ -53,8 +60,8 @@ const ConfirmationModal: React.FC = () => {
                         <button
                             onClick={handleConfirm}
                             className={`flex-1 h-14 rounded-2xl text-white font-bold shadow-lg transition-all active:scale-[0.98] ${variant === 'danger'
-                                    ? 'bg-red-500 shadow-red-500/20'
-                                    : 'bg-primary shadow-primary/20 !text-background-dark'
+                                ? 'bg-red-500 shadow-red-500/20'
+                                : 'bg-primary shadow-primary/20 !text-background-dark'
                                 }`}
                         >
                             {confirmLabel}

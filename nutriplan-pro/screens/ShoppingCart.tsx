@@ -72,9 +72,11 @@ const ShoppingCart: React.FC = () => {
         id: group.id,
         name: group.name.split(' ::: ')[0], // Strip unique suffix for display
         originalName: group.name,
-        itemCount: group.items.length,
+        itemCount: group.items.filter((i: any) => i.nome_item !== '_empty_').length,
         completedCount: group.items.filter((i: any) => i.comprado).length,
-        totalPrice: group.items.reduce((sum: number, item: any) => sum + (item.ultimo_preco_informado || 0), 0),
+        totalPrice: group.items
+          .filter((i: any) => i.nome_item !== '_empty_')
+          .reduce((sum: number, item: any) => sum + (item.ultimo_preco_informado || 0), 0),
         createdAt: group.createdAt,
         concluido: group.items.some((i: any) => i.concluido) // If any item is marked as concluded, the group is
       }))
@@ -94,15 +96,15 @@ const ShoppingCart: React.FC = () => {
       title: 'Apagar Lista',
       onConfirm: async () => {
         try {
-          const query = supabase
+          let query = supabase
             .from('lista_precos_mercado')
             .delete()
             .eq('usuario_id', user?.id);
 
           if (group.originalName === 'Sem Grupo') {
-            query.is('grupo_nome', null);
+            query = query.is('grupo_nome', null);
           } else {
-            query.eq('grupo_nome', group.originalName);
+            query = query.eq('grupo_nome', group.originalName);
           }
 
           const { error } = await query;
@@ -131,7 +133,7 @@ const ShoppingCart: React.FC = () => {
     const nameExists = groups.some(g => g.name.toLowerCase() === nameToPass.toLowerCase());
 
     if (nameExists) {
-      showConfirmation(`Já existe uma lista ativa chamada "${nameToPass}". Deseja criar outra lista com o mesmo nome?`, {
+      showConfirmation(`Já existe uma lista ativa com esse nome. Deseja criar outra lista mesmo assim?`, {
         title: 'Nome já existe',
         confirmLabel: 'Sim',
         cancelLabel: 'Não',
