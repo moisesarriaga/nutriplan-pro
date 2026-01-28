@@ -169,6 +169,17 @@
             display: inline-block;
             vertical-align: middle;
         }
+
+        /* Remove Recharts black focus outline */
+        .recharts-wrapper,
+        .recharts-surface,
+        .recharts-sector,
+        .recharts-bar-rectangle,
+        .recharts-active-dot,
+        .recharts-tooltip-cursor {
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent;
+        }
     </style>
     <script type="importmap">
 {
