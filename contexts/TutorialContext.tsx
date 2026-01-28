@@ -48,7 +48,7 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
         {
             title: "Suas Receitas",
             description: "Crie e gerencie suas próprias receitas personalizadas aqui.",
-            targetId: "nav-my-recipes"
+            targetId: "dashboard-my-recipes"
         },
         {
             title: "Perfil e Metas",

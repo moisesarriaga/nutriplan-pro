@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
@@ -103,8 +103,11 @@ const WaterLog: React.FC = () => {
         }
     };
 
-    const numLaps = Math.floor(visualWater / goal);
-    const currentLapPercentage = goal > 0 ? ((visualWater % goal) / goal) * 100 : 0;
+    const waterStats = useMemo(() => {
+        const laps = Math.floor(visualWater / goal);
+        const percentage = goal > 0 ? ((visualWater % goal) / goal) * 100 : 0;
+        return { laps, percentage };
+    }, [visualWater, goal]);
 
     // Sequential animation effect
     useEffect(() => {
@@ -115,7 +118,7 @@ const WaterLog: React.FC = () => {
 
             const timeout = setTimeout(() => {
                 setVisualWater(target);
-            }, (visualWater > 0 && visualWater % goal === 0) ? 580 : 50);
+            }, (visualWater > 0 && visualWater % goal === 0) ? 300 : 16); // Faster but smoother (60fps) targets
 
             return () => clearTimeout(timeout);
         } else if (visualWater > currentWater) {
@@ -344,8 +347,8 @@ const WaterLog: React.FC = () => {
 
             <div className="flex-1 px-4 flex flex-col items-center justify-center py-10">
                 <div className="relative size-64 mb-10 group">
-                    <div className={`absolute inset-0 rounded-full transition-all duration-700 ${currentLapPercentage === 0 && numLaps > 0 ? 'shadow-[0_0_30px_rgba(59,130,246,0.3)] scale-105' : 'shadow-none'}`} />
-                    <svg className={`size-full -rotate-90 transform transition-transform duration-500 ${(currentLapPercentage === 0 && numLaps > 0) ? 'scale-110' : 'scale-100'}`}>
+                    <div className={`absolute inset-0 rounded-full transition-all duration-700 ${waterStats.percentage === 0 && waterStats.laps > 0 ? 'shadow-[0_0_30px_rgba(59,130,246,0.3)] scale-105' : 'shadow-none'}`} />
+                    <svg className={`size-full -rotate-90 transform transition-transform duration-500 ${(waterStats.percentage === 0 && waterStats.laps > 0) ? 'scale-110' : 'scale-100'}`}>
                         {/* Background grey circle - only visible on lap 0 */}
                         <circle
                             className="text-slate-200 dark:text-slate-800"
@@ -358,19 +361,19 @@ const WaterLog: React.FC = () => {
                         />
 
                         {/* Rendering one layer for each lap reached */}
-                        {Array.from({ length: numLaps + 1 }).map((_, lapIndex) => {
+                        {Array.from({ length: waterStats.laps + 1 }).map((_, lapIndex) => {
                             // Cycle through colors
                             const color = WATER_PROGRESS_COLORS[lapIndex % WATER_PROGRESS_COLORS.length];
 
                             // If it's a previous lap, it's 100% full. Otherwise, it's the current percentage.
-                            const lapPercent = lapIndex < numLaps ? 100 : currentLapPercentage;
+                            const lapPercent = lapIndex < waterStats.laps ? 100 : waterStats.percentage;
 
                             return (
                                 <circle
                                     key={`lap-${lapIndex}`}
                                     style={{ color }}
                                     className="transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1)"
-                                    strokeWidth={lapIndex === numLaps ? 16 : 14}
+                                    strokeWidth={lapIndex === waterStats.laps ? 16 : 14}
                                     strokeDasharray={2 * Math.PI * 120}
                                     strokeDashoffset={2 * Math.PI * 120 * (1 - lapPercent / 100)}
                                     strokeLinecap="round"
@@ -460,13 +463,15 @@ const WaterLog: React.FC = () => {
                     )}
                 </div>
 
-                <div className="mt-6 flex flex-col items-center gap-4">
-                    <div className="flex items-stretch gap-4">
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 min-w-[280px]">
-                            <Bell className="text-blue-500" size={24} />
-                            <div className="flex-1">
-                                <p className="text-sm font-semibold">Lembretes de Água</p>
-                                <p className="text-xs text-slate-500">
+                <div className="mt-8 w-full max-w-[400px]">
+                    <div className="flex items-stretch gap-3">
+                        <div className="flex-1 flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 shadow-sm transition-all">
+                            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
+                                <Bell className="text-blue-500" size={20} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold truncate">Lembretes</p>
+                                <p className="text-[10px] font-bold text-slate-400">
                                     A cada {intervalMinutes >= 60 ? `${intervalMinutes / 60}h` : `${intervalMinutes}min`}
                                 </p>
                             </div>
@@ -486,19 +491,19 @@ const WaterLog: React.FC = () => {
                                         .update({ lembretes_agua: newStatus })
                                         .eq('id', user?.id);
                                 }}
-                                className={`relative w-12 h-6 rounded-full transition-colors ${remindersActive ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
+                                className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${remindersActive ? 'bg-blue-500' : 'bg-slate-200 dark:bg-slate-700'
                                     }`}
                             >
-                                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${remindersActive ? 'translate-x-6' : 'translate-x-0'
+                                <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${remindersActive ? 'translate-x-5' : 'translate-x-0'
                                     }`} />
                             </button>
                         </div>
 
                         <button
                             onClick={() => setShowSettings(true)}
-                            className="flex items-center justify-center px-4 rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                            className="w-14 flex items-center justify-center rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-white/5 active:scale-95 transition-all text-slate-400 hover:text-blue-500"
                         >
-                            <span className="material-symbols-outlined text-slate-500" style={{ fontSize: '24px' }}>settings</span>
+                            <span className="material-symbols-outlined shrink-0" style={{ fontSize: '24px' }}>settings</span>
                         </button>
                     </div>
                 </div>
@@ -507,7 +512,7 @@ const WaterLog: React.FC = () => {
             {/* Settings Modal */}
             {showSettings && (
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white dark:bg-surface-dark w-full max-w-md p-6 rounded-t-[32px] sm:rounded-3xl shadow-2xl animate-in slide-in-from-bottom duration-300">
+                    <div className="bg-white dark:bg-surface-dark w-full max-w-md p-6 rounded-t-[32px] sm:rounded-3xl shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto no-scrollbar">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold">Configurar Lembretes</h2>
                             <button onClick={() => setShowSettings(false)} className="p-2 -mr-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/5">
@@ -515,23 +520,23 @@ const WaterLog: React.FC = () => {
                             </button>
                         </div>
 
-                        <div className="space-y-6">
+                        <div className="space-y-6 pb-6">
                             <section>
                                 <label className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-3">Meta Diária (ml)</label>
-                                <div className="flex gap-3 mb-3">
+                                <div className="flex flex-col gap-3">
                                     <input
                                         type="number"
                                         value={goal}
                                         onChange={(e) => setGoal(Number(e.target.value))}
-                                        className="flex-1 bg-slate-50 dark:bg-white/5 border-2 border-slate-100 dark:border-slate-800 rounded-xl p-3 text-lg font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                        className="w-full bg-slate-50 dark:bg-white/5 border-2 border-slate-100 dark:border-slate-800 rounded-xl p-3 text-lg font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                         placeholder="Ex: 2000"
                                     />
-                                    <div className="flex flex-col gap-2">
-                                        {[2000, 3000].map((preset) => (
+                                    <div className="flex flex-wrap gap-2">
+                                        {[2000, 2500, 3000].map((preset) => (
                                             <button
                                                 key={preset}
                                                 onClick={() => setGoal(preset)}
-                                                className={`px-3 py-1 text-xs font-bold rounded-lg border transition-all ${goal === preset
+                                                className={`flex-1 min-w-[80px] py-2 text-xs font-bold rounded-lg border transition-all ${goal === preset
                                                     ? 'bg-blue-500 border-blue-500 text-white'
                                                     : 'border-slate-200 dark:border-slate-700 text-slate-500'
                                                     }`}
@@ -545,14 +550,14 @@ const WaterLog: React.FC = () => {
 
                             <section>
                                 <label className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-3">Frequência das notificações</label>
-                                <div className="grid grid-cols-3 gap-3">
+                                <div className="grid grid-cols-2 xs:grid-cols-3 gap-3">
                                     {[30, 60, 120, 180, 240, 300].map((mins) => (
                                         <button
                                             key={mins}
                                             onClick={() => setIntervalMinutes(mins)}
-                                            className={`py-2 px-3 rounded-xl border-2 transition-all font-medium text-sm ${intervalMinutes === mins
+                                            className={`py-3 px-2 rounded-xl border-2 transition-all font-bold text-sm ${intervalMinutes === mins
                                                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                                                : 'border-slate-100 dark:border-slate-800 hover:border-slate-300'
+                                                : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 text-slate-500'
                                                 }`}
                                         >
                                             {mins >= 60 ? `${mins / 60}h` : `${mins}min`}
@@ -563,34 +568,38 @@ const WaterLog: React.FC = () => {
 
                             <section>
                                 <label className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-3">Modo Sono (Sem notificações)</label>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex-1">
-                                        <span className="text-xs text-slate-400 block mb-1">Início</span>
-                                        <input
-                                            type="time"
-                                            value={sleepStart}
-                                            onChange={(e) => setSleepStart(e.target.value)}
-                                            className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500"
-                                        />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[10px] uppercase font-bold text-slate-400 px-1">Início</span>
+                                        <div className="relative">
+                                            <input
+                                                type="time"
+                                                value={sleepStart}
+                                                onChange={(e) => setSleepStart(e.target.value)}
+                                                className="w-full bg-slate-50 dark:bg-white/5 border-2 border-slate-100 dark:border-slate-800 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="flex-1">
-                                        <span className="text-xs text-slate-400 block mb-1">Fim</span>
-                                        <input
-                                            type="time"
-                                            value={sleepEnd}
-                                            onChange={(e) => setSleepEnd(e.target.value)}
-                                            className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500"
-                                        />
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[10px] uppercase font-bold text-slate-400 px-1">Fim</span>
+                                        <div className="relative">
+                                            <input
+                                                type="time"
+                                                value={sleepEnd}
+                                                onChange={(e) => setSleepEnd(e.target.value)}
+                                                className="w-full bg-slate-50 dark:bg-white/5 border-2 border-slate-100 dark:border-slate-800 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                                <p className="text-[10px] text-slate-400 mt-2 italic px-1">
+                                <p className="text-[10px] text-slate-400 mt-3 italic px-1 leading-tight">
                                     As notificações serão pausadas automaticamente durante esse período.
                                 </p>
                             </section>
 
                             <button
                                 onClick={saveSettings}
-                                className="w-full py-4 rounded-2xl bg-blue-500 text-white font-bold hover:bg-blue-600 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20"
+                                className="w-full py-4 mt-2 rounded-2xl bg-blue-500 text-white font-bold hover:bg-blue-600 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20"
                             >
                                 Salvar Configurações
                             </button>

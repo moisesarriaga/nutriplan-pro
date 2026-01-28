@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
 import { MOCK_RECIPES, MOCK_USER, WATER_PROGRESS_COLORS } from '../../constants';
@@ -34,12 +34,23 @@ const Dashboard: React.FC = () => {
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [shoppingListGroups, setShoppingListGroups] = useState(0);
 
+  const loadAllData = useCallback(async () => {
+    if (!user) return;
+    try {
+      await Promise.all([
+        fetchProfile(),
+        fetchTodayCalories(),
+        fetchUserRecipes(),
+        fetchShoppingListGroups()
+      ]);
+    } catch (err) {
+      console.error('[Dashboard] Error loading data in parallel:', err);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user) {
-      fetchProfile();
-      fetchTodayCalories();
-      fetchUserRecipes();
-      fetchShoppingListGroups();
+      loadAllData();
 
       const storageKey = `welcome_shown_${user.id}`;
       const hasBeenWelcomed = localStorage.getItem(storageKey);
@@ -55,7 +66,7 @@ const Dashboard: React.FC = () => {
         setShowWelcome(false);
       }, 7000);
 
-      // Real-time subscription for profile updates (water consumption)
+      // Real-time subscription for profile updates
       const profileSubscription = supabase
         .channel('dashboard_profile_changes')
         .on('postgres_changes', {
@@ -65,53 +76,52 @@ const Dashboard: React.FC = () => {
           filter: `id=eq.${user.id}`
         }, (payload) => {
           const updatedProfile = payload.new;
-          console.log('[Dashboard] Real-time profile update:', { consumo_agua_hoje: updatedProfile.consumo_agua_hoje });
           setProfile(prev => {
-            const current = prev || ({} as any);
-            return {
-              ...current,
-              consumo_agua_hoje: typeof updatedProfile.consumo_agua_hoje !== 'undefined' ? updatedProfile.consumo_agua_hoje : current.consumo_agua_hoje,
-              meta_agua_ml: updatedProfile.meta_agua_ml || current.meta_agua_ml,
-              meta_calorica_diaria: updatedProfile.meta_calorica_diaria || current.meta_calorica_diaria,
-              nome: updatedProfile.nome || current.nome,
-              avatar_url: updatedProfile.avatar_url || current.avatar_url,
-              data_ultimo_reset_agua: updatedProfile.data_ultimo_reset_agua || current.data_ultimo_reset_agua
-            };
+            if (!prev) return updatedProfile as any;
+            // Only update if something actually changed to avoid unnecessary re-renders
+            if (prev.consumo_agua_hoje === updatedProfile.consumo_agua_hoje &&
+              prev.meta_agua_ml === updatedProfile.meta_agua_ml &&
+              prev.meta_calorica_diaria === updatedProfile.meta_calorica_diaria) {
+              return prev;
+            }
+            return { ...prev, ...updatedProfile };
           });
         })
         .subscribe();
 
-      // Subscription to water_logs for real-time updates when logs are added/deleted
+      // Debounced logs subscription
+      let refreshTimeout: NodeJS.Timeout;
       const logsSubscription = supabase
         .channel('dashboard_logs_changes')
         .on('postgres_changes', {
-          event: '*', // Sync on any change
+          event: '*',
           schema: 'public',
           table: 'water_logs',
           filter: `usuario_id=eq.${user.id}`
         }, () => {
-          console.log('[Dashboard] Water logs changed, refreshing profile...');
-          fetchProfile();
+          clearTimeout(refreshTimeout);
+          refreshTimeout = setTimeout(() => {
+            fetchProfile();
+          }, 300); // 300ms debounce
         })
         .subscribe();
 
-      // Midnight reset check
       const midnightCheckInterval = setInterval(() => {
         const now = new Date();
         if (now.getHours() === 0 && now.getMinutes() === 0) {
-          console.log('[Dashboard] Midnight transition detected, refreshing profile...');
-          fetchProfile();
+          loadAllData();
         }
       }, 60000);
 
       return () => {
         clearTimeout(timer);
+        clearTimeout(refreshTimeout);
         clearInterval(midnightCheckInterval);
         supabase.removeChannel(profileSubscription);
         supabase.removeChannel(logsSubscription);
       };
     }
-  }, [user, t]);
+  }, [user, t, loadAllData]);
 
   const fetchTodayCalories = async () => {
     if (!user) return;
@@ -287,48 +297,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const fetchUserRecipes = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('receitas')
-        .select('id, nome, modo_preparo, total_calories, created_at, imagem_url, tempo_preparo')
-        .eq('usuario_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      setUserRecipes(data || []);
-    } catch (err) {
-      console.error('Error fetching user recipes:', err);
-      setUserRecipes([]);
-    }
-  };
-
-  const numLaps = profile ? Math.floor((profile.consumo_agua_hoje || 0) / (profile.meta_agua_ml || 2000)) : 0;
-  const lapPercentage = profile ? (((profile.consumo_agua_hoje || 0) % (profile.meta_agua_ml || 2000)) / (profile.meta_agua_ml || 2000)) * 100 : 0;
-  const currentLapColor = WATER_PROGRESS_COLORS[numLaps % WATER_PROGRESS_COLORS.length];
-  const previousLapColor = numLaps > 0 ? WATER_PROGRESS_COLORS[(numLaps - 1) % WATER_PROGRESS_COLORS.length] : 'transparent';
-
-  const fetchShoppingListGroups = async () => {
-    if (!user) return;
-    try {
-      const { data, error } = await supabase
-        .from('lista_precos_mercado')
-        .select('grupo_nome')
-        .eq('usuario_id', user.id)
-        .eq('concluido', false);
-      if (error) throw error;
-      if (data) {
-        const uniqueGroups = new Set(data.map(item => item.grupo_nome));
-        setShoppingListGroups(uniqueGroups.size);
-      }
-    } catch (err) {
-      console.error('Error fetching shopping list groups:', err);
-    }
-  };
-
   const handleDeleteRecipe = async (recipeId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent navigating to recipe details
 
@@ -371,6 +339,142 @@ const Dashboard: React.FC = () => {
       }
     });
   };
+
+  const fetchUserRecipes = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('receitas')
+        .select('id, nome, modo_preparo, total_calories, created_at, imagem_url, tempo_preparo')
+        .eq('usuario_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setUserRecipes(data || []);
+    } catch (err) {
+      console.error('Error fetching user recipes:', err);
+      setUserRecipes([]);
+    }
+  };
+
+  const waterStats = useMemo(() => {
+    const consumo = profile?.consumo_agua_hoje || 0;
+    const meta = profile?.meta_agua_ml || 2000;
+    const laps = Math.floor(consumo / meta);
+    const percentage = ((consumo % meta) / meta) * 100;
+    const currentLapColor = WATER_PROGRESS_COLORS[laps % WATER_PROGRESS_COLORS.length];
+    const prevColor = laps > 0 ? WATER_PROGRESS_COLORS[(laps - 1) % WATER_PROGRESS_COLORS.length] : 'transparent';
+
+    return { laps, percentage, currentLapColor, prevColor };
+  }, [profile?.consumo_agua_hoje, profile?.meta_agua_ml]);
+
+  // Memoize meal items to avoid expensive re-renders
+  const memoizedMeals = useMemo(() => {
+    return todayMeals.map((meal, index) => (
+      <div
+        key={`${meal.receita_id}-${index}`}
+        onClick={() => navigate(`/recipe/${meal.receita_id}`)}
+        className="flex flex-col gap-3 rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm min-w-[160px] w-[160px] flex-shrink-0 transition-transform active:scale-95"
+      >
+        <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-slate-100 dark:bg-white/5 flex items-center justify-center">
+          {meal.recipe.image ? (
+            <img
+              src={meal.recipe.image}
+              alt={meal.recipe.name}
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[40px]">restaurant_menu</span>
+          )}
+          <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium text-white capitalize">
+            {meal.tipo_refeicao}
+          </div>
+        </div>
+        <div>
+          <p className="text-sm font-bold leading-snug truncate">{meal.recipe.name}</p>
+          <p className="text-slate-500 dark:text-[#92c9a4] text-xs font-medium mt-0.5">{meal.recipe.calories} kcal</p>
+        </div>
+      </div>
+    ));
+  }, [todayMeals, navigate]);
+
+  const memoizedUserRecipes = useMemo(() => {
+    return userRecipes.map((recipe) => (
+      <div
+        key={recipe.id}
+        onClick={() => navigate(`/recipe/${recipe.id}`)}
+        className="group flex gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-[#23482f]/50 transition cursor-pointer border border-slate-100 dark:border-white/5 shadow-sm"
+      >
+        <div className="size-20 shrink-0 rounded-lg bg-slate-100 dark:bg-white/5 overflow-hidden flex items-center justify-center">
+          {recipe.imagem_url ? (
+            <img
+              src={recipe.imagem_url}
+              alt={recipe.nome}
+              className="w-full h-full object-cover transition duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          ) : (
+            <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[40px]">restaurant_menu</span>
+          )}
+        </div>
+        <div className="flex flex-col justify-center flex-1 min-w-0">
+          <div className="flex justify-between items-start">
+            <h4 className="font-bold text-sm truncate">{recipe.nome}</h4>
+            <div className="flex gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/create-recipe?id=${recipe.id}`);
+                }}
+                className="text-slate-400 hover:text-primary transition-colors p-1 rounded-full hover:bg-primary/10"
+                title="Editar receita"
+              >
+                <span className="material-symbols-rounded text-[20px]">edit</span>
+              </button>
+              <button
+                onClick={(e) => handleDeleteRecipe(recipe.id, e)}
+                className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+                title="Excluir receita"
+              >
+                <span className="material-symbols-rounded text-[20px]">delete</span>
+              </button>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-[#92c9a4] line-clamp-2 mt-1">
+            {recipe.modo_preparo ? recipe.modo_preparo.substring(0, 80) + '...' : 'Sem descrição'}
+          </p>
+          <div className="flex items-center gap-3 mt-2 text-xs text-slate-400 dark:text-slate-500">
+            <span className="flex items-center gap-1">
+              <span className="material-symbols-rounded text-[14px]">bolt</span> {recipe.total_calories || 0} kcal
+            </span>
+          </div>
+        </div>
+      </div>
+    ));
+  }, [userRecipes, navigate, handleDeleteRecipe]);
+
+  const fetchShoppingListGroups = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('lista_precos_mercado')
+        .select('grupo_nome')
+        .eq('usuario_id', user.id)
+        .eq('concluido', false);
+      if (error) throw error;
+      if (data) {
+        const uniqueGroups = new Set(data.map(item => item.grupo_nome));
+        setShoppingListGroups(uniqueGroups.size);
+      }
+    } catch (err) {
+      console.error('Error fetching shopping list groups:', err);
+    }
+  };
+
+
 
   return (
     <div className="flex flex-col min-h-screen pb-52 relative w-full">
@@ -439,7 +543,7 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center gap-3">
             <div
               className="size-10 rounded-full flex items-center justify-center transition-colors duration-500"
-              style={{ backgroundColor: `${currentLapColor}20`, color: currentLapColor }}
+              style={{ backgroundColor: `${waterStats.currentLapColor}20`, color: waterStats.currentLapColor }}
             >
               <span className="material-symbols-rounded text-[20px]" style={{ fontVariationSettings: "'wght' 600" }}>water_drop</span>
             </div>
@@ -450,13 +554,13 @@ const Dashboard: React.FC = () => {
           </div>
           <div
             className="w-full h-2.5 rounded-full overflow-hidden mt-1 transition-colors duration-500"
-            style={{ backgroundColor: numLaps > 0 ? previousLapColor : 'rgba(0,0,0,0.05)' }}
+            style={{ backgroundColor: waterStats.laps > 0 ? waterStats.prevColor : 'rgba(0,0,0,0.05)' }}
           >
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{
-                width: `${lapPercentage}%`,
-                backgroundColor: currentLapColor
+                width: `${waterStats.percentage}%`,
+                backgroundColor: waterStats.currentLapColor
               }}
             ></div>
           </div>
@@ -469,34 +573,8 @@ const Dashboard: React.FC = () => {
           <button className="text-xs font-medium text-primary" onClick={() => navigate('/planner')}>Ver tudo</button>
         </div>
         <div className="flex overflow-x-auto no-scrollbar pb-4 pt-2 px-4 gap-3">
-          {todayMeals.length > 0 ? (
-            todayMeals.map((meal, index) => (
-              <div
-                key={`${meal.receita_id}-${index}`}
-                onClick={() => navigate(`/recipe/${meal.receita_id}`)}
-                className="flex flex-col gap-3 rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm min-w-[160px] w-[160px] flex-shrink-0 transition-transform active:scale-95"
-              >
-                <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-slate-100 dark:bg-white/5 flex items-center justify-center">
-                  {meal.recipe.image ? (
-                    <img
-                      src={meal.recipe.image}
-                      alt={meal.recipe.name}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[40px]">restaurant_menu</span>
-                  )}
-                  <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium text-white capitalize">
-                    {meal.tipo_refeicao}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-bold leading-snug truncate">{meal.recipe.name}</p>
-                  <p className="text-slate-500 dark:text-[#92c9a4] text-xs font-medium mt-0.5">{meal.recipe.calories} kcal</p>
-                </div>
-              </div>
-            ))
+          {memoizedMeals.length > 0 ? (
+            memoizedMeals
           ) : (
             <div
               onClick={() => navigate('/planner')}
@@ -546,7 +624,7 @@ const Dashboard: React.FC = () => {
 
 
 
-      <div className="px-4 pb-12">
+      <div id="dashboard-my-recipes" className="px-4 pb-12">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold tracking-tight">Minhas Receitas</h2>
           <button onClick={() => navigate('/my-recipes')} className="text-xs font-medium text-primary active:opacity-70 transition-opacity">
@@ -555,58 +633,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="flex flex-col gap-4">
-          {userRecipes.map((recipe) => (
-            <div
-              key={recipe.id}
-              onClick={() => navigate(`/recipe/${recipe.id}`)}
-              className="group flex gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-[#23482f]/50 transition cursor-pointer border border-slate-100 dark:border-white/5 shadow-sm"
-            >
-              <div className="size-20 shrink-0 rounded-lg bg-slate-100 dark:bg-white/5 overflow-hidden flex items-center justify-center">
-                {recipe.imagem_url ? (
-                  <img
-                    src={recipe.imagem_url}
-                    alt={recipe.nome}
-                    className="w-full h-full object-cover transition duration-500 group-hover:scale-110"
-                    loading="lazy"
-                  />
-                ) : (
-                  <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[40px]">restaurant_menu</span>
-                )}
-              </div>
-              <div className="flex flex-col justify-center flex-1 min-w-0">
-                <div className="flex justify-between items-start">
-                  <h4 className="font-bold text-sm truncate">{recipe.nome}</h4>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/create-recipe?id=${recipe.id}`);
-                      }}
-                      className="text-slate-400 hover:text-primary transition-colors p-1 rounded-full hover:bg-primary/10"
-                      title="Editar receita"
-                    >
-                      <span className="material-symbols-rounded text-[20px]">edit</span>
-                    </button>
-                    <button
-                      onClick={(e) => handleDeleteRecipe(recipe.id, e)}
-                      className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
-                      title="Excluir receita"
-                    >
-                      <span className="material-symbols-rounded text-[20px]">delete</span>
-                    </button>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-[#92c9a4] line-clamp-2 mt-1">
-                  {recipe.modo_preparo ? recipe.modo_preparo.substring(0, 80) + '...' : 'Sem descrição'}
-                </p>
-                <div className="flex items-center gap-3 mt-2 text-xs text-slate-400 dark:text-slate-500">
-                  <span className="flex items-center gap-1">
-                    <span className="material-symbols-rounded text-[14px]">bolt</span> {recipe.total_calories || 0} kcal
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
+          {memoizedUserRecipes}
         </div>
       </div>
 
