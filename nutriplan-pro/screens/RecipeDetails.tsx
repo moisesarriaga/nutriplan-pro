@@ -9,6 +9,7 @@ import UpgradePrompt from '../../components/UpgradePrompt';
 import { ArrowLeft, Heart, Pencil, Clock, Flame, Activity, Users, Lock, Check, ShoppingCart, Calendar, Trash2 } from 'lucide-react';
 import Navigation from '../../components/Navigation';
 import { useNotification } from '../../contexts/NotificationContext';
+import { calculateServings, calculatePrepTime, calculateDifficulty } from '../../utils/recipeHelpers';
 
 const RecipeDetails: React.FC = () => {
   const { id } = useParams();
@@ -40,87 +41,6 @@ const RecipeDetails: React.FC = () => {
     fetchRecipe();
   }, [id]);
 
-  const calculatePrepTime = (instructions: string): string => {
-    if (!instructions) return '30 min';
-
-    // Regex to find time indications
-    const minuteRegex = /(\d+)\s*(?:minutos?|min|m\b)/gi;
-    const hourRegex = /(\d+)\s*(?:horas?|h\b)/gi;
-
-    let totalMinutes = 0;
-    let match;
-
-    // Sum all minutes found
-    while ((match = minuteRegex.exec(instructions)) !== null) {
-      totalMinutes += parseInt(match[1], 10);
-    }
-
-    // Sum all hours found
-    while ((match = hourRegex.exec(instructions)) !== null) {
-      totalMinutes += parseInt(match[1], 10) * 60;
-    }
-
-    if (totalMinutes === 0) {
-      // If no time is explicitly mentioned, estimate based on step count (approx 10 min per step)
-      const stepCount = instructions.split('\n').filter(s => s.trim().length > 0).length;
-      return stepCount > 0 ? `${stepCount * 10} min` : '30 min';
-    }
-
-    if (totalMinutes < 60) {
-      return `${totalMinutes} min`;
-    }
-
-    const hours = Math.floor(totalMinutes / 60);
-    const mins = totalMinutes % 60;
-
-    if (mins === 0) return `${hours}h`;
-    return `${hours}h ${mins}min`;
-  };
-
-  const calculateDifficulty = (timeString: string): string => {
-    // Extract total minutes from the time string
-    const minRegex = /(\d+)\s*min/;
-    const hourRegex = /(\d+)\s*h/;
-
-    let totalMinutes = 0;
-
-    // Check for hours
-    const hourMatch = timeString.match(hourRegex);
-    if (hourMatch) {
-      totalMinutes += parseInt(hourMatch[1], 10) * 60;
-    }
-
-    // Check for independent minutes (e.g., "30 min") or remaining minutes (e.g., "1h 30min")
-    const minMatch = timeString.match(minRegex);
-    if (minMatch) {
-      totalMinutes += parseInt(minMatch[1], 10);
-    }
-
-    if (totalMinutes === 0) return 'Médio'; // Fallback
-
-    if (totalMinutes <= 20) return 'Fácil';
-    if (totalMinutes <= 60) return 'Médio';
-    return 'Difícil';
-  };
-
-  const calculateServings = (instructions: string, totalCalories: number): number => {
-    // 1. Try to find explicit mentions in text (e.g., "Rende 4 porções", "Serve 2 pessoas")
-    const servingRegex = /(?:rende|serve|rendimento|porções)\s*[:]?\s*(\d+)/i;
-    const match = instructions.match(servingRegex);
-    if (match) {
-      return parseInt(match[1], 10);
-    }
-
-    // 2. Estimate based on calories (assuming ~600kcal per main meal portion)
-    // This is a heuristic: standard meals overlap around 500-800kcal
-    if (totalCalories > 0) {
-      const estimated = Math.round(totalCalories / 600);
-      return Math.max(1, estimated);
-    }
-
-    // 3. Fallback
-    return 2;
-  };
 
   const fetchRecipe = async () => {
     if (!id) return;
@@ -403,7 +323,7 @@ const RecipeDetails: React.FC = () => {
     <div className="bg-background-light dark:bg-background-dark min-h-screen pb-72">
       <header className={`relative w-full ${recipe.image ? 'h-[320px]' : 'h-[240px]'}`}>
         <div
-          className={`absolute inset-0 w-full h-full ${recipe.image ? 'bg-cover bg-center' : 'bg-slate-100 dark:bg-surface-dark flex items-center justify-center'}`}
+          className={`absolute inset-0 w-full h-full ${recipe.image ? 'bg-cover bg-center' : 'bg-slate-50 dark:bg-background-dark/50 flex items-center justify-center'}`}
           style={recipe.image ? { backgroundImage: `url(${recipe.image})` } : {}}
         >
           {!recipe.image && (

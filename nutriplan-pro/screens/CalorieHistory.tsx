@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { MOCK_RECIPES } from '../../constants';
+import { calculateServings, getCaloriesPerServing } from '../../utils/recipeHelpers';
 import {
     AreaChart,
     Area,
@@ -77,7 +78,7 @@ const CalorieHistory: React.FC = () => {
             if (realRecipeIds.length > 0) {
                 const { data: recipes } = await supabase
                     .from('receitas')
-                    .select('id, total_calories, nutritional_data, nome, imagem_url')
+                    .select('id, total_calories, nutritional_data, nome, imagem_url, modo_preparo')
                     .in('id', realRecipeIds);
                 dbRecipes = recipes || [];
             }
@@ -89,10 +90,13 @@ const CalorieHistory: React.FC = () => {
                 let calories = 0;
                 const mock = MOCK_RECIPES.find(r => r.id === plan.receita_id);
                 if (mock) {
-                    calories = mock.calories;
+                    calories = getCaloriesPerServing(mock.calories, mock.servings || 1);
                 } else {
                     const db = dbRecipes.find(r => r.id === plan.receita_id);
-                    calories = db?.total_calories || 0;
+                    if (db) {
+                        const servings = calculateServings(db.modo_preparo || '', db.total_calories || 0);
+                        calories = getCaloriesPerServing(db.total_calories || 0, servings);
+                    }
                 }
                 dailyTotals[plan.dia_semana] += calories;
             });
@@ -132,12 +136,36 @@ const CalorieHistory: React.FC = () => {
                 if (!recipe) {
                     const db = dbRecipes.find(r => r.id === plan.receita_id);
                     if (db) {
+                        const servings = calculateServings(db.modo_preparo || '', db.total_calories || 0);
                         recipe = {
                             id: db.id,
                             name: db.nome || 'Receita Personalizada',
-                            calories: db.total_calories || 0,
+                            calories: getCaloriesPerServing(db.total_calories || 0, servings),
+                            servings: servings,
                             image: db.imagem_url,
                             nutrition: db.nutritional_data?.nutrition || { protein: 0, fats: 0, carbs: 0 }
+                        };
+                        // Also normalize nutrition if available
+                        if (recipe.nutrition && servings > 1) {
+                            recipe.nutrition = {
+                                protein: Math.round((recipe.nutrition.protein || 0) / servings),
+                                fats: Math.round((recipe.nutrition.fats || 0) / servings),
+                                carbs: Math.round((recipe.nutrition.carbs || 0) / servings)
+                            };
+                        }
+                    }
+                } else {
+                    // Normalize Mock if needed
+                    if (recipe.servings > 1) {
+                        const servings = recipe.servings;
+                        recipe = {
+                            ...recipe,
+                            calories: getCaloriesPerServing(recipe.calories, servings),
+                            nutrition: {
+                                protein: Math.round((recipe.nutrition?.protein || 0) / servings),
+                                fats: Math.round((recipe.nutrition?.fats || 0) / servings),
+                                carbs: Math.round((recipe.nutrition?.carbs || 0) / servings)
+                            }
                         };
                     }
                 }
@@ -416,7 +444,7 @@ const CalorieHistory: React.FC = () => {
 
                     <div className="h-[300px] w-full -ml-4">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                            <AreaChart data={chartData} margin={{ top: 10, right: 45, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorKcal" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#F97316" stopOpacity={0.3} />
@@ -444,7 +472,15 @@ const CalorieHistory: React.FC = () => {
                                         stroke="#F97316"
                                         strokeDasharray="10 10"
                                         opacity={0.3}
-                                        label={{ position: 'right', value: 'Meta', fill: '#F97316', fontSize: 10, fontWeight: 700 }}
+                                        label={{
+                                            position: 'top',
+                                            offset: 10,
+                                            value: 'META',
+                                            fill: '#F97316',
+                                            fontSize: 10,
+                                            fontWeight: 900,
+                                            className: 'tracking-tighter'
+                                        }}
                                     />
                                 )}
                                 <Area

@@ -28,16 +28,17 @@ const TutorialOverlay: React.FC = () => {
                 const screenWidth = window.innerWidth;
                 const screenHeight = window.innerHeight;
                 const tooltipWidth = Math.min(screenWidth - 40, 320);
+                const estimatedTooltipHeight = 350; // Increased estimate for safety
+                const paddingFromEdge = 20;
+
                 const spaceBelow = screenHeight - rect.bottom;
                 const spaceAbove = rect.top;
 
                 let preferredPosition: 'top' | 'bottom' = 'bottom';
-                let topValue = rect.bottom + 20;
 
-                // Adjust positioning if space is tight
-                if (spaceBelow < 280 && spaceAbove > spaceBelow) {
+                // Decide position based on available space
+                if (spaceBelow < estimatedTooltipHeight && spaceAbove > spaceBelow) {
                     preferredPosition = 'top';
-                    topValue = rect.top - 20;
                 }
 
                 setTooltipPosition(preferredPosition);
@@ -46,13 +47,24 @@ const TutorialOverlay: React.FC = () => {
                 let leftValue = rect.left + rect.width / 2;
                 leftValue = Math.max(padding + tooltipWidth / 2, Math.min(screenWidth - padding - tooltipWidth / 2, leftValue));
 
-                setTooltipStyles({
-                    top: topValue,
+                const styles: React.CSSProperties = {
                     left: leftValue,
                     width: tooltipWidth,
-                    transform: preferredPosition === 'top' ? 'translate(-50%, -100%)' : 'translateX(-50%)',
-                    display: 'block'
-                });
+                    transform: 'translateX(-50%)', // Only horizontal transform now
+                    display: 'block',
+                    maxHeight: 'calc(100vh - 80px)', // Ensure it fits on screen
+                    overflowY: 'auto'
+                };
+
+                if (preferredPosition === 'bottom') {
+                    styles.top = Math.max(paddingFromEdge, rect.bottom + 20);
+                    styles.bottom = 'auto'; // Let it grow downwards
+                } else {
+                    styles.bottom = Math.max(paddingFromEdge, screenHeight - rect.top + 20);
+                    styles.top = 'auto'; // Let it grow upwards
+                }
+
+                setTooltipStyles(styles);
 
                 element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {

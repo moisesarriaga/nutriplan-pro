@@ -6,6 +6,7 @@ import { MOCK_RECIPES } from '../../constants';
 import { ArrowLeft, Search as SearchIcon, Sliders, Plus, Zap, Clock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
+import MealPlannerModal from '../../components/MealPlannerModal';
 
 const Search: React.FC = () => {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ const Search: React.FC = () => {
   const [activeCategories, setActiveCategories] = useState<string[]>([]);
   const [userRecipes, setUserRecipes] = useState<any[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedRecipeForPlanner, setSelectedRecipeForPlanner] = useState<{ id: string | number, name: string } | null>(null);
+  const [isPlannerModalOpen, setIsPlannerModalOpen] = useState(false);
 
   const categories = ['Todas', 'Café da Manhã', 'Almoço', 'Jantar', 'Vegano', 'Low Carb'];
 
@@ -40,6 +43,11 @@ const Search: React.FC = () => {
       console.error('Error fetching user recipes:', err);
       setUserRecipes([]);
     }
+  };
+
+  const handleOpenPlanner = (recipe: any) => {
+    setSelectedRecipeForPlanner({ id: recipe.id, name: recipe.nome || recipe.name });
+    setIsPlannerModalOpen(true);
   };
 
   const filteredRecipes = MOCK_RECIPES.filter(r =>
@@ -127,17 +135,23 @@ const Search: React.FC = () => {
                   onClick={() => navigate(`/recipe/${recipe.id}`)}
                   className="group relative flex flex-col rounded-2xl bg-white dark:bg-surface-dark overflow-hidden shadow-sm border border-transparent hover:border-primary/30 transition-all"
                 >
-                  <div className="relative aspect-[4/3] w-full bg-slate-100 dark:bg-white/5 overflow-hidden flex items-center justify-center">
+                  <div className="relative aspect-[4/3] w-full bg-slate-50 dark:bg-background-dark/50 overflow-hidden flex items-center justify-center">
                     {recipe.imagem_url ? (
                       <div
                         className="h-full w-full bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                         style={{ backgroundImage: `url(${recipe.imagem_url})` }}
                       ></div>
                     ) : (
-                      <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[40px]">restaurant_menu</span>
+                      <span className="material-symbols-outlined text-slate-300 dark:text-slate-700 text-[40px]">local_dining</span>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100"></div>
-                    <button className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 dark:bg-black/80 text-primary shadow-md">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenPlanner(recipe);
+                      }}
+                      className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 dark:bg-black/80 text-primary shadow-md active:scale-95 transition-transform"
+                    >
                       <Plus size={20} />
                     </button>
                   </div>
@@ -176,7 +190,13 @@ const Search: React.FC = () => {
                   loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100"></div>
-                <button className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 dark:bg-black/80 text-primary shadow-md">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenPlanner(recipe);
+                  }}
+                  className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 dark:bg-black/80 text-primary shadow-md active:scale-95 transition-transform"
+                >
                   <Plus size={20} />
                 </button>
               </div>
@@ -249,6 +269,15 @@ const Search: React.FC = () => {
       </div>
 
       <Navigation />
+
+      {selectedRecipeForPlanner && (
+        <MealPlannerModal
+          isOpen={isPlannerModalOpen}
+          onClose={() => setIsPlannerModalOpen(false)}
+          recipeId={selectedRecipeForPlanner.id}
+          recipeName={selectedRecipeForPlanner.name}
+        />
+      )}
     </div>
   );
 };

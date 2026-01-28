@@ -7,9 +7,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { supabase } from '../../lib/supabaseClient';
 import { Plus } from 'lucide-react';
+import MealPlannerModal from '../../components/MealPlannerModal';
 import { useTranslation } from 'react-i18next';
 
 import { useTutorial } from '../../contexts/TutorialContext';
+import { calculateServings, getCaloriesPerServing } from '../../utils/recipeHelpers';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -32,6 +34,8 @@ const Dashboard: React.FC = () => {
   const [userRecipes, setUserRecipes] = useState<any[]>([]);
   const [showWelcome, setShowWelcome] = useState(true);
   const [welcomeMessage, setWelcomeMessage] = useState('');
+  const [selectedRecipeForPlanner, setSelectedRecipeForPlanner] = useState<{ id: string | number, name: string } | null>(null);
+  const [isPlannerModalOpen, setIsPlannerModalOpen] = useState(false);
   const [shoppingListGroups, setShoppingListGroups] = useState(0);
 
   const loadAllData = useCallback(async () => {
@@ -155,7 +159,7 @@ const Dashboard: React.FC = () => {
       if (realRecipeIds.length > 0) {
         const { data: recipes, error: recipesError } = await supabase
           .from('receitas')
-          .select('id, nome, total_calories, imagem_url')
+          .select('id, nome, total_calories, imagem_url, modo_preparo')
           .in('id', realRecipeIds);
 
         if (!recipesError && recipes) {
@@ -171,19 +175,31 @@ const Dashboard: React.FC = () => {
           // Try finding in DB fetched recipes
           const dbRecipe = dbRecipes.find(r => r.id === plan.receita_id);
           if (dbRecipe) {
+            const servings = calculateServings(dbRecipe.modo_preparo || '', dbRecipe.total_calories || 0);
             recipe = {
               id: dbRecipe.id,
               name: dbRecipe.nome,
               image: dbRecipe.imagem_url || null,
-              calories: dbRecipe.total_calories || 0,
+              calories: getCaloriesPerServing(dbRecipe.total_calories || 0, servings),
               description: 'Receita personalizada',
               time: '30 min',
               category: 'Personalizada',
               difficulty: 'Médio',
-              servings: 1,
+              servings: servings,
               ingredients: [],
               steps: [],
               nutrition: { protein: 0, carbs: 0, fats: 0 }
+            };
+          }
+        } else {
+          // Normalizar calorias do Mock se tiver mais de uma porção
+          // (Assumindo que em constants.ts o valor pode ser o total ou o que o usuário quer ver)
+          // Mas pela estrutura do app, 'calories' em mocks costuma ser por porção.
+          // Porém, para garantir consistência com o pedido do usuário "todas as receitas":
+          if (recipe.servings > 1) {
+            recipe = {
+              ...recipe,
+              calories: getCaloriesPerServing(recipe.calories, recipe.servings)
             };
           }
         }
@@ -340,6 +356,11 @@ const Dashboard: React.FC = () => {
     });
   };
 
+  const handleOpenPlanner = (recipe: any) => {
+    setSelectedRecipeForPlanner({ id: recipe.id, name: recipe.nome });
+    setIsPlannerModalOpen(true);
+  };
+
   const fetchUserRecipes = async () => {
     if (!user) return;
 
@@ -378,7 +399,7 @@ const Dashboard: React.FC = () => {
         onClick={() => navigate(`/recipe/${meal.receita_id}`)}
         className="flex flex-col gap-3 rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm min-w-[160px] w-[160px] flex-shrink-0 transition-transform active:scale-95"
       >
-        <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-slate-100 dark:bg-white/5 flex items-center justify-center">
+        <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-slate-50 dark:bg-background-dark/50 flex items-center justify-center">
           {meal.recipe.image ? (
             <img
               src={meal.recipe.image}
@@ -387,7 +408,7 @@ const Dashboard: React.FC = () => {
               loading="lazy"
             />
           ) : (
-            <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[40px]">restaurant_menu</span>
+            <span className="material-symbols-outlined text-slate-300 dark:text-slate-700 text-[40px]">local_dining</span>
           )}
           <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium text-white capitalize">
             {meal.tipo_refeicao}
@@ -408,7 +429,7 @@ const Dashboard: React.FC = () => {
         onClick={() => navigate(`/recipe/${recipe.id}`)}
         className="group flex gap-3 p-3 rounded-xl bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-[#23482f]/50 transition cursor-pointer border border-slate-100 dark:border-white/5 shadow-sm"
       >
-        <div className="size-20 shrink-0 rounded-lg bg-slate-100 dark:bg-white/5 overflow-hidden flex items-center justify-center">
+        <div className="size-20 shrink-0 rounded-lg bg-slate-50 dark:bg-background-dark/50 overflow-hidden flex items-center justify-center">
           {recipe.imagem_url ? (
             <img
               src={recipe.imagem_url}
@@ -417,13 +438,23 @@ const Dashboard: React.FC = () => {
               loading="lazy"
             />
           ) : (
-            <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[40px]">restaurant_menu</span>
+            <span className="material-symbols-outlined text-slate-300 dark:text-slate-700 text-[40px]">local_dining</span>
           )}
         </div>
         <div className="flex flex-col justify-center flex-1 min-w-0">
           <div className="flex justify-between items-start">
             <h4 className="font-bold text-sm truncate">{recipe.nome}</h4>
             <div className="flex gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenPlanner(recipe);
+                }}
+                className="text-slate-400 hover:text-primary transition-colors p-1 rounded-full hover:bg-primary/10"
+                title="Adicionar ao cardápio"
+              >
+                <Plus size={20} />
+              </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -652,6 +683,15 @@ const Dashboard: React.FC = () => {
       </div>
 
       <Navigation />
+
+      {selectedRecipeForPlanner && (
+        <MealPlannerModal
+          isOpen={isPlannerModalOpen}
+          onClose={() => setIsPlannerModalOpen(false)}
+          recipeId={selectedRecipeForPlanner.id}
+          recipeName={selectedRecipeForPlanner.name}
+        />
+      )}
     </div>
   );
 };

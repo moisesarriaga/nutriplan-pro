@@ -5,12 +5,15 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import Navigation from '../../components/Navigation';
 import { ArrowLeft, Plus, Zap, Utensils } from 'lucide-react';
+import MealPlannerModal from '../../components/MealPlannerModal';
 
 const MyRecipes: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [recipes, setRecipes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedRecipeForPlanner, setSelectedRecipeForPlanner] = useState<{ id: string, name: string } | null>(null);
+    const [isPlannerModalOpen, setIsPlannerModalOpen] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -36,6 +39,11 @@ const MyRecipes: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleOpenPlanner = (recipe: any) => {
+        setSelectedRecipeForPlanner({ id: recipe.id, name: recipe.nome });
+        setIsPlannerModalOpen(true);
     };
 
     return (
@@ -73,20 +81,29 @@ const MyRecipes: React.FC = () => {
                                 onClick={() => navigate(`/recipe/${recipe.id}`)}
                                 className="group relative flex flex-col rounded-2xl bg-white dark:bg-surface-dark overflow-hidden shadow-sm border border-transparent hover:border-primary/30 transition-all"
                             >
-                                <div className="relative aspect-[4/3] w-full bg-gray-100 overflow-hidden">
-                                    <img
-                                        src={recipe.imagem_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800'}
-                                        alt={recipe.nome}
-                                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                        loading="lazy"
-                                    />
+                                <div className="relative aspect-[4/3] w-full bg-slate-100 dark:bg-white/5 overflow-hidden">
+                                    {recipe.imagem_url ? (
+                                        <img
+                                            src={recipe.imagem_url}
+                                            alt={recipe.nome}
+                                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                            loading="lazy"
+                                        />
+                                    ) : (
+                                        <div className="h-full w-full flex items-center justify-center transition-colors duration-700 group-hover:bg-slate-200 dark:group-hover:bg-white/10">
+                                            <span className="material-symbols-outlined text-slate-300 dark:text-slate-700 text-[64px]">local_dining</span>
+                                        </div>
+                                    )}
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100"></div>
-                                    <button className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 dark:bg-black/80 text-primary shadow-md">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenPlanner(recipe);
+                                        }}
+                                        className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 dark:bg-black/80 text-primary shadow-md active:scale-95 transition-transform"
+                                    >
                                         <Plus size={20} />
                                     </button>
-                                    <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/40 backdrop-blur-md border border-white/10">
-                                        <span className="text-[10px] font-bold text-white uppercase tracking-wider">MINHAS</span>
-                                    </div>
                                 </div>
                                 <div className="p-3 flex flex-col flex-1 gap-1">
                                     <h4 className="text-sm font-bold leading-tight line-clamp-2">{recipe.nome}</h4>
@@ -116,6 +133,15 @@ const MyRecipes: React.FC = () => {
             </div>
 
             <Navigation />
+
+            {selectedRecipeForPlanner && (
+                <MealPlannerModal
+                    isOpen={isPlannerModalOpen}
+                    onClose={() => setIsPlannerModalOpen(false)}
+                    recipeId={selectedRecipeForPlanner.id}
+                    recipeName={selectedRecipeForPlanner.name}
+                />
+            )}
         </div>
     );
 };

@@ -390,7 +390,7 @@ const MealPlanner: React.FC = () => {
                   {meals.length > 0 ? (
                     meals.map((entry) => (
                       <div key={entry.id} className="group relative flex items-stretch justify-between gap-4 rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm border border-transparent hover:border-primary/30 transition-all cursor-pointer" onClick={() => navigate(`/recipe/${entry.receita_id}`)}>
-                        <div className="w-20 h-20 shrink-0 bg-slate-100 dark:bg-white/5 rounded-lg overflow-hidden flex items-center justify-center">
+                        <div className="w-20 h-20 shrink-0 bg-slate-50 dark:bg-background-dark/50 rounded-lg overflow-hidden flex items-center justify-center">
                           {entry.receita?.image ? (
                             <img
                               src={entry.receita.image}
@@ -399,7 +399,7 @@ const MealPlanner: React.FC = () => {
                               loading="lazy"
                             />
                           ) : (
-                            <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[32px]">restaurant_menu</span>
+                            <span className="material-symbols-outlined text-slate-300 dark:text-slate-700 text-[32px]">local_dining</span>
                           )}
                         </div>
                         <div className="flex flex-col justify-center flex-1 min-w-0 py-1">
@@ -697,8 +697,8 @@ const MealPlanner: React.FC = () => {
                               style={{ backgroundImage: `url(${recipe.image})` }}
                             ></div>
                           ) : (
-                            <div className="size-16 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center">
-                              <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[24px]">restaurant_menu</span>
+                            <div className="size-16 rounded-xl bg-slate-50 dark:bg-background-dark/50 flex items-center justify-center">
+                              <span className="material-symbols-outlined text-slate-300 dark:text-slate-700 text-[24px]">local_dining</span>
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
@@ -746,8 +746,8 @@ const MealPlanner: React.FC = () => {
                               style={{ backgroundImage: `url(${recipe.image})` }}
                             ></div>
                           ) : (
-                            <div className="size-16 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center">
-                              <span className="material-symbols-rounded text-slate-300 dark:text-slate-700 text-[24px]">restaurant_menu</span>
+                            <div className="size-16 rounded-xl bg-slate-50 dark:bg-background-dark/50 flex items-center justify-center">
+                              <span className="material-symbols-outlined text-slate-300 dark:text-slate-700 text-[24px]">local_dining</span>
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
