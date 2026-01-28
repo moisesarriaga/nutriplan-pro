@@ -88,11 +88,11 @@ const LandingPage: React.FC = () => {
             </nav>
 
             {/* Hero Section */}
-            <section className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
+            <section className="pt-32 pb-12 px-6 relative overflow-hidden">
                 {/* Glow Effect */}
-                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-neon-green/20 rounded-full blur-[100px] -z-10" />
+                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-neon-green/20 rounded-full blur-[100px] -z-10" />
 
-                <div className="max-w-[1000px] mx-auto text-center space-y-8">
+                <div className="max-w-[1000px] mx-auto text-center space-y-6">
                     <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
                         Economize <span className="text-neon-green">tempo</span> e <span className="text-neon-green">dinheiro</span> nas suas compras!
                     </h1>
@@ -100,7 +100,7 @@ const LandingPage: React.FC = () => {
                         A maneira mais inteligente de organizar suas refeições. Planeje, economize e tenha controle total do seu carrinho.
                     </p>
 
-                    <div className="pt-12">
+                    <div className="pt-8">
                         <button
                             onClick={() => navigate('/register')}
                             className="bg-neon-green text-black font-bold py-4 px-12 rounded-xl text-lg hover:shadow-glow-hover transition-all transform hover:-translate-y-1"
@@ -109,7 +109,7 @@ const LandingPage: React.FC = () => {
                         </button>
                     </div>
 
-                    <div className="pt-20 animate-fade-in">
+                    <div className="pt-12 animate-fade-in">
                         <h2 className="text-2xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
                             Por que usar a <span className="text-neon-green">MENU LIST</span>?
                         </h2>
@@ -123,7 +123,7 @@ const LandingPage: React.FC = () => {
             {/* Features Title (already in Hero) */}
 
             {/* Features Grid */}
-            <section className="py-20 px-6">
+            <section className="py-12 px-6">
                 <div className="max-w-[1000px] mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <FeatureCard
@@ -151,7 +151,7 @@ const LandingPage: React.FC = () => {
             </section>
 
             {/* Pricing Section */}
-            <section className="py-20 px-6">
+            <section className="py-12 px-6">
                 <div className="max-w-[1000px] mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">Escolha o plano ideal</h2>
@@ -210,7 +210,7 @@ const LandingPage: React.FC = () => {
             </section >
 
             {/* FAQ Section */}
-            < section className="py-20 px-6" >
+            < section className="py-12 px-6" >
                 <div className="max-w-3xl mx-auto space-y-8">
                     <h2 className="text-3xl font-bold text-center text-slate-900 dark:text-white">Perguntas Frequentes</h2>
                     <div className="space-y-4">
