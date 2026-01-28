@@ -673,7 +673,7 @@ const MealPlanner: React.FC = () => {
                 value={recipeSearchTerm}
                 onChange={(e) => setRecipeSearchTerm(e.target.value)}
                 className="w-full bg-gray-50 dark:bg-white/5 border-none rounded-2xl py-3.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary transition-all text-slate-900 dark:text-white"
-                autoFocus
+                autoFocus={window.innerWidth >= 640}
               />
             </div>
 
