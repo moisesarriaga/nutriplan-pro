@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../../components/Navigation';
-import { MOCK_RECIPES, MOCK_USER } from '../../constants';
+import { MOCK_RECIPES, MOCK_USER, WATER_PROGRESS_COLORS } from '../../constants';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { supabase } from '../../lib/supabaseClient';
@@ -23,6 +23,7 @@ const Dashboard: React.FC = () => {
     consumo_agua_hoje: number;
     meta_agua_ml: number;
     meta_calorica_diaria: number;
+    data_ultimo_reset_agua?: string;
     tutorial_visto?: boolean;
   } | null>(null);
 
@@ -65,18 +66,49 @@ const Dashboard: React.FC = () => {
         }, (payload) => {
           const updatedProfile = payload.new;
           console.log('[Dashboard] Real-time profile update:', { consumo_agua_hoje: updatedProfile.consumo_agua_hoje });
-          setProfile(prev => prev ? {
-            ...prev,
-            consumo_agua_hoje: updatedProfile.consumo_agua_hoje || 0,
-            meta_agua_ml: updatedProfile.meta_agua_ml || prev.meta_agua_ml,
-            meta_calorica_diaria: updatedProfile.meta_calorica_diaria || prev.meta_calorica_diaria
-          } : null);
+          setProfile(prev => {
+            const current = prev || ({} as any);
+            return {
+              ...current,
+              consumo_agua_hoje: typeof updatedProfile.consumo_agua_hoje !== 'undefined' ? updatedProfile.consumo_agua_hoje : current.consumo_agua_hoje,
+              meta_agua_ml: updatedProfile.meta_agua_ml || current.meta_agua_ml,
+              meta_calorica_diaria: updatedProfile.meta_calorica_diaria || current.meta_calorica_diaria,
+              nome: updatedProfile.nome || current.nome,
+              avatar_url: updatedProfile.avatar_url || current.avatar_url,
+              data_ultimo_reset_agua: updatedProfile.data_ultimo_reset_agua || current.data_ultimo_reset_agua
+            };
+          });
         })
         .subscribe();
 
+      // Subscription to water_logs for real-time updates when logs are added/deleted
+      const logsSubscription = supabase
+        .channel('dashboard_logs_changes')
+        .on('postgres_changes', {
+          event: '*', // Sync on any change
+          schema: 'public',
+          table: 'water_logs',
+          filter: `usuario_id=eq.${user.id}`
+        }, () => {
+          console.log('[Dashboard] Water logs changed, refreshing profile...');
+          fetchProfile();
+        })
+        .subscribe();
+
+      // Midnight reset check
+      const midnightCheckInterval = setInterval(() => {
+        const now = new Date();
+        if (now.getHours() === 0 && now.getMinutes() === 0) {
+          console.log('[Dashboard] Midnight transition detected, refreshing profile...');
+          fetchProfile();
+        }
+      }, 60000);
+
       return () => {
         clearTimeout(timer);
+        clearInterval(midnightCheckInterval);
         supabase.removeChannel(profileSubscription);
+        supabase.removeChannel(logsSubscription);
       };
     }
   }, [user, t]);
@@ -173,28 +205,85 @@ const Dashboard: React.FC = () => {
   };
 
   const fetchProfile = async () => {
+    if (!user) return;
     try {
+      console.log('[Dashboard] Fetching profile for user:', user.id);
       const { data, error } = await supabase
         .from('perfis_usuario')
-        .select('nome, avatar_url, consumo_agua_hoje, meta_agua_ml, meta_calorica_diaria, tutorial_visto')
-        .eq('id', user?.id)
-        .single();
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) {
+        console.error('[Dashboard] Error fetching profile:', error);
+        return;
+      }
+
       if (data) {
-        console.log('[Dashboard] Profile fetched:', { consumo_agua_hoje: data.consumo_agua_hoje, meta_agua_ml: data.meta_agua_ml });
-        setProfile(data);
+        // Daily reset checks
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const lastReset = data.data_ultimo_reset_agua ? data.data_ultimo_reset_agua.split('T')[0] : null;
+
+        let consumoAgua = data.consumo_agua_hoje || 0;
+
+        if (lastReset !== today) {
+          console.log('[Dashboard] New day detected! Resetting water consumption... (Last reset:', lastReset, 'Today:', today, ')');
+          consumoAgua = 0;
+          const { error: updateError } = await supabase
+            .from('perfis_usuario')
+            .update({
+              consumo_agua_hoje: 0,
+              data_ultimo_reset_agua: today
+            })
+            .eq('id', user.id);
+
+          if (updateError) {
+            console.error('[Dashboard] Error resetting water today:', updateError);
+          }
+        } else if (consumoAgua === 0) {
+          // Self-healing: if 0, check if there are logs for today
+          console.log('[Dashboard] Consumption is 0, checking water_logs for today...');
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+
+          const { data: logs } = await supabase
+            .from('water_logs')
+            .select('quantidade_ml')
+            .eq('usuario_id', user.id)
+            .gte('created_at', todayStart.toISOString());
+
+          if (logs && logs.length > 0) {
+            const sum = logs.reduce((acc, log) => acc + (log.quantidade_ml || 0), 0);
+            if (sum > 0) {
+              console.log('[Dashboard] Found logged water not synced to profile:', sum);
+              consumoAgua = sum;
+              // Sync back to profile
+              await supabase
+                .from('perfis_usuario')
+                .update({ consumo_agua_hoje: sum })
+                .eq('id', user.id);
+            }
+          }
+        }
+
+        setProfile({
+          ...data,
+          consumo_agua_hoje: consumoAgua,
+          data_ultimo_reset_agua: today
+        });
 
         // Auto-trigger tutorial if not seen
         if (data.tutorial_visto === false || data.tutorial_visto === null) {
-          // Delay slightly to allow layout to settle
           setTimeout(() => {
             startTutorial();
           }, 1500);
         }
+      } else {
+        console.warn('[Dashboard] No profile found for user:', user.id);
       }
     } catch (err) {
-      console.error('Error fetching dashboard profile:', err);
+      console.error('[Dashboard] Unexpected error in fetchProfile:', err);
     }
   };
 
@@ -216,6 +305,11 @@ const Dashboard: React.FC = () => {
       setUserRecipes([]);
     }
   };
+
+  const numLaps = profile ? Math.floor((profile.consumo_agua_hoje || 0) / (profile.meta_agua_ml || 2000)) : 0;
+  const lapPercentage = profile ? (((profile.consumo_agua_hoje || 0) % (profile.meta_agua_ml || 2000)) / (profile.meta_agua_ml || 2000)) * 100 : 0;
+  const currentLapColor = WATER_PROGRESS_COLORS[numLaps % WATER_PROGRESS_COLORS.length];
+  const previousLapColor = numLaps > 0 ? WATER_PROGRESS_COLORS[(numLaps - 1) % WATER_PROGRESS_COLORS.length] : 'transparent';
 
   const fetchShoppingListGroups = async () => {
     if (!user) return;
@@ -343,7 +437,10 @@ const Dashboard: React.FC = () => {
           className="rounded-xl bg-white dark:bg-surface-dark p-3 shadow-sm flex flex-col gap-2 cursor-pointer active:scale-95 transition-all hover:border-primary/30 border border-transparent"
         >
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
+            <div
+              className="size-10 rounded-full flex items-center justify-center transition-colors duration-500"
+              style={{ backgroundColor: `${currentLapColor}20`, color: currentLapColor }}
+            >
               <span className="material-symbols-rounded text-[20px]" style={{ fontVariationSettings: "'wght' 600" }}>water_drop</span>
             </div>
             <div>
@@ -351,10 +448,16 @@ const Dashboard: React.FC = () => {
               <p className="text-sm font-bold">{(profile?.consumo_agua_hoje || 0) / 1000}L <span className="text-[10px] font-normal opacity-70">/ {(profile?.meta_agua_ml || 2000) / 1000}L</span></p>
             </div>
           </div>
-          <div className="w-full bg-slate-100 dark:bg-white/5 h-2.5 rounded-full overflow-hidden mt-1">
+          <div
+            className="w-full h-2.5 rounded-full overflow-hidden mt-1 transition-colors duration-500"
+            style={{ backgroundColor: numLaps > 0 ? previousLapColor : 'rgba(0,0,0,0.05)' }}
+          >
             <div
-              className="bg-blue-500 h-full rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(((profile?.consumo_agua_hoje || 0) / (profile?.meta_agua_ml || 2000)) * 100, 100)}%` }}
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${lapPercentage}%`,
+                backgroundColor: currentLapColor
+              }}
             ></div>
           </div>
         </div>

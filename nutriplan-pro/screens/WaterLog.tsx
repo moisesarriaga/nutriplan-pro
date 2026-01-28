@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWaterNotifications } from '../../hooks/useWaterNotifications';
 import { ArrowLeft, Bell } from 'lucide-react';
+import { WATER_PROGRESS_COLORS } from '../../constants';
 
 const WaterLog: React.FC = () => {
     const navigate = useNavigate();
@@ -321,11 +322,7 @@ const WaterLog: React.FC = () => {
         setShowSettings(false);
     };
 
-    const WATER_PROGRESS_COLORS = [
-        '#3B82F6', // Blue (blue-500)
-        '#10B981', // Green (emerald-500)
-        '#A855F7', // Purple (purple-500)
-    ];
+
 
     return (
         <div className="flex flex-col min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-white pb-10">

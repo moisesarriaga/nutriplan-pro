@@ -67,3 +67,9 @@ export const MOCK_USER = {
     allergies: ['Amendoim']
   }
 };
+
+export const WATER_PROGRESS_COLORS = [
+  '#3B82F6', // Blue (blue-500)
+  '#10B981', // Green (emerald-500)
+  '#A855F7', // Purple (purple-500)
+];

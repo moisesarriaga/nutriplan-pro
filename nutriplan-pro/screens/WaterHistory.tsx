@@ -468,14 +468,11 @@ const WaterHistory: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-lg sm:text-xl font-black mb-1">
-                            {(stats.today / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}L
-                            <span className="text-xs font-normal text-slate-400 ml-1">/ {(goal / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}L</span>
+                            {stats.today.toLocaleString()}ml
                         </p>
-                        <div className="w-full bg-slate-100 dark:bg-white/5 h-1.5 rounded-full overflow-hidden mt-1">
-                            <div
-                                className="bg-blue-500 h-full rounded-full transition-all duration-500"
-                                style={{ width: `${Math.min((stats.today / goal) * 100, 100)}%` }}
-                            ></div>
+                        <div className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-bold ${stats.vsOntem >= 0 ? 'text-green-500' : 'text-blue-500'}`}>
+                            {stats.vsOntem >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                            {stats.diffLabel}
                         </div>
                     </div>
                 </div >
