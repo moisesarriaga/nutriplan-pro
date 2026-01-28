@@ -214,6 +214,7 @@ const RecipeDetails: React.FC = () => {
       usuario_id: user.id,
       nome_item: ing.name,
       quantidade: parseFloat(ing.quantity) || 1,
+      quantidade_usuario: 0,
       ultimo_preco_informado: 0,
       unidade_preco: ing.unit,
       grupo_nome: finalGroupName === 'Sem Grupo' ? null : finalGroupName,

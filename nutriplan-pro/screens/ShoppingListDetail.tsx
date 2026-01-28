@@ -7,12 +7,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import UpgradePrompt from '../../components/UpgradePrompt';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
 interface ShoppingItem {
   usuario_id: string;
   nome_item: string;
   quantidade: number;
+  quantidade_usuario: number;
   ultimo_preco_informado: number;
   unidade_preco: string;
   comprado?: boolean;
@@ -138,6 +138,7 @@ const ShoppingListDetail: React.FC = () => {
       usuario_id: user.id,
       nome_item: newItemName,
       quantidade: 1,
+      quantidade_usuario: 0,
       ultimo_preco_informado: 0,
       unidade_preco: 'un',
       comprado: false,
@@ -184,6 +185,24 @@ const ShoppingListDetail: React.FC = () => {
     }
   };
 
+  const updateItem = async (nomeItem: string, updates: Partial<ShoppingItem>) => {
+    if (!user || !listId) return;
+    const decodedListId = decodeURIComponent(listId);
+
+    const { error } = await supabase
+      .from('lista_precos_mercado')
+      .update(updates)
+      .eq('usuario_id', user.id)
+      .eq('nome_item', nomeItem)
+      .eq('grupo_nome', decodedListId);
+
+    if (!error) {
+      setItems(prev => prev.map(i =>
+        i.nome_item === nomeItem ? { ...i, ...updates } : i
+      ));
+    }
+  };
+
   const saveEmptyList = async () => {
     if (!user || !listId || listId !== 'new') return;
 
@@ -194,6 +213,7 @@ const ShoppingListDetail: React.FC = () => {
       usuario_id: user.id,
       nome_item: '_empty_',
       quantidade: 0,
+      quantidade_usuario: 0,
       ultimo_preco_informado: 0,
       unidade_preco: '',
       comprado: false,
@@ -286,7 +306,7 @@ const ShoppingListDetail: React.FC = () => {
     }
   };
 
-  const totalPrice = items.reduce((acc, curr) => acc + (curr.ultimo_preco_informado || 0), 0).toFixed(2);
+  const totalPrice = items.reduce((acc, curr) => acc + ((curr.quantidade_usuario || 0) * (curr.ultimo_preco_informado || 0)), 0).toFixed(2);
   const allChecked = items.length > 0 && items.every(i => i.comprado);
   const isHistoryList = items.length > 0 && items[0].concluido;
 
@@ -301,7 +321,7 @@ const ShoppingListDetail: React.FC = () => {
   }, [allChecked, isHistoryList, loading]);
 
   return (
-    <div className="flex flex-col min-h-screen pb-52">
+    <div className="flex flex-col min-h-screen pb-32">
       <header className="sticky top-0 z-20 flex items-center justify-between bg-background-light/90 dark:bg-background-dark/90 px-4 py-4 backdrop-blur-md">
         <button onClick={handleBack} className="flex size-10 items-center justify-center rounded-full text-slate-900 dark:text-white hover:bg-black/5">
           <span className="material-symbols-rounded text-[20px]">arrow_back</span>
@@ -397,12 +417,58 @@ const ShoppingListDetail: React.FC = () => {
                         >
                           {item.comprado && <span className="material-symbols-rounded text-primary text-[18px]">check</span>}
                         </button>
-                        <div className="flex flex-col min-w-0">
-                          <h4 className="text-sm font-bold leading-tight truncate">{item.nome_item}</h4>
-                          <p className="text-[10px] text-slate-500 font-medium">
-                            {item.quantidade > 0 && <span>{item.quantidade} {item.unidade_preco || 'un'} • </span>}
-                            R$ {item.ultimo_preco_informado.toFixed(2)}
-                          </p>
+                        <div className="flex items-center justify-between gap-4 flex-1">
+                          <div className="flex flex-col min-w-0">
+                            <h4 className="text-sm font-bold leading-tight truncate">{item.nome_item}</h4>
+                            <p className="text-[10px] text-slate-500 font-medium opacity-80">
+                              {item.quantidade > 0 && <span>Receita: {item.quantidade} {item.unidade_preco || 'un'}</span>}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2 pr-1">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[8px] uppercase text-slate-400 font-bold ml-1">Qtd</span>
+                              <input
+                                type="number"
+                                value={item.quantidade_usuario || ''}
+                                onChange={(e) => setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, quantidade_usuario: Number(e.target.value) } : i))}
+                                onBlur={(e) => updateItem(item.nome_item, { quantidade_usuario: Number(e.target.value) })}
+                                className="w-10 h-7 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded text-[10px] text-center focus:outline-none focus:ring-1 focus:ring-primary/50"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[8px] uppercase text-slate-400 font-bold ml-1">Un</span>
+                              <select
+                                value={item.unidade_preco}
+                                onChange={(e) => {
+                                  setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, unidade_preco: e.target.value } : i));
+                                  updateItem(item.nome_item, { unidade_preco: e.target.value });
+                                }}
+                                className="w-12 h-7 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded text-[10px] text-center focus:outline-none focus:ring-1 focus:ring-primary/50 appearance-none cursor-pointer"
+                              >
+                                {['un', 'kg', 'g', 'L', 'ml', 'pct', 'cx', 'dz'].map(u => (
+                                  <option key={u} value={u} className="bg-white dark:bg-surface-dark">{u}</option>
+                                ))}
+                                {!['un', 'kg', 'g', 'L', 'ml', 'pct', 'cx', 'dz'].includes(item.unidade_preco) && item.unidade_preco && (
+                                  <option value={item.unidade_preco}>{item.unidade_preco}</option>
+                                )}
+                              </select>
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[8px] uppercase text-slate-400 font-bold ml-1">Preço</span>
+                              <div className="relative">
+                                <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">R$</span>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={item.ultimo_preco_informado || ''}
+                                  onChange={(e) => setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, ultimo_preco_informado: Number(e.target.value) } : i))}
+                                  onBlur={(e) => updateItem(item.nome_item, { ultimo_preco_informado: Number(e.target.value) })}
+                                  className="w-16 h-7 pl-4 pr-1 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded text-[10px] focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                />
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       <button
@@ -432,8 +498,47 @@ const ShoppingListDetail: React.FC = () => {
                           >
                             <span className="material-symbols-rounded text-background-dark text-[18px]">check</span>
                           </button>
-                          <div className="flex flex-col min-w-0">
-                            <h4 className="text-sm font-bold leading-tight truncate line-through text-slate-400">{item.nome_item}</h4>
+                          <div className="flex items-center justify-between gap-4 flex-1">
+                            <div className="flex flex-col min-w-0">
+                              <h4 className="text-sm font-bold leading-tight truncate line-through text-slate-400">{item.nome_item}</h4>
+                              <p className="text-[10px] text-slate-500 font-medium opacity-50">
+                                {item.quantidade > 0 && <span>Receita: {item.quantidade} {item.unidade_preco || 'un'}</span>}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-2 pr-1 opacity-50">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-[8px] uppercase text-slate-400 font-bold ml-1">Qtd</span>
+                                <input
+                                  type="number"
+                                  disabled
+                                  value={item.quantidade_usuario || ''}
+                                  className="w-10 h-7 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded text-[10px] text-center"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-[8px] uppercase text-slate-400 font-bold ml-1">Un</span>
+                                <select
+                                  disabled
+                                  value={item.unidade_preco}
+                                  className="w-12 h-7 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded text-[10px] text-center appearance-none"
+                                >
+                                  <option value={item.unidade_preco}>{item.unidade_preco}</option>
+                                </select>
+                              </div>
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-[8px] uppercase text-slate-400 font-bold ml-1">Preço</span>
+                                <div className="relative">
+                                  <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">R$</span>
+                                  <input
+                                    type="number"
+                                    disabled
+                                    value={item.ultimo_preco_informado || ''}
+                                    className="w-16 h-7 pl-4 pr-1 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded text-[10px]"
+                                  />
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                         <button
@@ -452,27 +557,6 @@ const ShoppingListDetail: React.FC = () => {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-30 p-4 pb-[96px] bg-gradient-to-t from-background-light via-background-light via-60% to-transparent dark:from-background-dark dark:via-background-dark dark:via-60% pt-32 px-4">
-        <div className="mx-auto w-full max-w-md">
-          <div className="mb-4 flex items-center justify-between px-1">
-            <span className="text-sm text-slate-500">Total a Pagar</span>
-            <span className={`text-xl font-bold transition-all ${!canSumPrices ? 'blur-sm select-none' : ''}`}>
-              R$ {totalPrice}
-            </span>
-          </div>
-          <button
-            onClick={allChecked && !isHistoryList ? () => setShowFinishConfirm(true) : (!canSumPrices ? () => setShowUpgradeModal(true) : undefined)}
-            className="flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl h-14 bg-primary text-black text-base font-bold shadow-lg active:scale-[0.98] transition-all"
-          >
-            {allChecked && !isHistoryList ? (
-              <CheckCircle2 size={24} />
-            ) : (
-              <ArrowRight size={24} />
-            )}
-            <span>{allChecked && !isHistoryList ? 'Finalizar Compra' : 'Confirmar Pedido'}</span>
-          </button>
-        </div>
-      </div>
 
       {showUpgradeModal && (
         <UpgradePrompt
