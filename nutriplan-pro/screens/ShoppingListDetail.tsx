@@ -12,9 +12,10 @@ interface ShoppingItem {
   usuario_id: string;
   nome_item: string;
   quantidade: number;
-  quantidade_usuario: number;
-  ultimo_preco_informado: number;
+  quantidade_usuario: number | null;
+  ultimo_preco_informado: number | null;
   unidade_preco: string;
+  unidade_receita: string; // Immutable unit from recipe
   comprado?: boolean;
   created_at?: string;
   grupo_nome?: string; // Add group name field
@@ -138,9 +139,10 @@ const ShoppingListDetail: React.FC = () => {
       usuario_id: user.id,
       nome_item: newItemName,
       quantidade: 1,
-      quantidade_usuario: 0,
-      ultimo_preco_informado: 0,
-      unidade_preco: 'un',
+      quantidade_usuario: null,
+      ultimo_preco_informado: null,
+      unidade_preco: '',
+      unidade_receita: '', // Initialize as empty for manual items
       comprado: false,
       grupo_nome: finalGroupName,
       concluido: false
@@ -213,9 +215,10 @@ const ShoppingListDetail: React.FC = () => {
       usuario_id: user.id,
       nome_item: '_empty_',
       quantidade: 0,
-      quantidade_usuario: 0,
-      ultimo_preco_informado: 0,
+      quantidade_usuario: null,
+      ultimo_preco_informado: null,
       unidade_preco: '',
+      unidade_receita: '', // Initialize as empty
       comprado: false,
       grupo_nome: finalGroupName,
       concluido: false
@@ -257,7 +260,7 @@ const ShoppingListDetail: React.FC = () => {
       .from('lista_precos_mercado')
       .select('grupo_nome')
       .eq('usuario_id', user.id)
-      .eq('concluido', false) // Somente listas ativas
+      .eq('concluido', false)
       .ilike('grupo_nome', `${tempGroupName.trim()} ::: %`)
       .limit(1);
 
@@ -272,7 +275,6 @@ const ShoppingListDetail: React.FC = () => {
     if (!user || !listId) return;
 
     const decodedListId = decodeURIComponent(listId);
-    // Keep the same timestamp suffix if it exists, replace name part
     const suffix = decodedListId.includes(' ::: ') ? decodedListId.split(' ::: ')[1] : Date.now();
     const newFullGroupName = `${tempGroupName.trim()} ::: ${suffix}`;
 
@@ -285,7 +287,6 @@ const ShoppingListDetail: React.FC = () => {
     if (!error) {
       setShowRenameModal(false);
       setShowDuplicateRenameConfirm(false);
-      // Navigate to the new URL to reflect the name change in the state/fetch
       navigate(`/cart/${encodeURIComponent(newFullGroupName)}`, { replace: true });
     }
   };
@@ -302,7 +303,7 @@ const ShoppingListDetail: React.FC = () => {
       .eq('grupo_nome', decodedListId);
 
     if (!error) {
-      navigate('/history'); // Send to dedicated history page
+      navigate('/history');
     }
   };
 
@@ -312,7 +313,6 @@ const ShoppingListDetail: React.FC = () => {
 
   useEffect(() => {
     if (allChecked && !isHistoryList && !loading && !showFinishConfirm) {
-      // Small delay to ensure the UI updates the last checkmark before showing modal
       const timer = setTimeout(() => {
         setShowFinishConfirm(true);
       }, 300);
@@ -321,46 +321,29 @@ const ShoppingListDetail: React.FC = () => {
   }, [allChecked, isHistoryList, loading]);
 
   return (
-    <div className="flex flex-col min-h-screen pb-32">
+    <div className="flex flex-col min-h-screen pb-48">
       <header className="sticky top-0 z-20 flex items-center justify-between bg-background-light/90 dark:bg-background-dark/90 px-4 py-4 backdrop-blur-md">
         <button onClick={handleBack} className="flex size-10 items-center justify-center rounded-full text-slate-900 dark:text-white hover:bg-black/5">
           <span className="material-symbols-rounded text-[20px]">arrow_back</span>
         </button>
-        <div className="flex items-center gap-2">
-          <h1 className="text-lg font-bold">{listName}</h1>
-          <button onClick={handleRenameClick} className="flex size-8 items-center justify-center rounded-full text-primary hover:bg-primary/10 transition-colors">
-            <span className="material-symbols-rounded text-[18px]">edit</span>
-          </button>
+        <div className="flex flex-col items-center">
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="text-xl font-bold tracking-tight">{listName}</h1>
+            <button
+              onClick={() => {
+                setTempGroupName(listName);
+                setShowRenameModal(true);
+              }}
+              className="p-1 rounded-lg hover:bg-white/5 transition-colors"
+            >
+              <span className="material-symbols-rounded text-primary text-[20px]">edit</span>
+            </button>
+          </div>
         </div>
         <div className="size-10"></div>
       </header>
 
       <div className="px-4 pt-2 mb-6">
-        <div className="flex gap-2 mb-4">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              value={newItemName}
-              onChange={(e) => setNewItemName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addItem()}
-              placeholder="Adicionar item..."
-              className="w-full h-12 pl-10 pr-4 bg-white dark:bg-surface-dark border border-slate-100 dark:border-white/5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-            <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">add</span>
-          </div>
-          <button
-            onClick={addItem}
-            disabled={isAdding || !newItemName.trim()}
-            className="h-12 w-12 flex items-center justify-center bg-primary text-background-dark rounded-xl shadow-sm active:scale-95 transition-all disabled:opacity-50 shrink-0"
-          >
-            {isAdding ? (
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-background-dark border-t-transparent"></div>
-            ) : (
-              <span className="material-symbols-rounded text-[24px]">add</span>
-            )}
-          </button>
-        </div>
-
         <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-surface-dark p-5 shadow-sm border border-slate-100 dark:border-white/5">
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
@@ -417,54 +400,76 @@ const ShoppingListDetail: React.FC = () => {
                         >
                           {item.comprado && <span className="material-symbols-rounded text-primary text-[18px]">check</span>}
                         </button>
-                        <div className="flex items-center justify-between gap-4 flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 flex-1 min-w-0">
                           <div className="flex flex-col min-w-0">
                             <h4 className="text-sm font-bold leading-tight truncate">{item.nome_item}</h4>
                             <p className="text-[10px] text-slate-500 font-medium opacity-80">
-                              {item.quantidade > 0 && <span>Receita: {item.quantidade} {item.unidade_preco || 'un'}</span>}
+                              {item.quantidade > 0 ? (
+                                <span>Receita: {item.quantidade} {item.unidade_receita || 'un'}</span>
+                              ) : (
+                                <span>-</span>
+                              )}
                             </p>
                           </div>
 
-                          <div className="flex items-center gap-2 pr-1">
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-[8px] uppercase text-slate-400 font-bold ml-1">Qtd</span>
+                          <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-center">
+                            <div className="flex flex-col gap-1 items-center">
+                              <span className="text-[8px] uppercase text-slate-400 font-bold">Qtd</span>
                               <input
                                 type="number"
-                                value={item.quantidade_usuario || ''}
-                                onChange={(e) => setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, quantidade_usuario: Number(e.target.value) } : i))}
-                                onBlur={(e) => updateItem(item.nome_item, { quantidade_usuario: Number(e.target.value) })}
-                                className="w-10 h-7 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded text-[10px] text-center focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                value={item.quantidade_usuario ?? ''}
+                                onChange={(e) => {
+                                  const val = e.target.value === '' ? null : Number(e.target.value);
+                                  setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, quantidade_usuario: val } : i));
+                                }}
+                                onBlur={(e) => {
+                                  const val = e.target.value === '' ? null : Number(e.target.value);
+                                  updateItem(item.nome_item, { quantidade_usuario: val });
+                                }}
+                                className="w-11 h-8 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] text-center font-bold focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary shadow-sm transition-all"
                               />
                             </div>
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-[8px] uppercase text-slate-400 font-bold ml-1">Un</span>
-                              <select
-                                value={item.unidade_preco}
-                                onChange={(e) => {
-                                  setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, unidade_preco: e.target.value } : i));
-                                  updateItem(item.nome_item, { unidade_preco: e.target.value });
-                                }}
-                                className="w-12 h-7 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded text-[10px] text-center focus:outline-none focus:ring-1 focus:ring-primary/50 appearance-none cursor-pointer"
-                              >
-                                {['un', 'kg', 'g', 'L', 'ml', 'pct', 'cx', 'dz'].map(u => (
-                                  <option key={u} value={u} className="bg-white dark:bg-surface-dark">{u}</option>
-                                ))}
-                                {!['un', 'kg', 'g', 'L', 'ml', 'pct', 'cx', 'dz'].includes(item.unidade_preco) && item.unidade_preco && (
-                                  <option value={item.unidade_preco}>{item.unidade_preco}</option>
-                                )}
-                              </select>
-                            </div>
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-[8px] uppercase text-slate-400 font-bold ml-1">Preço</span>
+                            <div className="flex flex-col gap-1 items-center">
+                              <span className="text-[8px] uppercase text-slate-400 font-bold">Un</span>
                               <div className="relative">
-                                <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">R$</span>
+                                <select
+                                  value={item.unidade_preco || ''}
+                                  onChange={(e) => {
+                                    setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, unidade_preco: e.target.value } : i));
+                                    updateItem(item.nome_item, { unidade_preco: e.target.value });
+                                  }}
+                                  className="w-14 h-8 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-900 dark:text-white text-center px-1 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary cursor-pointer appearance-none shadow-sm transition-all"
+                                >
+                                  <option value="" className="bg-white dark:bg-surface-dark">-</option>
+                                  {['un', 'kg', 'g', 'L', 'ml', 'pct', 'cx', 'dz'].map(u => (
+                                    <option key={u} value={u} className="bg-white dark:bg-surface-dark">{u}</option>
+                                  ))}
+                                  {item.unidade_preco && !['un', 'kg', 'g', 'L', 'ml', 'pct', 'cx', 'dz'].includes(item.unidade_preco) && (
+                                    <option value={item.unidade_preco} className="bg-white dark:bg-surface-dark">{item.unidade_preco}</option>
+                                  )}
+                                </select>
+                                <span className="material-symbols-rounded absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 text-[14px] pointer-events-none opacity-50">
+                                  expand_more
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1 items-center">
+                              <span className="text-[8px] uppercase text-slate-400 font-bold">Preço</span>
+                              <div className="relative">
+                                <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">R$</span>
                                 <input
                                   type="number"
                                   step="0.01"
-                                  value={item.ultimo_preco_informado || ''}
-                                  onChange={(e) => setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, ultimo_preco_informado: Number(e.target.value) } : i))}
-                                  onBlur={(e) => updateItem(item.nome_item, { ultimo_preco_informado: Number(e.target.value) })}
-                                  className="w-16 h-7 pl-4 pr-1 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded text-[10px] focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                  value={item.ultimo_preco_informado ?? ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value === '' ? null : Number(e.target.value);
+                                    setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, ultimo_preco_informado: val } : i));
+                                  }}
+                                  onBlur={(e) => {
+                                    const val = e.target.value === '' ? null : Number(e.target.value);
+                                    updateItem(item.nome_item, { ultimo_preco_informado: val });
+                                  }}
+                                  className="w-18 h-8 pl-5 pr-1 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary shadow-sm transition-all"
                                 />
                               </div>
                             </div>
@@ -498,43 +503,52 @@ const ShoppingListDetail: React.FC = () => {
                           >
                             <span className="material-symbols-rounded text-background-dark text-[18px]">check</span>
                           </button>
-                          <div className="flex items-center justify-between gap-4 flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 flex-1 min-w-0">
                             <div className="flex flex-col min-w-0">
                               <h4 className="text-sm font-bold leading-tight truncate line-through text-slate-400">{item.nome_item}</h4>
                               <p className="text-[10px] text-slate-500 font-medium opacity-50">
-                                {item.quantidade > 0 && <span>Receita: {item.quantidade} {item.unidade_preco || 'un'}</span>}
+                                {item.quantidade > 0 ? (
+                                  <span>Receita: {item.quantidade} {item.unidade_receita || 'un'}</span>
+                                ) : (
+                                  <span>-</span>
+                                )}
                               </p>
                             </div>
 
-                            <div className="flex items-center gap-2 pr-1 opacity-50">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-[8px] uppercase text-slate-400 font-bold ml-1">Qtd</span>
+                            <div className="flex items-center gap-2 sm:gap-3 pr-1 opacity-50 self-end sm:self-center">
+                              <div className="flex flex-col gap-1 items-center">
+                                <span className="text-[8px] uppercase text-slate-400 font-bold">Qtd</span>
                                 <input
                                   type="number"
                                   disabled
-                                  value={item.quantidade_usuario || ''}
-                                  className="w-10 h-7 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded text-[10px] text-center"
+                                  value={item.quantidade_usuario ?? ''}
+                                  className="w-11 h-8 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] text-center font-bold"
                                 />
                               </div>
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-[8px] uppercase text-slate-400 font-bold ml-1">Un</span>
-                                <select
-                                  disabled
-                                  value={item.unidade_preco}
-                                  className="w-12 h-7 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded text-[10px] text-center appearance-none"
-                                >
-                                  <option value={item.unidade_preco}>{item.unidade_preco}</option>
-                                </select>
-                              </div>
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-[8px] uppercase text-slate-400 font-bold ml-1">Preço</span>
+                              <div className="flex flex-col gap-1 items-center">
+                                <span className="text-[8px] uppercase text-slate-400 font-bold">Un</span>
                                 <div className="relative">
-                                  <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">R$</span>
+                                  <select
+                                    disabled
+                                    value={item.unidade_preco || ''}
+                                    className="w-14 h-8 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-900 dark:text-white text-center px-1 appearance-none"
+                                  >
+                                    <option value={item.unidade_preco || ''} className="bg-white dark:bg-surface-dark">{item.unidade_preco || '-'}</option>
+                                  </select>
+                                  <span className="material-symbols-rounded absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 text-[14px] pointer-events-none opacity-30">
+                                    expand_more
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-1 items-center">
+                                <span className="text-[8px] uppercase text-slate-400 font-bold">Preço</span>
+                                <div className="relative">
+                                  <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">R$</span>
                                   <input
                                     type="number"
                                     disabled
-                                    value={item.ultimo_preco_informado || ''}
-                                    className="w-16 h-7 pl-4 pr-1 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded text-[10px]"
+                                    value={item.ultimo_preco_informado ?? ''}
+                                    className="w-18 h-8 pl-5 pr-1 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold"
                                   />
                                 </div>
                               </div>
@@ -557,6 +571,33 @@ const ShoppingListDetail: React.FC = () => {
         )}
       </div>
 
+      {/* Floating Add Item Input */}
+      <div className="fixed bottom-[60px] left-0 w-full z-40 bg-gradient-to-t from-background-light dark:from-background-dark via-background-light/95 dark:via-background-dark/95 to-transparent pt-8 pb-4 px-4 backdrop-blur-sm">
+        <div className="max-w-md mx-auto flex gap-2">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addItem()}
+              placeholder="Adicionar item..."
+              className="w-full h-12 pl-10 pr-4 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary shadow-lg transition-all"
+            />
+            <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">add</span>
+          </div>
+          <button
+            onClick={addItem}
+            disabled={isAdding || !newItemName.trim()}
+            className="h-12 w-12 flex items-center justify-center bg-primary text-background-dark rounded-xl shadow-lg active:scale-95 transition-all disabled:opacity-50 shrink-0"
+          >
+            {isAdding ? (
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-background-dark border-t-transparent"></div>
+            ) : (
+              <span className="material-symbols-rounded text-[24px]">add</span>
+            )}
+          </button>
+        </div>
+      </div>
 
       {showUpgradeModal && (
         <UpgradePrompt
