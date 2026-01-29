@@ -391,97 +391,95 @@ const ShoppingListDetail: React.FC = () => {
               <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-3">Pendentes</h4>
               <div className="flex flex-col gap-2">
                 {items.filter(i => !i.comprado).map((item) => (
-                  <div key={item.nome_item} className="flex flex-col rounded-xl bg-white dark:bg-surface-dark p-2 pl-4 pr-3 shadow-sm border border-slate-100 dark:border-white/5">
-                    <div className="flex justify-between items-center gap-2">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div key={item.nome_item} className="flex flex-col rounded-2xl bg-white dark:bg-surface-dark p-3 pl-4 pr-3 shadow-sm border border-slate-100 dark:border-white/5">
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0 pt-1">
                         <button
                           onClick={() => togglePurchased(item.nome_item)}
-                          className="size-6 rounded-md border-2 border-slate-200 dark:border-gray-600 flex items-center justify-center transition-colors"
+                          className="size-6 shrink-0 rounded-md border-2 border-slate-200 dark:border-gray-600 flex items-center justify-center transition-colors"
                         >
                           {item.comprado && <span className="material-symbols-rounded text-primary text-[18px]">check</span>}
                         </button>
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 flex-1 min-w-0">
-                          <div className="flex flex-col min-w-0">
-                            <h4 className="text-sm font-bold leading-tight truncate">{item.nome_item}</h4>
-                            <p className="text-[10px] text-slate-500 font-medium opacity-80">
-                              {item.quantidade > 0 ? (
-                                <span>Receita: {item.quantidade} {item.unidade_receita || 'un'}</span>
-                              ) : (
-                                <span>-</span>
-                              )}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-center">
-                            <div className="flex flex-col gap-1 items-center">
-                              <span className="text-[8px] uppercase text-slate-400 font-bold">Qtd</span>
-                              <input
-                                type="number"
-                                value={item.quantidade_usuario ?? ''}
-                                onChange={(e) => {
-                                  const val = e.target.value === '' ? null : Number(e.target.value);
-                                  setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, quantidade_usuario: val } : i));
-                                }}
-                                onBlur={(e) => {
-                                  const val = e.target.value === '' ? null : Number(e.target.value);
-                                  updateItem(item.nome_item, { quantidade_usuario: val });
-                                }}
-                                className="w-11 h-8 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] text-center font-bold focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary shadow-sm transition-all"
-                              />
-                            </div>
-                            <div className="flex flex-col gap-1 items-center">
-                              <span className="text-[8px] uppercase text-slate-400 font-bold">Un</span>
-                              <div className="relative">
-                                <select
-                                  value={item.unidade_preco || ''}
-                                  onChange={(e) => {
-                                    setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, unidade_preco: e.target.value } : i));
-                                    updateItem(item.nome_item, { unidade_preco: e.target.value });
-                                  }}
-                                  className="w-14 h-8 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-900 dark:text-white text-center px-1 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary cursor-pointer appearance-none shadow-sm transition-all"
-                                >
-                                  <option value="" className="bg-white dark:bg-surface-dark">-</option>
-                                  {['un', 'kg', 'g', 'L', 'ml', 'pct', 'cx', 'dz'].map(u => (
-                                    <option key={u} value={u} className="bg-white dark:bg-surface-dark">{u}</option>
-                                  ))}
-                                  {item.unidade_preco && !['un', 'kg', 'g', 'L', 'ml', 'pct', 'cx', 'dz'].includes(item.unidade_preco) && (
-                                    <option value={item.unidade_preco} className="bg-white dark:bg-surface-dark">{item.unidade_preco}</option>
-                                  )}
-                                </select>
-                                <span className="material-symbols-rounded absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 text-[14px] pointer-events-none opacity-50">
-                                  expand_more
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-1 items-center">
-                              <span className="text-[8px] uppercase text-slate-400 font-bold">Preço</span>
-                              <div className="relative">
-                                <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">R$</span>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  value={item.ultimo_preco_informado ?? ''}
-                                  onChange={(e) => {
-                                    const val = e.target.value === '' ? null : Number(e.target.value);
-                                    setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, ultimo_preco_informado: val } : i));
-                                  }}
-                                  onBlur={(e) => {
-                                    const val = e.target.value === '' ? null : Number(e.target.value);
-                                    updateItem(item.nome_item, { ultimo_preco_informado: val });
-                                  }}
-                                  className="w-18 h-8 pl-5 pr-1 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary shadow-sm transition-all"
-                                />
-                              </div>
-                            </div>
-                          </div>
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <h4 className="text-[15px] font-bold leading-tight truncate">{item.nome_item}</h4>
+                          <p className="text-[10px] text-slate-500 font-medium opacity-80 mt-0.5">
+                            {item.quantidade > 0 ? (
+                              <span>Receita: {item.quantidade} {item.unidade_receita || 'un'}</span>
+                            ) : (
+                              <span>-</span>
+                            )}
+                          </p>
                         </div>
                       </div>
                       <button
                         onClick={() => deleteItem(item.nome_item)}
-                        className="flex size-8 items-center justify-center rounded-full text-slate-300 hover:text-red-500 transition-colors"
+                        className="flex size-8 shrink-0 items-center justify-center rounded-full text-slate-300 hover:text-red-500 transition-colors"
                       >
                         <span className="material-symbols-rounded text-[20px]">delete</span>
                       </button>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-4 pl-9 gap-3">
+                      <div className="flex flex-col gap-1 items-center flex-1 max-w-[50px]">
+                        <span className="text-[9px] uppercase text-slate-400 font-bold">Qtd</span>
+                        <input
+                          type="number"
+                          value={item.quantidade_usuario ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? null : Number(e.target.value);
+                            setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, quantidade_usuario: val } : i));
+                          }}
+                          onBlur={(e) => {
+                            const val = e.target.value === '' ? null : Number(e.target.value);
+                            updateItem(item.nome_item, { quantidade_usuario: val });
+                          }}
+                          className="w-full h-8 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-xs text-center font-bold focus:outline-none focus:ring-1 focus:ring-primary/50 shadow-sm transition-all"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1 items-center flex-1 max-w-[65px]">
+                        <span className="text-[9px] uppercase text-slate-400 font-bold">Un</span>
+                        <div className="relative w-full">
+                          <select
+                            value={item.unidade_preco || ''}
+                            onChange={(e) => {
+                              setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, unidade_preco: e.target.value } : i));
+                              updateItem(item.nome_item, { unidade_preco: e.target.value });
+                            }}
+                            className="w-full h-8 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-[11px] font-bold text-slate-900 dark:text-white text-center pl-1 pr-4 focus:outline-none focus:ring-1 focus:ring-primary/50 cursor-pointer appearance-none shadow-sm transition-all"
+                          >
+                            <option value="" className="bg-white dark:bg-surface-dark">-</option>
+                            {['un', 'kg', 'g', 'L', 'ml', 'pct', 'cx', 'dz'].map(u => (
+                              <option key={u} value={u} className="bg-white dark:bg-surface-dark">{u}</option>
+                            ))}
+                          </select>
+                          <span className="material-symbols-rounded absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 text-[14px] pointer-events-none opacity-50">
+                            expand_more
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1 items-center flex-1">
+                        <span className="text-[9px] uppercase text-slate-400 font-bold">Preço</span>
+                        <div className="relative w-full">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">R$</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder="0,00"
+                            value={item.ultimo_preco_informado ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value === '' ? null : Number(e.target.value);
+                              setItems(prev => prev.map(i => i.nome_item === item.nome_item ? { ...i, ultimo_preco_informado: val } : i));
+                            }}
+                            onBlur={(e) => {
+                              const val = e.target.value === '' ? null : Number(e.target.value);
+                              updateItem(item.nome_item, { ultimo_preco_informado: val });
+                            }}
+                            className="w-full h-8 pl-7 pr-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-xs font-bold focus:outline-none focus:ring-1 focus:ring-primary/50 shadow-sm transition-all"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -494,73 +492,71 @@ const ShoppingListDetail: React.FC = () => {
                 <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-3">Comprados</h4>
                 <div className="flex flex-col gap-2 opacity-60 grayscale-[0.5]">
                   {items.filter(i => i.comprado).map((item) => (
-                    <div key={item.nome_item} className="flex flex-col rounded-xl bg-slate-50 dark:bg-white/[0.02] p-2 pl-4 pr-3 border border-dashed border-slate-200 dark:border-white/10">
-                      <div className="flex justify-between items-center gap-2">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div key={item.nome_item} className="flex flex-col rounded-2xl bg-slate-50 dark:bg-white/[0.02] p-3 pl-4 pr-3 border border-dashed border-slate-200 dark:border-white/10 opacity-70 grayscale-[0.2]">
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0 pt-1">
                           <button
                             onClick={() => togglePurchased(item.nome_item)}
-                            className="size-6 rounded-md bg-primary border-2 border-primary flex items-center justify-center transition-colors"
+                            className="size-6 shrink-0 rounded-md bg-primary border-2 border-primary flex items-center justify-center transition-colors"
                           >
                             <span className="material-symbols-rounded text-background-dark text-[18px]">check</span>
                           </button>
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 flex-1 min-w-0">
-                            <div className="flex flex-col min-w-0">
-                              <h4 className="text-sm font-bold leading-tight truncate line-through text-slate-400">{item.nome_item}</h4>
-                              <p className="text-[10px] text-slate-500 font-medium opacity-50">
-                                {item.quantidade > 0 ? (
-                                  <span>Receita: {item.quantidade} {item.unidade_receita || 'un'}</span>
-                                ) : (
-                                  <span>-</span>
-                                )}
-                              </p>
-                            </div>
-
-                            <div className="flex items-center gap-2 sm:gap-3 pr-1 opacity-50 self-end sm:self-center">
-                              <div className="flex flex-col gap-1 items-center">
-                                <span className="text-[8px] uppercase text-slate-400 font-bold">Qtd</span>
-                                <input
-                                  type="number"
-                                  disabled
-                                  value={item.quantidade_usuario ?? ''}
-                                  className="w-11 h-8 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] text-center font-bold"
-                                />
-                              </div>
-                              <div className="flex flex-col gap-1 items-center">
-                                <span className="text-[8px] uppercase text-slate-400 font-bold">Un</span>
-                                <div className="relative">
-                                  <select
-                                    disabled
-                                    value={item.unidade_preco || ''}
-                                    className="w-14 h-8 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-900 dark:text-white text-center px-1 appearance-none"
-                                  >
-                                    <option value={item.unidade_preco || ''} className="bg-white dark:bg-surface-dark">{item.unidade_preco || '-'}</option>
-                                  </select>
-                                  <span className="material-symbols-rounded absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 text-[14px] pointer-events-none opacity-30">
-                                    expand_more
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-1 items-center">
-                                <span className="text-[8px] uppercase text-slate-400 font-bold">Preço</span>
-                                <div className="relative">
-                                  <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">R$</span>
-                                  <input
-                                    type="number"
-                                    disabled
-                                    value={item.ultimo_preco_informado ?? ''}
-                                    className="w-18 h-8 pl-5 pr-1 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold"
-                                  />
-                                </div>
-                              </div>
-                            </div>
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <h4 className="text-[15px] font-bold leading-tight truncate line-through text-slate-400">{item.nome_item}</h4>
+                            <p className="text-[10px] text-slate-500 font-medium opacity-50 mt-0.5">
+                              {item.quantidade > 0 ? (
+                                <span>Receita: {item.quantidade} {item.unidade_receita || 'un'}</span>
+                              ) : (
+                                <span>-</span>
+                              )}
+                            </p>
                           </div>
                         </div>
                         <button
                           onClick={() => deleteItem(item.nome_item)}
-                          className="flex size-8 items-center justify-center rounded-full text-slate-300 hover:text-red-500 transition-colors"
+                          className="flex size-8 shrink-0 items-center justify-center rounded-full text-slate-300 hover:text-red-500 transition-colors"
                         >
                           <span className="material-symbols-rounded text-[20px]">delete</span>
                         </button>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-4 pl-9 gap-3 opacity-60">
+                        <div className="flex flex-col gap-1 items-center flex-1 max-w-[50px]">
+                          <span className="text-[9px] uppercase text-slate-400 font-bold">Qtd</span>
+                          <input
+                            type="number"
+                            disabled
+                            value={item.quantidade_usuario ?? ''}
+                            className="w-full h-8 bg-white/50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-lg text-xs text-center font-bold"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1 items-center flex-1 max-w-[65px]">
+                          <span className="text-[9px] uppercase text-slate-400 font-bold">Un</span>
+                          <div className="relative w-full">
+                            <select
+                              disabled
+                              value={item.unidade_preco || ''}
+                              className="w-full h-8 bg-white/50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-lg text-[11px] font-bold text-slate-900 dark:text-white text-center pl-1 pr-4 appearance-none"
+                            >
+                              <option value={item.unidade_preco || ''} className="bg-white dark:bg-surface-dark">{item.unidade_preco || '-'}</option>
+                            </select>
+                            <span className="material-symbols-rounded absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 text-[14px] pointer-events-none opacity-30">
+                              expand_more
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1 items-center flex-1">
+                          <span className="text-[9px] uppercase text-slate-400 font-bold">Preço</span>
+                          <div className="relative w-full">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">R$</span>
+                            <input
+                              type="number"
+                              disabled
+                              value={item.ultimo_preco_informado ?? ''}
+                              className="w-full h-8 pl-7 pr-2 bg-white/50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-lg text-xs font-bold"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -572,8 +568,8 @@ const ShoppingListDetail: React.FC = () => {
       </div>
 
       {/* Floating Add Item Input */}
-      <div className="fixed bottom-[60px] left-0 w-full z-40 bg-gradient-to-t from-background-light dark:from-background-dark via-background-light/95 dark:via-background-dark/95 to-transparent pt-8 pb-4 px-4 backdrop-blur-sm">
-        <div className="max-w-md mx-auto flex gap-2">
+      <div className="fixed bottom-[74px] left-0 w-full z-40 px-4">
+        <div className="max-w-md mx-auto flex gap-2 p-2 bg-white/80 dark:bg-surface-dark/80 backdrop-blur-lg rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-2xl">
           <div className="relative flex-1">
             <input
               type="text"
@@ -581,19 +577,19 @@ const ShoppingListDetail: React.FC = () => {
               onChange={(e) => setNewItemName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addItem()}
               placeholder="Adicionar item..."
-              className="w-full h-12 pl-10 pr-4 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary shadow-lg transition-all"
+              className="w-full h-11 pl-10 pr-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
             />
             <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">add</span>
           </div>
           <button
             onClick={addItem}
             disabled={isAdding || !newItemName.trim()}
-            className="h-12 w-12 flex items-center justify-center bg-primary text-background-dark rounded-xl shadow-lg active:scale-95 transition-all disabled:opacity-50 shrink-0"
+            className="h-11 w-11 flex items-center justify-center bg-primary text-background-dark rounded-xl shadow-lg active:scale-95 transition-all disabled:opacity-50 shrink-0"
           >
             {isAdding ? (
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-background-dark border-t-transparent"></div>
             ) : (
-              <span className="material-symbols-rounded text-[24px]">add</span>
+              <span className="material-symbols-rounded text-[22px]">add</span>
             )}
           </button>
         </div>
